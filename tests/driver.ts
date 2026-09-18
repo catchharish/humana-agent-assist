@@ -187,7 +187,7 @@ export async function runScenario(opts: {
     if (ev.id === "e-hist-final" || ev.id === "e-return-met") {
       await waitNeedAnswer(session, "historical_price", 12_000);
     }
-    if (ev.id === "e-90day") {
+    if (ev.id === "e-90day" || ev.id === "e-90") {
       await waitNeedAnswer(session, "service_education", 12_000);
     }
     if (ev.id === "e-yes-compare") {
@@ -213,6 +213,88 @@ export async function runScenario(opts: {
   }
   dumpEvidence(session);
   return session;
+}
+
+export async function measureUtterance(opts: {
+  scenarioId: string;
+  replaceId: string;
+  text: string;
+  waitNeed?: string;
+  waitQuotes?: boolean;
+  compressMs?: number;
+}): Promise<{
+  session: SessionState;
+  paintMs: number | null;
+  paths: SessionState["diagnostics"]["needPaths"];
+}> {
+  const start = await json("/api/session/start", {
+    method: "POST",
+    body: JSON.stringify({
+      scenarioId: opts.scenarioId,
+      overlay: null,
+      injectedDelayMs: 0,
+    }),
+  });
+  const session = start.body.session;
+  if (!session) throw new Error("start failed");
+  const stream = await json(
+    `/api/simulated/telephony/scenario-events?id=${opts.scenarioId}`,
+  );
+  const events = stream.body.data?.events ?? [];
+  const tokenRef = { token: null as string | null };
+  let last = 0;
+  let paintMs: number | null = null;
+  for (const raw of events) {
+    const ev =
+      raw.id === opts.replaceId ? { ...raw, text: opts.text } : raw;
+    const gap = Math.max(0, ev.offsetMs - last);
+    last = ev.offsetMs;
+    const wait = Math.min(gap, opts.compressMs ?? 20);
+    if (wait) await new Promise((r) => setTimeout(r, wait));
+    const tEvent = Date.now();
+    const ingest = await json("/api/session/ingest", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: session.sessionId,
+        event: { ...ev, clientT: tEvent },
+      }),
+    });
+    if (ingest.body.session) Object.assign(session, ingest.body.session);
+    const target = ev.id === opts.replaceId;
+    if (!target) {
+      if (ev.id === "e-hist-final" || ev.id === "e-return-met") {
+        await waitNeedAnswer(session, "historical_price", 12_000);
+      }
+      if (ev.id === "e-90day" || ev.id === "e-90") {
+        await waitNeedAnswer(session, "service_education", 20_000);
+      }
+    } else {
+      if (opts.waitNeed) await waitNeedAnswer(session, opts.waitNeed, 20_000);
+      if (opts.waitQuotes) {
+        await waitUntil(
+          session,
+          (s) =>
+            s.consent.comparison === "absolute_yes" && s.quotes.length > 0,
+          20_000,
+        );
+      }
+    }
+    const tPaint = Date.now();
+    await paint(session.sessionId, ev.id, ev.type, tEvent);
+    if (ev.id === opts.replaceId) paintMs = tPaint - tEvent;
+    await refresh(session);
+    if (session.paused) {
+      await act(session, tokenRef);
+      const resumed = await json("/api/session/resume", {
+        method: "POST",
+        body: JSON.stringify({ sessionId: session.sessionId }),
+      });
+      if (resumed.body.session) Object.assign(session, resumed.body.session);
+    }
+    if (ev.id === opts.replaceId) break;
+  }
+  dumpEvidence(session);
+  return { session, paintMs, paths: session.diagnostics.needPaths };
 }
 
 async function paint(
@@ -296,6 +378,7 @@ function dumpEvidence(session: SessionState) {
         transfer: session.transfer,
         disposition: session.disposition,
         lastTimings: session.lastTimings,
+        needPaths: session.diagnostics.needPaths,
       },
       null,
       2,

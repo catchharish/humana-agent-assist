@@ -11,6 +11,7 @@ import type {
   TranscriptLine,
   TriggerTrace,
 } from "@/lib/types";
+import type { UtteranceRules } from "@/lib/utteranceRules";
 import { randomUUID } from "crypto";
 
 const g = globalThis as unknown as { __haaSessions?: Map<string, SessionState> };
@@ -44,6 +45,7 @@ export function createSession(init: {
   overlay?: string | null;
   scenarioId?: string;
   injectedDelayMs?: number;
+  utteranceRules?: UtteranceRules | null;
 }): SessionState {
   const sessionId = randomUUID();
   const overlay = init.overlay ?? null;
@@ -72,6 +74,7 @@ export function createSession(init: {
     closing: "not_applicable",
     greetingSource: "GET /api/simulated/scripting/disclosures",
     disclosures: init.disclosures,
+    utteranceRules: init.utteranceRules ?? null,
     transcript: [],
     needs: [],
     nowCard: {
@@ -131,6 +134,7 @@ export function createSession(init: {
       router: [],
       triggers: [],
       rechecks: [],
+      needPaths: [],
     },
   };
   sessions.set(sessionId, state);

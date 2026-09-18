@@ -3,10 +3,6 @@ import { interpretUtterance, type Interpretation } from "@/lib/interpret";
 import { terraComplete, parseJsonObject } from "@/lib/openai";
 import { routeQuery, type RouterResult } from "@/lib/queryRouter";
 import { publishSession } from "@/lib/sse";
-import { interpretUtterance, type Interpretation } from "@/lib/interpret";
-import { terraComplete, parseJsonObject } from "@/lib/openai";
-import { routeQuery, type RouterResult } from "@/lib/queryRouter";
-import { publishSession } from "@/lib/sse";
 import { appendJsonl } from "@/lib/log";
 import {
   CLARIFY_INTEREST,
@@ -27,8 +23,14 @@ import {
   showNow,
   upsertNeed,
 } from "@/lib/session";
-import { classifyPricingTrigger } from "@/lib/triggers";
+import {
+  classifyComparisonConsent,
+  isNinetyDayQuestion,
+  matchesAll,
+  matchesAny,
+} from "@/lib/utteranceRules";
 import type { SessionState } from "@/lib/types";
+import { classifyPricingTrigger } from "@/lib/triggers";
 
 const historicalJobs = new Set<string>();
 
@@ -43,7 +45,7 @@ function mailPharmacyName(session: SessionState) {
       x.pharmacyId === "centerwell" ||
       /mail|centerwell/i.test(x.pharmacyName),
   );
-  return q?.pharmacyName || "the mail pharmacy";
+  return q?.pharmacyName || "mail pharmacy";
 }
 
 function pickupPharmacyName(session: SessionState) {
@@ -67,11 +69,23 @@ function sessionEnrollmentReadback(session: SessionState) {
     (d) => !delivery.some((x) => x.toLowerCase() === d.toLowerCase()),
   );
   return enrollmentReadback({
-    mailPharmacy: mailPharmacyName(session),
+    serviceName:
+      session.prefetch?.serviceGuide?.displayName || "the recorded pharmacy service",
     deliveryMedications: delivery,
     retailMedications: retail,
     pickupPharmacy: pickupPharmacyName(session),
   });
+}
+
+function recordNeedPath(
+  session: SessionState,
+  eventId: string | undefined,
+  need: string,
+  path: "code_rule" | "luna",
+) {
+  const rec = { eventId: eventId ?? "", need, path };
+  session.diagnostics.needPaths = [...session.diagnostics.needPaths, rec];
+  appendJsonl(session.sessionId, { kind: "need_path", ...rec });
 }
 
 function fingerprint(parts: string[]) {
@@ -492,9 +506,14 @@ export async function loadQuotes(
   }
   const req = pricingRequirement(session);
   const due = session.pricing === "due_now" || session.pricing === "late_finding";
+  const amountsOk = session.consent.comparison === "absolute_yes";
   showNow(session, {
     title: due ? "Pricing statement due now" : "Prospective comparison",
-    body: due ? (req?.verbatimText ?? "") : quoteNowBody(session),
+    body: due
+      ? (req?.verbatimText ?? "")
+      : amountsOk
+        ? quoteNowBody(session)
+        : "Comparison interest is not yet an absolute yes. Estimates are withheld.",
     sourceLabel: due
       ? "Governed guidance · scripting · simulated"
       : "System record · pharmacy · simulated",
@@ -1144,6 +1163,7 @@ async function applyInterpretation(
     markServiceDiscussed(session);
     if (getNeed(session, "service_education")?.guidance !== "ready") {
       await loadFast90(session, origin);
+      recordNeedPath(session, line.id, "service_education", "luna");
     }
   }
 
@@ -1188,14 +1208,42 @@ async function applyInterpretation(
     interp.comparisonConsent === "absolute_yes" &&
     !session.optionalWorkSuppressed
   ) {
-    session.consent.comparison = "absolute_yes";
-    session.consent.clarification = null;
-    if (
-      !interp.quotePharmacy &&
-      !interp.quotePharmacyCorrection &&
-      session.quotes.length === 0
-    ) {
-      await loadQuotes(session, origin);
+    const lastAdv =
+      [...session.transcript]
+        .reverse()
+        .find((t) => t.speaker === "advocate")?.text ?? "";
+    const code = classifyComparisonConsent({
+      rules: session.utteranceRules,
+      speaker: line.speaker,
+      text: line.text,
+      stability: line.stability,
+      optionalWorkSuppressed: session.optionalWorkSuppressed,
+      scopedPending: Boolean(session.consent.clarification) ||
+        matchesAny(session.utteranceRules?.scopedComparisonAsk, lastAdv),
+      lastAdvocate: lastAdv,
+    });
+    if (code === "hedge") {
+      session.consent.comparison = "hedge";
+      session.consent.clarification = CLARIFY_INTEREST;
+      showNow(session, {
+        title: "Clarify comparison interest",
+        body: CLARIFY_INTEREST,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      });
+    } else if (code === "absolute_yes") {
+      session.consent.comparison = "absolute_yes";
+      session.consent.clarification = null;
+    } else if (code === "wait" && session.consent.comparison !== "absolute_yes") {
+      session.consent.comparison = "absolute_yes";
+      session.consent.clarification = null;
+      if (
+        !interp.quotePharmacy &&
+        !interp.quotePharmacyCorrection &&
+        session.quotes.length === 0
+      ) {
+        await loadQuotes(session, origin);
+      }
+      recordNeedPath(session, line.id, "prospective_comparison", "luna");
     }
   }
 
@@ -1333,30 +1381,105 @@ export async function prefetchMemberRecords(
     claims: hist.evidence.claims,
     classifications: hist.evidence.classifications,
     fast90: edu.evidence.fast90,
+    serviceGuide: null,
   };
+  const svcResp = await fetch(
+    `${origin}/api/simulated/scripting/articles/DEMO-SERVICE-v1`,
+    { cache: "no-store" },
+  );
+  if (svcResp.ok) {
+    const svcJson = (await svcResp.json()) as {
+      data?: { articleId?: string; displayName?: string; body?: string };
+    };
+    const d = svcJson.data;
+    if (d) {
+      session.prefetch.serviceGuide = {
+        articleId: d.articleId ?? "DEMO-SERVICE-v1",
+        displayName: d.displayName ?? "",
+        body: d.body ?? "",
+      };
+    }
+  }
 }
 
-async function applyCodeNeeds(
+export async function applyGovernedUtteranceRules(
   session: SessionState,
   origin: string,
-  line: { speaker: string; stability: string; text: string },
+  line: { id?: string; speaker: string; stability: string; text: string },
 ) {
-  if (line.stability === "uncertain") return;
-  const text = line.text;
-  if (line.speaker === "member" && /90[\s-]?day/i.test(text)) {
-    markServiceDiscussed(session);
-    await loadFast90(session, origin);
+  const beforeTitle = session.nowCard.title;
+  const beforeBody = session.nowCard.body;
+  const beforeConsent = session.consent.comparison;
+  if (line.speaker === "member" && line.stability === "partial") {
+    appendJsonl(session.sessionId, {
+      kind: "governed_utterance",
+      eventId: line.id,
+      speaker: line.speaker,
+      stability: line.stability,
+      comparison: "wait",
+      ninetyDay: false,
+      displayChanged: false,
+      nowTitle: session.nowCard.title,
+    });
+    return;
   }
+  if (line.stability === "uncertain") return;
+  const rules = session.utteranceRules;
+  const text = line.text;
+  const lastAdv =
+    [...session.transcript]
+      .reverse()
+      .find((t) => t.speaker === "advocate")?.text ?? "";
+
   if (
     line.speaker === "member" &&
-    /please compare|compare both/i.test(text) &&
-    !session.optionalWorkSuppressed
+    (line.stability === "final" || line.stability === "corrected") &&
+    isNinetyDayQuestion(rules, text)
   ) {
+    markServiceDiscussed(session);
+    await loadFast90(session, origin);
+    recordNeedPath(session, line.id, "service_education", "code_rule");
+  }
+  if (
+    line.speaker === "advocate" &&
+    matchesAny(rules?.advocateServiceIntro, text)
+  ) {
+    markServiceDiscussed(session);
+  }
+
+  const comparison = classifyComparisonConsent({
+    rules,
+    speaker: line.speaker,
+    text,
+    stability: line.stability,
+    optionalWorkSuppressed: session.optionalWorkSuppressed,
+    scopedPending:
+      Boolean(session.consent.clarification) ||
+      matchesAny(rules?.scopedComparisonAsk, lastAdv),
+    lastAdvocate: lastAdv,
+  });
+  if (comparison === "hedge") {
+    session.consent.comparison = "hedge";
+    session.consent.clarification = CLARIFY_INTEREST;
+    showNow(session, {
+      title: "Clarify comparison interest",
+      body: CLARIFY_INTEREST,
+      sourceLabel: "Governed guidance · scripting · simulated",
+    });
+  }
+  if (comparison === "absolute_yes") {
     session.consent.comparison = "absolute_yes";
     session.consent.clarification = null;
-    if (session.quotes.length === 0) await loadQuotes(session, origin);
+    if (session.quotes.length === 0) {
+      await loadQuotes(session, origin);
+      recordNeedPath(session, line.id, "prospective_comparison", "code_rule");
+    }
   }
-  if (line.speaker === "advocate" && /ready for pickup/i.test(text)) {
+
+  if (
+    line.speaker === "advocate" &&
+    matchesAny(rules?.readyForPickup, text)
+  ) {
     upsertNeed(session, "refill_status", {
       status: "resolved",
       flowStep: "explain status → wrap path",
@@ -1364,6 +1487,63 @@ async function applyCodeNeeds(
     maybeOfferComparison(session);
     await maybeCompleteServicing(session);
   }
+  if (
+    line.speaker === "member" &&
+    (line.stability === "final" || line.stability === "corrected") &&
+    matchesAll(rules?.splitElection, text)
+  ) {
+    const deliveryMatch = text.match(
+      /delivery for (?:the )?([^.]+?)(?:\.|$)/i,
+    );
+    const named = deliveryMatch?.[1]?.replace(/\bonly\b/i, "").trim();
+    if (named) {
+      session.enrollment.medications = [named];
+      session.enrollment.readback = sessionEnrollmentReadback(session);
+      session.enrollment.confirmed = false;
+      session.enrollment.submitted = false;
+      upsertNeed(session, "service_election", {
+        status: "active",
+        guidance: "ready",
+        flowStep: "enroll/decline — scoped election",
+      });
+      showNow(session, {
+        title: "Enrollment draft — scoped",
+        body: session.enrollment.readback,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      });
+    }
+  }
+  if (
+    line.speaker === "member" &&
+    session.enrollment.medications.length > 0 &&
+    !session.enrollment.withdrawn &&
+    matchesAny(rules?.enrollmentAbsolute, text)
+  ) {
+    session.consent.enrollment = "absolute_yes";
+    session.consent.clarification = null;
+  }
+  if (line.speaker === "member" && matchesAny(rules?.withdraw, text)) {
+    applyHumanWithdrawEnrollment(session);
+  }
+  if (line.speaker === "member" && matchesAny(rules?.firmRefusal, text)) {
+    session.optionalWorkSuppressed = true;
+    session.recommendation = null;
+    session.consent.comparison = "none";
+    session.consent.enrollment = "none";
+  }
+  appendJsonl(session.sessionId, {
+    kind: "governed_utterance",
+    eventId: line.id,
+    speaker: line.speaker,
+    stability: line.stability,
+    comparison,
+    ninetyDay: isNinetyDayQuestion(rules, text),
+    displayChanged:
+      session.nowCard.title !== beforeTitle ||
+      session.nowCard.body !== beforeBody ||
+      session.consent.comparison !== beforeConsent,
+    nowTitle: session.nowCard.title,
+  });
 }
 
 export async function processTranscriptEvent(
@@ -1380,7 +1560,7 @@ export async function processTranscriptEvent(
   await applyAdvocateObligations(session, line);
   if (line.stability === "uncertain") return;
   if (session.identityStatus !== "VALID") return;
-  await applyCodeNeeds(session, origin, line);
+  await applyGovernedUtteranceRules(session, origin, line);
   void (async () => {
     const interp = await interpretUtterance(session, line);
     appendJsonl(session.sessionId, {
@@ -1388,6 +1568,11 @@ export async function processTranscriptEvent(
       eventId: line.id,
       ms: interp.ms,
       ok: interp.ok,
+      n90: interp.ninetyDayAsked,
+      cc: interp.comparisonConsent,
+      ha: interp.historicalAsked,
+      qp: interp.quotePharmacy,
+      raw: interp.raw.slice(0, 180),
     });
     session.lastInterpretation = {
       eventId: line.id,
@@ -1405,6 +1590,7 @@ export async function processTranscriptEvent(
       }
       return;
     }
+    if (line.stability === "partial") return;
     await applyInterpretation(
       session,
       origin,

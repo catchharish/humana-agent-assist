@@ -1,0 +1,71 @@
+{
+  "ruleSetId": "DEMO-UTTERANCE-RULES-v1",
+  "ninetyDayDuration": [
+    "\\b90[- ]days?\\b",
+    "\\bninety[- ]days?\\b",
+    "\\bthree[- ]months?\\b",
+    "\\b3[- ]months?\\b"
+  ],
+  "ninetyDayQuestionCue": [
+    "\\?",
+    "\\bhow (does|do|would|is|can)\\b",
+    "\\bhow (it|that|this) works\\b",
+    "\\bexplain\\b",
+    "\\bwalk me through\\b",
+    "\\btell me (about|how)\\b",
+    "\\bwhat(?:'s| is)\\b",
+    "\\bcould you\\b",
+    "\\bcan you\\b"
+  ],
+  "ninetyDayExclude": [
+    "\\bestimate\\b",
+    "\\bprice\\b",
+    "\\bcost\\b",
+    "\\bquote\\b",
+    "\\bran out\\b",
+    "\\balready (get|got|on)\\b"
+  ],
+  "advocateServiceIntro": ["90[- ]day", "pharmacy service", "ninety[- ]day"],
+  "comparisonHedge": [
+    "\\bi guess\\b",
+    "\\bwhatever\\b",
+    "yeah,\\s+i guess",
+    "sure,\\s+whatever",
+    "\\bmaybe\\b",
+    "\\bkind of\\b",
+    "\\bsort of\\b",
+    "\\bi suppose\\b",
+    "\\bif you think\\b",
+    "\\bif you want\\b",
+    "\\bi think so\\b",
+    "\\bup to you\\b"
+  ],
+  "comparisonAbsolute": [
+    "^yes\\.?$",
+    "^yes,? please\\.?$",
+    "^yes,? go ahead\\.?$",
+    "^yes,? please (compare|do)\\b",
+    "^sure,? compare (them|both)\\.?$",
+    "^sure,? go ahead\\.?$",
+    "^please do\\.?$",
+    "^please compare (them|both)\\.?$",
+    "^i['’]d like that\\.?$",
+    "^go ahead\\.?$",
+    "^absolutely\\.?$"
+  ],
+  "scopedComparisonAsk": [
+    "would you like to hear the retail and delivery estimates",
+    "to confirm: would you like to hear the retail and delivery estimates",
+    "hear the retail and delivery estimates"
+  ],
+  "compoundQuestion": [
+    "\\band (to )?enroll\\b",
+    "estimates and .+",
+    "\\?\\s*.+\\band\\b.+"
+  ],
+  "readyForPickup": ["ready for pickup"],
+  "splitElection": ["at retail", "delivery for"],
+  "enrollmentAbsolute": ["^yes, for "],
+  "withdraw": ["withdraw", "don'?t want to enroll", "stop the enrollment"],
+  "firmRefusal": ["do not want delivery", "keep my retail"]
+}

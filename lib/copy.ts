@@ -16,21 +16,30 @@ function joinList(items: string[]): string {
   return `${clean.slice(0, -1).join(", ")}, and ${clean[clean.length - 1]}`;
 }
 
+function capitalize(s: string) {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export function hasDoubledWords(text: string) {
+  return /\b(\w+)\s+\1\b/i.test(text);
+}
+
 export function offerBody(p: { mailPharmacy: string }): string {
   return `After today's servicing, offer a comparison of retail and ${p.mailPharmacy} delivery for the existing medicines. Eligibility plus the cost question is a reason to offer information, not a recommendation to enroll.`;
 }
 
 export function enrollmentReadback(p: {
-  mailPharmacy: string;
+  serviceName: string;
   deliveryMedications: string[];
   retailMedications: string[];
   pickupPharmacy: string;
 }): string {
   const delivery = joinList(p.deliveryMedications);
   const retail = p.retailMedications.length
-    ? `${joinList(p.retailMedications)} stay at retail, and `
+    ? `${capitalize(joinList(p.retailMedications))} ${p.retailMedications.length === 1 ? "stays" : "stay"} at retail. `
     : "";
-  return `You want to enroll in the ${p.mailPharmacy} pharmacy service for future ${delivery} fills. ${retail}today's ready refill stays at ${p.pickupPharmacy}. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?`;
+  return `You want to enroll in ${p.serviceName} for future ${delivery} fills. ${retail}Today's ready refill stays at ${p.pickupPharmacy}. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?`;
 }
 
 export function transferOffer(p: {

@@ -104,6 +104,8 @@ export type TriggerTrace = {
   suppressed?: boolean;
 };
 
+export type UtteranceRules = import("@/lib/utteranceRules").UtteranceRules;
+
 export type SessionState = {
   sessionId: string;
   startedAt: number;
@@ -127,6 +129,11 @@ export type SessionState = {
       lineageSourceId: string | null;
       version?: string;
     } | null;
+    serviceGuide: {
+      articleId: string;
+      displayName: string;
+      body: string;
+    } | null;
   } | null;
   callType: string;
   currentNeed: string;
@@ -140,6 +147,7 @@ export type SessionState = {
   closing: ObligationStatus;
   greetingSource: string;
   disclosures: DisclosureRequirement[];
+  utteranceRules: import("@/lib/utteranceRules").UtteranceRules | null;
   transcript: TranscriptLine[];
   needs: NeedRecord[];
   nowCard: {
@@ -230,5 +238,10 @@ export type SessionState = {
     router: RouterTrace[];
     triggers: TriggerTrace[];
     rechecks: { at: string; fingerprint: string; changed: boolean }[];
+    needPaths: Array<{
+      eventId: string;
+      need: string;
+      path: "code_rule" | "luna";
+    }>;
   };
 };

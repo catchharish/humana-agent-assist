@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { outcomeWith, outcomeWithout } from "@/lib/copy";
+import { quoteAmountsMayRender } from "@/lib/utteranceRules";
 import type { NeedKind, SessionState } from "@/lib/types";
 
 type StreamEvent = {
@@ -409,7 +410,9 @@ export default function Page() {
             <p className="source">{session.recommendation.body}</p>
           </div>
         )}
-        {session && session.quotes.length > 0 && (
+        {session &&
+          session.quotes.length > 0 &&
+          quoteAmountsMayRender(session.consent.comparison) && (
           <table className="quote-table">
             <thead>
               <tr>

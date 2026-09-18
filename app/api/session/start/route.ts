@@ -8,6 +8,7 @@ import {
   recordWarmup,
 } from "@/lib/session";
 import type { DisclosureRequirement } from "@/lib/types";
+import type { UtteranceRules } from "@/lib/utteranceRules";
 
 export async function POST(request: Request) {
   const origin = new URL(request.url).origin;
@@ -22,12 +23,20 @@ export async function POST(request: Request) {
     data?: { requirements?: DisclosureRequirement[] };
   };
   const disclosures = discJson.data?.requirements ?? [];
+  const rulesResp = await fetch(
+    `${origin}/api/simulated/scripting/utterance-rules`,
+    { cache: "no-store" },
+  );
+  const rulesJson = (await rulesResp.json()) as {
+    data?: { rules?: UtteranceRules };
+  };
   const session = createSession({
     disclosures,
     disclosureFetch: "GET /api/simulated/scripting/disclosures",
     overlay: body.overlay ?? null,
     scenarioId: body.scenarioId ?? "t01_m2a",
     injectedDelayMs: Number(body.injectedDelayMs) || 0,
+    utteranceRules: rulesJson.data?.rules ?? null,
   });
   void warmupLuna().then((warmup) => {
     recordWarmup(session.sessionId, {

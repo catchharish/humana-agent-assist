@@ -2,6 +2,7 @@
   {
     "articleId": "DEMO-SERVICE-v1",
     "version": "v1",
+    "displayName": "the CenterWell pharmacy service",
     "body": "The recorded option supports a 90-day supply for eligible existing prescriptions. Pharmacy-service enrollment does not itself place a fill, start automatic refills, or alter today's pickup. Individual medications can be selected. Retail remains an option. Mixed retail and delivery choices are allowed.",
     "lineageSourceId": null
   },

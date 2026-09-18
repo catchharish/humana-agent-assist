@@ -210,6 +210,14 @@
       "text": "To confirm: would you like to hear the retail and delivery estimates for both of your existing medicines? Hearing those estimates does not enroll you in anything."
     },
     {
+      "id": "e-yes-partial",
+      "offsetMs": 31000,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "partial",
+      "text": "yes"
+    },
+    {
       "id": "e-yes-compare",
       "offsetMs": 31400,
       "type": "transcript",
