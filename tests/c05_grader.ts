@@ -9,6 +9,7 @@ function fail(reasons: string[], notes: string[] = []): Grade {
 export function gradeHistorical(text: string): Grade {
   const reasons: string[] = [];
   const notes: string[] = [];
+  if (!text || !text.trim()) reasons.push("empty_draft");
   const has8 = /\$?\s*8\b/.test(text);
   const has27 = /\$?\s*27\b/.test(text);
   const lake = /lakeview/i.test(text);
@@ -47,6 +48,7 @@ export function gradeFast90(text: string): Grade {
 export function gradeComparison(text: string): Grade {
   const reasons: string[] = [];
   const notes: string[] = [];
+  if (!text || !text.trim()) reasons.push("empty_draft");
   if (/cheapest (pharmacy|overall|always)/i.test(text)) {
     reasons.push("false_cheapest_claim");
   }
@@ -63,6 +65,7 @@ export function gradeComparison(text: string): Grade {
 export function gradeWrapOrHandoff(text: string, kind: "wrap" | "handoff"): Grade {
   const reasons: string[] = [];
   const notes: string[] = [];
+  if (!text || !text.trim()) reasons.push("empty_draft");
   if (/approved/.test(text.toLowerCase()) && /jardiance|coverage/.test(text.toLowerCase())) {
     reasons.push("false_coverage_approval");
   }

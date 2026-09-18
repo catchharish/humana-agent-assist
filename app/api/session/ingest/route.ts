@@ -60,7 +60,15 @@ export async function POST(request: Request) {
       { cache: "no-store" },
     );
     const json = (await ivr.json()) as { data?: { ivrReason?: string } };
-    setIvrHint(session, json.data?.ivrReason ?? "refill");
+    if (json.data?.ivrReason) {
+      setIvrHint(session, json.data.ivrReason);
+    } else {
+      session.nowCard = {
+        title: "IVR hint limitation",
+        body: "Telephony did not return an IVR reason. Call type is not inferred.",
+        sourceLabel: "System record · telephony · simulated",
+      };
+    }
   } else if (ev.type === "system" && ev.name === "authorization") {
     const authResp = await fetch(
       `${origin}/api/simulated/eligibility/authorizations`,

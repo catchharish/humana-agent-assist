@@ -5,8 +5,9 @@ export const NUDGE_CLOSING = "Closing speech could not be verified.";
 export const CLARIFY_INTEREST =
   "To confirm: would you like to hear the retail and delivery estimates for both of your existing medicines? Hearing those estimates does not enroll you in anything.";
 
-export const OBJECTION_BODY =
-  "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is.";
+export function clarifyInterest(p: { medicines: string }) {
+  return `To confirm: would you like to hear the retail and delivery estimates for ${p.medicines}? Hearing those estimates does not enroll you in anything.`;
+}
 
 function joinList(items: string[]): string {
   const clean = items.map((s) => s.trim()).filter(Boolean);

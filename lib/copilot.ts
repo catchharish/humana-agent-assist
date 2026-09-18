@@ -1,4 +1,4 @@
-import { invalidateSessionTokens } from "@/lib/enrollmentToken";
+import { invalidateSessionTokens, normalizeScopeKey } from "@/lib/enrollmentToken";
 import { interpretUtterance, finalCompatibleWithPartial, type Interpretation } from "@/lib/interpret";
 import { terraComplete, parseJsonObject } from "@/lib/openai";
 import { routeQuery, type RouterResult } from "@/lib/queryRouter";
@@ -9,12 +9,12 @@ import {
   NUDGE_CLOSING,
   NUDGE_PARAPHRASE,
   NUDGE_PRICING,
-  OBJECTION_BODY,
+  clarifyInterest,
   enrollmentReadback,
   offerBody,
   transferOffer,
 } from "@/lib/copy";
-import { isExactReading, wordDiff } from "@/lib/exactness";
+import { isExactReading, isWordingAttempt, stitchedReading, wordDiff } from "@/lib/exactness";
 import {
   getNeed,
   pushRouterTrace,
@@ -25,14 +25,17 @@ import {
 } from "@/lib/session";
 import {
   classifyComparisonConsent,
+  classifyEnrollmentConsent,
+  isDirectNamedQuoteAsk,
   isNinetyDayQuestion,
   matchesAll,
   matchesAny,
+  namedMedicationsInText,
 } from "@/lib/utteranceRules";
 import type { SessionState } from "@/lib/types";
-import { classifyLunaTrigger, classifyPricingTrigger } from "@/lib/triggers";
+import { classifyLunaTrigger, classifyPricingTrigger, closingAttemptCues } from "@/lib/triggers";
 
-const historicalJobs = new Set<string>();
+const historicalJobs = new Map<string, string>();
 
 export let testInterpretFactory: ((
   session: SessionState,
@@ -127,6 +130,16 @@ function pickupPharmacyName(session: SessionState) {
   );
 }
 
+function joinMedicineNames(session: SessionState) {
+  const names = [
+    ...new Set(session.quotes.map((q) => q.drugName).filter(Boolean)),
+  ];
+  if (names.length === 0) return "";
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+}
+
 function sessionEnrollmentReadback(session: SessionState) {
   const delivery = session.enrollment.medications;
   const quoted = [
@@ -142,6 +155,55 @@ function sessionEnrollmentReadback(session: SessionState) {
     retailMedications: retail,
     pickupPharmacy: pickupPharmacyName(session),
   });
+}
+
+export function setEnrollmentMedications(
+  session: SessionState,
+  medications: string[],
+) {
+  if (session.enrollment.submitted) return;
+  const nextKey = normalizeScopeKey(medications);
+  const prevKey = normalizeScopeKey(session.enrollment.medications);
+  if (nextKey !== prevKey) {
+    invalidateSessionTokens(session.sessionId);
+    session.consent.enrollment = "none";
+    session.consent.enrollmentScopeKey = null;
+    session.consent.enrollmentUtteranceId = null;
+    session.enrollment.confirmed = false;
+    session.enrollment.scopeChangedAt = Date.now();
+  }
+  session.enrollment.medications = medications;
+  session.enrollment.readback = sessionEnrollmentReadback(session);
+}
+
+function readbackPending(session: SessionState): boolean {
+  if (!session.enrollment.readback.trim()) return false;
+  const after = session.enrollment.scopeChangedAt;
+  return session.transcript.some(
+    (t) =>
+      t.speaker === "advocate" &&
+      (t.stability === "final" || t.stability === "corrected") &&
+      t.receivedAt >= after &&
+      (isExactReading(t.text, session.enrollment.readback) ||
+        isWordingAttempt(t.text, session.enrollment.readback, 0.7)),
+  );
+}
+
+function memberConsentLine(
+  line: { speaker: string; stability: string },
+) {
+  return (
+    line.speaker === "member" &&
+    (line.stability === "final" || line.stability === "corrected")
+  );
+}
+
+function limitationCard(title: string, body: string) {
+  return {
+    title,
+    body,
+    sourceLabel: "Governed guidance · scripting · simulated",
+  };
 }
 
 function recordNeedPath(
@@ -244,7 +306,7 @@ function presentHistorical(
       title: drafted.title,
       body: drafted.body,
       sourceLabel: drafted.sourceLabel,
-    });
+    }, { priority: "answer", needKind: "historical_price" });
     maybeOfferComparison(session);
   } else {
     upsertNeed(session, "historical_price", {
@@ -374,6 +436,8 @@ function markExactPricingDelivery(
   line: { id?: string; offsetMs?: number },
 ) {
   session.pricingExactDelivered = true;
+  if (line.offsetMs != null) session.pricingExactOffset = line.offsetMs;
+  session.nowPriority = 0;
   session.nudge = null;
   const marks = scriptMarks.get(session.sessionId) ?? {};
   const nudgeOffsetMs = marks.nudgeOffsetMs;
@@ -396,16 +460,23 @@ function assessPricingSpeech(
   session: SessionState,
   line: { id: string; text: string; offsetMs?: number },
 ) {
-  if (session.pricingExactDelivered) return;
-  if (session.pricing === "exact_timely" || session.pricing === "not_applicable") {
-    return;
-  }
   const req = pricingRequirement(session);
   if (!req) return;
-  const exact = isExactReading(line.text, req.verbatimText);
+  const heard = stitchedReading(
+    session.transcript,
+    {
+      id: line.id,
+      speaker: "advocate",
+      stability: "final",
+      text: line.text,
+    },
+    req.verbatimText,
+  );
+  const exact = isExactReading(heard, req.verbatimText);
   if (exact) {
     markExactPricingDelivery(session, line);
-    if (session.estimateSpokenWithoutReading || session.pricing === "late_finding") {
+    const alreadyLate = session.estimateSpokenWithoutReading || session.pricing === "late_finding";
+    if (alreadyLate) {
       session.pricing = "late_finding";
       session.pricingNote = "Delivered correctly, but late.";
       if (session.quotes.length > 0) {
@@ -413,7 +484,7 @@ function assessPricingSpeech(
           title: "Prospective comparison",
           body: `${quoteNowBody(session)} No universal cheapest or guaranteed savings.`,
           sourceLabel: "System record · pharmacy · simulated",
-        });
+        }, { priority: "answer", needKind: "prospective_comparison" });
       }
     } else {
       session.pricing = "exact_timely";
@@ -421,15 +492,17 @@ function assessPricingSpeech(
     }
     return;
   }
+  if (session.pricingExactDelivered) return;
   if (session.pricing === "due_now" || session.pricing === "late_finding") {
-    const diff = wordDiff(line.text, req.verbatimText);
+    if (!isWordingAttempt(heard, req.verbatimText)) return;
+    const diff = wordDiff(heard, req.verbatimText);
     if (diff.missingFromHeard.length > 0 || diff.extraInHeard.length > 0) {
       session.pricing = session.estimateSpokenWithoutReading
         ? "late_finding"
         : "paraphrased";
       session.nudge = {
         template: NUDGE_PARAPHRASE,
-        heard: line.text,
+        heard,
         requiredText: req.verbatimText,
         missingFromHeard: diff.missingFromHeard,
         extraInHeard: diff.extraInHeard,
@@ -502,7 +575,7 @@ function quoteNowBody(session: SessionState) {
   const stale = session.quotes.filter((q) => q.validityStatus === "invalidated");
   const lines = valid.map(
     (q) =>
-      `${q.drugName} at ${q.pharmacyName}: $${q.estimatedMemberCost.value} (90-day estimate)`,
+      `${q.drugName} at ${q.pharmacyName}: $${q.estimatedMemberCost.value} (${q.daysSupply}-day estimate)`,
   );
   const staleNote = stale.length
     ? ` Invalidated (do not relabel): ${stale
@@ -581,17 +654,20 @@ export async function loadQuotes(
   const req = pricingRequirement(session);
   const due = session.pricing === "due_now" || session.pricing === "late_finding";
   const amountsOk = session.consent.comparison === "absolute_yes";
+  const showAmounts = amountsOk && !due && session.pricingExactDelivered;
   showNow(session, {
     title: due ? "Pricing statement due now" : "Prospective comparison",
     body: due
       ? (req?.verbatimText ?? "")
-      : amountsOk
+      : showAmounts
         ? quoteNowBody(session)
-        : "Comparison interest is not yet an absolute yes. Estimates are withheld.",
+        : amountsOk
+          ? "Comparison interest recorded. Read the pricing statement before speaking estimates."
+          : "Comparison interest is not yet an absolute yes. Estimates are withheld.",
     sourceLabel: due
       ? "Governed guidance · scripting · simulated"
       : "System record · pharmacy · simulated",
-  });
+  }, { priority: due ? "due_now" : "answer", needKind: "prospective_comparison" });
 }
 
 function requestQuotes(
@@ -661,9 +737,9 @@ export async function loadFast90(
   }
   showNow(session, {
     title: "90-day option",
-    body: `${art?.body ?? ""}\n\nEnrollment is not an order, not automatic refills, and does not change today's pickup. No delivery deadline is established.`,
+    body: art?.body || "Derived 90-day guidance unavailable.",
     sourceLabel: `Derived from source/version · scripting · simulated (${art?.articleId} ← ${art?.lineageSourceId})`,
-  });
+  }, { priority: "answer", needKind: "service_education" });
 }
 
 function markServiceDiscussed(session: SessionState) {
@@ -685,29 +761,29 @@ export function applyHumanDismiss(session: SessionState) {
 }
 
 export function applyHumanObjection(session: SessionState) {
+  const body =
+    session.prefetch?.objection?.body ||
+    "Governed objection article was not retrieved. Do not improvise a persuasion script.";
+  const articleId = session.prefetch?.objection?.articleId ?? "DEMO-OBJECTION-RETAIL-v1";
   session.recommendation = {
     kind: "objection_retail",
     title: "Governed hesitation response",
-    body: OBJECTION_BODY,
-    sourceLabel: "Governed guidance · scripting · simulated",
+    body,
+    sourceLabel: `Governed guidance · scripting · simulated (${articleId})`,
     status: "used",
   };
   showNow(session, {
     title: "Governed hesitation response",
-    body: OBJECTION_BODY,
-    sourceLabel: "Governed guidance · scripting · simulated",
-  });
+    body,
+    sourceLabel: `Governed guidance · scripting · simulated (${articleId})`,
+  }, { priority: "answer" });
 }
 
 export function applyHumanEditEnrollmentScope(
   session: SessionState,
   medications: string[],
 ) {
-  invalidateSessionTokens(session.sessionId);
-  session.enrollment.medications = medications;
-  session.enrollment.confirmed = false;
-  session.consent.enrollment = "none";
-  session.enrollment.readback = sessionEnrollmentReadback(session);
+  setEnrollmentMedications(session, medications);
   showNow(session, {
     title: "Enrollment scope changed — confirmation invalidated",
     body: session.enrollment.readback,
@@ -738,6 +814,12 @@ async function maybeCompleteServicing(session: SessionState) {
   if (getNeed(session, "prospective_comparison")) return;
   const election = getNeed(session, "service_election");
   if (election && !session.enrollment.withdrawn) return;
+  const unanswered = session.needs.some(
+    (n) =>
+      (n.kind === "unrecognized_request" || n.kind === "unsupported_work") &&
+      n.status !== "resolved",
+  );
+  if (unanswered) return;
   const refillDone = getNeed(session, "refill_status")?.status === "resolved";
   const educationClosed =
     session.serviceDiscussed && session.closing === "exact_timely";
@@ -752,8 +834,10 @@ function closingRequirement(session: SessionState) {
   return session.disclosures.find((d) => d.requirementId === "DEMO-CLOSING-v2");
 }
 
-function looksLikeClosing(text: string) {
-  return /decision|membership|plan membership/i.test(text);
+function looksLikeClosing(session: SessionState, text: string) {
+  const cues = closingAttemptCues(session);
+  const lower = text.toLowerCase();
+  return cues.some((c) => lower.includes(c.toLowerCase()));
 }
 
 async function draftWrapStable(session: SessionState) {
@@ -774,9 +858,16 @@ ${JSON.stringify({
     500,
   );
   const parsed = parseJsonObject<{ wrap?: string }>(terra.text);
+  appendJsonl(session.sessionId, {
+    kind: "terra_complete",
+    task: "wrap",
+    ok: terra.ok,
+    ms: terra.ms,
+    usage: terra.usage ?? null,
+  });
   session.wrapStable =
     parsed?.wrap ??
-    (terra.ok ? terra.text : "Wrap draft unavailable. Use a manual note.");
+    (terra.ok ? terra.text : "Wrap draft unavailable. Use a labeled manual template.");
   if (!session.transfer.connectionStatus) {
     session.wrapDraft = session.wrapStable;
   }
@@ -787,7 +878,7 @@ function fillWrapOutcome(session: SessionState) {
   const caseId = session.coverage?.caseId;
   const status = session.coverage?.status;
   const outcome = session.transfer.connectionStatus
-    ? `Connection result: ${session.transfer.transferId ?? "unassigned"} — ${session.transfer.connectionStatus}. ${caseId ?? "The coverage case"} remains ${status ?? "pending"}. Connection is not a coverage determination.`
+    ? `Connection result: ${session.transfer.transferId ?? "unassigned"} — ${session.transfer.connectionStatus}. ${caseId ? `${caseId} remains ${status ?? "unreturned"}` : "No coverage case is on the session"}. Connection is not a coverage determination.`
     : "No connection result has returned; do not state a transfer outcome.";
   session.wrapDraft = [session.wrapStable, outcome].filter(Boolean).join("\n\n");
   session.outcomeReady = true;
@@ -795,13 +886,24 @@ function fillWrapOutcome(session: SessionState) {
 
 function assessClosing(
   session: SessionState,
-  line: { text: string; stability: string },
+  line: { id?: string; text: string; stability: string },
 ) {
   if (line.stability === "partial") return;
   if (session.closing === "not_applicable") return;
   const req = closingRequirement(session);
   if (!req) return;
-  if (line.stability === "uncertain" && looksLikeClosing(line.text)) {
+  if (session.closingLocked) return;
+  const heard = stitchedReading(
+    session.transcript,
+    {
+      id: line.id ?? "",
+      speaker: "advocate",
+      stability: line.stability,
+      text: line.text,
+    },
+    req.verbatimText,
+  );
+  if (line.stability === "uncertain" && looksLikeClosing(session, line.text)) {
     session.closing = "unable_to_verify";
     session.closingNote = "Uncertain first attempt preserved. Ask for a clear reread.";
     session.closingHistory.push({
@@ -818,16 +920,17 @@ function assessClosing(
       title: "Closing could not be verified",
       body: req.verbatimText,
       sourceLabel: "Governed guidance · scripting · simulated",
-    });
+    }, { priority: "nudge" });
     return;
   }
   if (
     (line.stability === "final" || line.stability === "corrected") &&
-    isExactReading(line.text, req.verbatimText)
+    isExactReading(heard, req.verbatimText)
   ) {
     session.nudge =
       session.nudge?.template === NUDGE_CLOSING ? null : session.nudge;
     session.closing = "exact_timely";
+    session.closingLocked = true;
     session.closingNote = session.closingHistory.some(
       (h) => h.assessment === "unable_to_verify",
     )
@@ -839,6 +942,19 @@ function assessClosing(
       assessment: "exact_timely",
     });
     void draftWrapStable(session);
+    return;
+  }
+  if (
+    (line.stability === "final" || line.stability === "corrected") &&
+    looksLikeClosing(session, heard) &&
+    isWordingAttempt(heard, req.verbatimText)
+  ) {
+    session.closing = "paraphrased";
+    session.nudge = {
+      template: NUDGE_CLOSING,
+      heard: line.text,
+      requiredText: req.verbatimText,
+    };
   }
 }
 
@@ -847,6 +963,7 @@ export async function loadCoverage(
   origin: string,
   updateFocus = true,
   sourceUtteranceId?: string,
+  drugName?: string,
 ) {
   const routed = await routeQuery({
     origin,
@@ -854,6 +971,8 @@ export async function loadCoverage(
     memberId: session.member?.memberId ?? "",
     planId: session.member?.planId ?? "",
     overlay: session.overlay,
+    drugName,
+    queryText: drugName,
   });
   pushRouterTrace(session, {
     routesUsed: routed.routesUsed,
@@ -863,8 +982,19 @@ export async function loadCoverage(
     ranked: routed.ranked,
     injectedDelayMs: 0,
   });
+  if (routed.evidence.limitation || !routed.evidence.coverage) {
+    showNow(
+      session,
+      limitationCard(
+        "Coverage lookup limitation",
+        routed.evidence.limitation ||
+          "No coverage case was returned for this member and medication.",
+      ),
+      { priority: "answer", needKind: "coverage_status" },
+    );
+    return;
+  }
   const c = routed.evidence.coverage;
-  if (!c) return;
   session.coverage = c;
   upsertNeed(session, "coverage_status", {
     status: "active",
@@ -882,7 +1012,7 @@ export async function loadCoverage(
       ? `The request is still under review; this record does not show an approval yet. ${c.caseId}: ${c.requestedMedication}, status ${c.status}. Pending is not denied. This role cannot make a determination.`
       : `${c.caseId} status ${c.status}. No determination is being made here.`,
     sourceLabel: "System record · coverage-review · simulated",
-  });
+  }, { priority: "answer", needKind: "coverage_status" });
   session.recommendation = {
     kind: "warm_transfer",
     title: "Recommend Coverage Review",
@@ -943,6 +1073,9 @@ export async function executeTransfer(session: SessionState, origin: string) {
   const resp = await fetch(`${origin}/api/simulated/telephony/transfers`, {
     method: "POST",
     cache: "no-store",
+    headers: session.overlay
+      ? { "x-demo-overlay": session.overlay }
+      : undefined,
   });
   const json = (await resp.json()) as {
     data?: {
@@ -951,62 +1084,154 @@ export async function executeTransfer(session: SessionState, origin: string) {
       destinationQueue?: string;
     };
   };
-  session.transfer.transferId = json.data?.transferId ?? "DEMO-TRANSFER001";
-  session.transfer.connectionStatus =
-    json.data?.connectionStatus ?? "receiving_specialist_connected";
-  session.disposition.recommended = "TRANSFERRED_COVERAGE_REVIEW";
+  if (!resp.ok || !json.data?.connectionStatus) {
+    showNow(
+      session,
+      limitationCard(
+        "Transfer limitation",
+        `Telephony did not return a connection status (HTTP ${resp.status}). No connected transfer is claimed.`,
+      ),
+    );
+    return { error: "telephony_no_status" as const };
+  }
+  const status = json.data.connectionStatus;
+  session.transfer.transferId = json.data.transferId ?? null;
+  session.transfer.connectionStatus = status;
+  const connected = /connected/i.test(status);
+  const pending = /pending/i.test(status);
+  const failed = /fail/i.test(status);
+  if (connected) {
+    session.disposition.recommended = "TRANSFERRED_COVERAGE_REVIEW";
+  } else if (pending) {
+    session.disposition.recommended = null;
+  } else if (failed) {
+    session.disposition.recommended = null;
+  }
   upsertNeed(session, "coverage_status", {
-    status: "unresolved_gap",
-    flowStep: "connected — case still pending",
+    status: connected ? "unresolved_gap" : "unresolved_gap",
+    flowStep: connected
+      ? "connected — case still pending"
+      : pending
+        ? "telephony pending — not connected"
+        : "telephony failed — not connected",
   });
+  const wrapWait = draftWrapStable(session);
+  await Promise.race([
+    wrapWait,
+    new Promise((r) => setTimeout(r, 8000)),
+  ]);
+  if (!session.wrapStable) {
+    session.wrapStable =
+      "Wrap draft unavailable (timeout). Labeled manual template: record completed work from the session evidence; do not invent a connection.";
+  }
   fillWrapOutcome(session);
   showNow(session, {
     title: "Connection result",
-    body: `${session.transfer.transferId}: ${session.transfer.connectionStatus}. ${session.coverage?.caseId ?? "The coverage case"} remains pending. Connection is not a coverage determination.`,
+    body: `${session.transfer.transferId ?? "unassigned"}: ${status}. ${
+      session.coverage
+        ? `${session.coverage.caseId} remains ${session.coverage.status}`
+        : "No coverage case is on the session"
+    }. Connection is not a coverage determination.`,
     sourceLabel: "System record · telephony · simulated",
   });
   return { ok: true as const };
 }
 
-export function confirmDisposition(session: SessionState, code: string) {
-  if (code === "TRANSFERRED_COVERAGE_REVIEW" && !session.transfer.connectionStatus) {
-    return;
+export function confirmDisposition(session: SessionState, code: string): { ok: boolean; reason?: string } {
+  if (code === "TRANSFERRED_COVERAGE_REVIEW") {
+    if (!session.transfer.connectionStatus || !/connected/i.test(session.transfer.connectionStatus)) {
+      return { ok: false, reason: "not_connected" };
+    }
+    session.disposition.confirmed = code;
+    return { ok: true };
   }
   if (code === "COMPLETED_SERVICING") {
+    if (
+      session.needs.some(
+        (n) =>
+          (n.kind === "unrecognized_request" || n.kind === "unsupported_work") &&
+          n.status !== "resolved",
+      )
+    ) {
+      return { ok: false, reason: "unanswered_work" };
+    }
     session.disposition.confirmed = code;
-    return;
+    return { ok: true };
   }
-  if (!session.transfer.connectionStatus) return;
+  if (!session.transfer.connectionStatus) return { ok: false, reason: "no_connection_status" };
   session.disposition.confirmed = code;
+  return { ok: true };
 }
 
 export function saveWrap(session: SessionState, wrap: string) {
   session.wrapDraft = wrap;
 }
 
+export function flagIssue(session: SessionState, note: string) {
+  session.flaggedIssues = [
+    ...session.flaggedIssues,
+    { at: new Date().toISOString(), note },
+  ];
+  appendJsonl(session.sessionId, { kind: "issue_flagged", note });
+}
+
+export function viewEvidence(session: SessionState) {
+  session.openEvidence = { ...session.nowCard };
+  appendJsonl(session.sessionId, {
+    kind: "evidence_opened",
+    title: session.nowCard.title,
+    sourceLabel: session.nowCard.sourceLabel,
+  });
+}
+
 function existingRequestCard(routed: Awaited<ReturnType<typeof routeQuery>>) {
-  const refill = routed.evidence.refill ?? {};
-  const id = (refill.requestId as string) ?? "DEMO-RF001";
+  if (routed.evidence.limitation || !routed.evidence.refill) {
+    return limitationCard(
+      "Refill lookup limitation",
+      routed.evidence.limitation || "No refill request was returned.",
+    );
+  }
+  const refill = routed.evidence.refill;
+  const id = refill.requestId as string | undefined;
   const pharmacy =
-    (refill.pharmacyName as string) ??
+    (refill.pharmacyName as string | undefined) ||
     ((refill.provider as { organizationName?: string } | undefined)
-      ?.organizationName ?? "the recorded pharmacy");
-  const status = (refill.fillStatus as string) ?? "received";
+      ?.organizationName);
+  const status = refill.fillStatus as string | undefined;
+  if (!id || !status) {
+    return limitationCard(
+      "Refill lookup limitation",
+      "Refill payload was incomplete; no status is claimed.",
+    );
+  }
   return {
     title: "Existing refill request",
-    body: `Existing request ${id} at ${pharmacy} is on file (fillStatus ${status}). This confirms the request exists; it does not establish that it is ready today. No new order is created.`,
+    body: `Existing request ${id}${pharmacy ? ` at ${pharmacy}` : ""} is on file (fillStatus ${status}). This confirms the request exists; it does not establish that it is ready today. No new order is created.`,
     sourceLabel: "System record · pharmacy · simulated",
   };
 }
 
 function freshReadyCard(routed: Awaited<ReturnType<typeof routeQuery>>) {
-  const fresh = routed.evidence.refillFresh ?? {};
+  if (routed.evidence.limitation || !routed.evidence.refillFresh) {
+    return limitationCard(
+      "Refill status limitation",
+      routed.evidence.limitation || "Fresh refill status was not returned.",
+    );
+  }
+  const fresh = routed.evidence.refillFresh;
   const pharmacy =
-    (fresh.pharmacyName as string) ??
-    ((routed.evidence.refill?.pharmacyName as string) ?? "the recorded pharmacy");
+    (fresh.pharmacyName as string | undefined) ||
+    (routed.evidence.refill?.pharmacyName as string | undefined);
+  const status = String(fresh.fillStatus ?? "");
+  const requestId =
+    (fresh.requestId as string | undefined) ||
+    (routed.evidence.refill?.requestId as string | undefined);
+  const ready = /ready/i.test(status);
   return {
     title: "Refill status (fresh read)",
-    body: `The pharmacy's current status says it is ready for pickup. Source: ${pharmacy} request ${(fresh.requestId as string) ?? (routed.evidence.refill?.requestId as string) ?? "the recorded request"}. Do not treat this as an order, collection, or pickup confirmation.`,
+    body: ready
+      ? `The pharmacy's current status is ${status}. Source: ${pharmacy ?? "the recorded pharmacy"} request ${requestId ?? "unreturned"}. Do not treat this as an order, collection, or pickup confirmation.`
+      : `The pharmacy's current status is ${status} (not ready for pickup). Source: ${pharmacy ?? "the recorded pharmacy"} request ${requestId ?? "unreturned"}.`,
     sourceLabel: "System record · pharmacy · simulated",
   };
 }
@@ -1032,7 +1257,14 @@ function applyPricingTriggerResult(
   const key = `${session.sessionId}:${line.id}`;
   if (appliedLunaTriggers.has(key) && trigger.modelCall) return;
   if (trigger.modelCall) appliedLunaTriggers.add(key);
-  const suppressRepeat = Boolean(trigger.fired && session.pricingExactDelivered);
+  const exactOff = session.pricingExactOffset;
+  const lineOff = line.offsetMs;
+  const suppressRepeat = Boolean(
+    trigger.fired &&
+      exactOff != null &&
+      lineOff != null &&
+      lineOff >= exactOff,
+  );
   pushTriggerTrace(session, {
     at: line.id,
     stage: trigger.stage,
@@ -1091,29 +1323,41 @@ export async function applyAdvocateObligations(
   const triggerCode = await classifyPricingTrigger(session, line);
   if (triggerCode.reason === "ambiguous_deferred_to_utterance_interpret") {
     void (async () => {
-      if (
-        testDelayTrigger &&
-        testDelayTrigger.eventId === line.id &&
-        testDelayTrigger.ms > 0
-      ) {
-        await new Promise((r) => setTimeout(r, testDelayTrigger.ms));
+      try {
+        if (
+          testDelayTrigger &&
+          testDelayTrigger.eventId === line.id &&
+          testDelayTrigger.ms > 0
+        ) {
+          await new Promise((r) => setTimeout(r, testDelayTrigger!.ms));
+        }
+        const luna = testTriggerResult
+          ? { ...testTriggerResult }
+          : await classifyLunaTrigger(session, line);
+        appendJsonl(session.sessionId, {
+          kind: "luna_trigger",
+          eventId: line.id,
+          ms: luna.latencyMs,
+          ttftMs: luna.ttftMs,
+          classification: luna.classification,
+          fired: luna.fired,
+          hedgeMs: "hedgeMs" in luna ? luna.hedgeMs : undefined,
+          saidAt,
+          offsetMs: stamped.offsetMs,
+        });
+        applyPricingTriggerResult(session, stamped, luna);
+        publishSession(session);
+      } catch {
+        applyPricingTriggerResult(session, stamped, {
+          stage: 2,
+          fired: false,
+          classification: "unable_to_verify",
+          latencyMs: 0,
+          modelCall: true,
+          reason: "luna_trigger_error",
+        });
+        publishSession(session);
       }
-      const luna = testTriggerResult
-        ? { ...testTriggerResult }
-        : await classifyLunaTrigger(session, line);
-      appendJsonl(session.sessionId, {
-        kind: "luna_trigger",
-        eventId: line.id,
-        ms: luna.latencyMs,
-        ttftMs: luna.ttftMs,
-        classification: luna.classification,
-        fired: luna.fired,
-        hedgeMs: "hedgeMs" in luna ? luna.hedgeMs : undefined,
-        saidAt,
-        offsetMs: stamped.offsetMs,
-      });
-      applyPricingTriggerResult(session, stamped, luna);
-      publishSession(session);
     })();
     return;
   }
@@ -1184,15 +1428,12 @@ async function applyInterpretation(
 
   if (
     interp.callTypeChange &&
-    interp.callTypeChange !== session.callType &&
-    interp.callTypeChange !== "Refill"
+    interp.callTypeChange !== session.callType
   ) {
-    if (interp.callTypeChange !== "Pricing") {
-      if (!isNewest) {
-        logFieldDiscard(session, line.id, "callType");
-      } else {
-        session.callType = interp.callTypeChange;
-      }
+    if (!isNewest) {
+      logFieldDiscard(session, line.id, "callType");
+    } else {
+      session.callType = interp.callTypeChange;
     }
   }
 
@@ -1207,16 +1448,14 @@ async function applyInterpretation(
       sourceUtteranceId: line.id,
     });
     focus("refill_status", "verify → check existing request");
-    const routed =
-      syntheticRefillRoute(session, "existing") ??
-      (await routeQuery({
+    const routed = await routeQuery({
         origin,
         need: "refill_status",
         memberId,
         planId,
         overlay: session.overlay,
         refillMode: "existing",
-      }));
+      });
     pushRouterTrace(session, {
       routesUsed: routed.routesUsed,
       latencyMs: routed.latencyMs,
@@ -1231,27 +1470,29 @@ async function applyInterpretation(
       flowStep: "verify → check existing request",
       answer: card,
     });
-    showNow(session, card);
+    showNow(session, card, { priority: "answer", needKind: "refill_status" });
   }
 
   if (interp.historicalAsked) {
-    upsertNeed(session, "historical_price", {
+    const histPatch: Parameters<typeof upsertNeed>[2] = {
       status: "requested",
       guidance: "preparing",
       flowStep: "identify matching purchases → retrieve applied policy/evidence",
-      queryText: line.text,
       sourceUtteranceId: line.id,
-    });
+    };
+    if (line.speaker === "member") histPatch.queryText = line.text;
+    upsertNeed(session, "historical_price", histPatch);
     if (interp.refillCheck === "none" && !interp.returnToHistorical) {
       focus(
         "historical_price",
         "identify matching purchases → retrieve applied policy/evidence",
       );
     }
-    const jobKey = `${session.sessionId}:historical`;
-    if (!historicalJobs.has(jobKey)) {
-      historicalJobs.add(jobKey);
-      void runHistorical(session, origin, line.text, {
+    const q = getNeed(session, "historical_price")?.queryText ?? (line.speaker === "member" ? line.text : "");
+    const jobKey = `${session.sessionId}:historical:${q}`;
+    if (q && historicalJobs.get(jobKey) !== q) {
+      historicalJobs.set(jobKey, q);
+      void runHistorical(session, origin, q, {
         injectedDelayMs: session.injectedDelayMs,
         recheck: false,
       });
@@ -1275,16 +1516,14 @@ async function applyInterpretation(
       "refill_status",
       "check existing request → explain status (fresh)",
     );
-    const routed =
-      syntheticRefillRoute(session, "fresh_status") ??
-      (await routeQuery({
+    const routed = await routeQuery({
         origin,
         need: "refill_status",
         memberId,
         planId,
         overlay: session.overlay,
         refillMode: "fresh_status",
-      }));
+      });
     pushRouterTrace(session, {
       routesUsed: routed.routesUsed,
       latencyMs: routed.latencyMs,
@@ -1297,10 +1536,10 @@ async function applyInterpretation(
     upsertNeed(session, "refill_status", {
       status: "active",
       guidance: "ready",
-      flowStep: "explain status (fresh READY_FOR_PICKUP)",
+      flowStep: "explain status (fresh read)",
       answer: card,
     });
-    showNow(session, card);
+    showNow(session, card, { priority: "answer", needKind: "refill_status" });
   }
 
   if (commitConsent && interp.communicatedRefillReadiness) {
@@ -1327,17 +1566,20 @@ async function applyInterpretation(
     }
   }
 
-  if (commitConsent && interp.retailHesitation && !session.optionalWorkSuppressed) {
+  if (commitConsent && interp.retailHesitation && memberConsentLine(line) && !session.optionalWorkSuppressed) {
+    const body =
+      session.prefetch?.objection?.body ||
+      "Governed objection article was not retrieved.";
     session.recommendation = {
       kind: "objection_retail",
       title: "Governed hesitation response",
-      body: OBJECTION_BODY,
+      body,
       sourceLabel: "Governed guidance · scripting · simulated",
       status: "pending",
     };
   }
 
-  if (commitConsent && interp.firmRefusal) {
+  if (commitConsent && interp.firmRefusal && memberConsentLine(line)) {
     session.optionalWorkSuppressed = true;
     session.recommendation = null;
     session.consent.comparison = "none";
@@ -1351,10 +1593,37 @@ async function applyInterpretation(
 
   const wantsConsent =
     interp.comparisonConsent !== "none" || interp.enrollmentConsent !== "none";
-  if (commitConsent && wantsConsent && !allowConsent) {
-    logFieldDiscard(session, line.id, "consent");
+  if (!memberConsentLine(line)) {
+    if (wantsConsent) logFieldDiscard(session, line.id, "consent");
   }
-  const mayConsent = commitConsent && allowConsent;
+  if (commitConsent && wantsConsent && memberConsentLine(line) && !allowConsent) {
+    logFieldDiscard(session, line.id, "consent");
+    const lastAdv =
+      [...session.transcript]
+        .reverse()
+        .find((t) => t.speaker === "advocate")?.text ?? "";
+    const codeWait = classifyComparisonConsent({
+      rules: session.utteranceRules,
+      speaker: line.speaker,
+      text: line.text,
+      stability: line.stability,
+      optionalWorkSuppressed: session.optionalWorkSuppressed,
+      scopedPending: Boolean(session.consent.clarification) ||
+        matchesAny(session.utteranceRules?.scopedComparisonAsk, lastAdv),
+      lastAdvocate: lastAdv,
+    });
+    if (codeWait === "wait" && session.consent.comparison === "none") {
+      const medicines =
+        joinMedicineNames(session) || "your existing medicines";
+      session.consent.clarification = clarifyInterest({ medicines });
+      showNow(session, {
+        title: "Clarify comparison interest",
+        body: session.consent.clarification,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      }, { priority: "nudge" });
+    }
+  }
+  const mayConsent = commitConsent && allowConsent && memberConsentLine(line);
 
   if (
     mayConsent &&
@@ -1401,16 +1670,15 @@ async function applyInterpretation(
       session.consent.comparison = "absolute_yes";
       session.consent.clarification = null;
     } else if (code === "wait" && session.consent.comparison !== "absolute_yes") {
-      session.consent.comparison = "absolute_yes";
-      session.consent.clarification = null;
-      if (
-        !interp.quotePharmacy &&
-        !interp.quotePharmacyCorrection &&
-        session.quotes.length === 0
-      ) {
-        await loadQuotes(session, origin);
-      }
-      recordNeedPath(session, line.id, "prospective_comparison", "luna");
+      session.consent.comparison = "hedge";
+      session.consent.clarification = clarifyInterest({
+        medicines: joinMedicineNames(session) || "your existing medicines",
+      });
+      showNow(session, {
+        title: "Clarify comparison interest",
+        body: session.consent.clarification,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      }, { priority: "nudge" });
     }
   }
 
@@ -1440,7 +1708,7 @@ async function applyInterpretation(
     }
   }
 
-  if (commitConsent && interp.electionMetforminOnly) {
+  if (commitConsent && interp.electionMetforminOnly && memberConsentLine(line) && isNewest) {
     const meds = interp.electedMedications;
     if (meds.length === 0) {
       showNow(session, {
@@ -1456,10 +1724,7 @@ async function applyInterpretation(
         sourceUtteranceId: line.id,
       });
       focus("service_election", "enroll/decline — scoped election");
-      session.enrollment.medications = meds;
-      session.enrollment.readback = sessionEnrollmentReadback(session);
-      session.enrollment.confirmed = false;
-      session.enrollment.submitted = false;
+      setEnrollmentMedications(session, meds);
       showNow(session, {
         title: "Enrollment draft — scoped",
         body: session.enrollment.readback,
@@ -1472,6 +1737,11 @@ async function applyInterpretation(
     session.consent.enrollment = "hedge";
     session.consent.clarification =
       "To confirm: do you want to submit the enrollment we just read back?";
+    showNow(session, {
+      title: "Clarify enrollment",
+      body: session.consent.clarification,
+      sourceLabel: "Governed guidance · scripting · simulated",
+    }, { priority: "nudge" });
   }
 
   if (
@@ -1479,26 +1749,102 @@ async function applyInterpretation(
     interp.enrollmentConsent === "absolute_yes" &&
     !session.enrollment.withdrawn
   ) {
-    session.consent.enrollment = "absolute_yes";
-    session.consent.clarification = null;
+    const decision = classifyEnrollmentConsent({
+      rules: session.utteranceRules,
+      speaker: line.speaker,
+      text: line.text,
+      stability: line.stability,
+      draftMedications: session.enrollment.medications,
+      readback: session.enrollment.readback,
+      readbackPending: readbackPending(session),
+    });
+    if (decision === "absolute_yes") {
+      session.consent.enrollment = "absolute_yes";
+      session.consent.enrollmentScopeKey = normalizeScopeKey(
+        session.enrollment.medications,
+      );
+      session.consent.enrollmentUtteranceId = line.id;
+      session.consent.clarification = null;
+    } else if (decision === "hedge" || decision === "clarify") {
+      session.consent.enrollment = "hedge";
+      session.consent.clarification =
+        "To confirm: do you want to submit the enrollment we just read back?";
+      showNow(session, {
+        title: "Clarify enrollment",
+        body: session.consent.clarification,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      }, { priority: "nudge" });
+    }
   }
 
-  if (commitConsent && interp.withdrawEnrollment) {
+  if (commitConsent && interp.withdrawEnrollment && memberConsentLine(line)) {
     applyHumanWithdrawEnrollment(session);
   }
 
   if (interp.coverageAsked) {
-    await loadCoverage(session, origin, isNewest, line.id);
+    const drug = namedMedicationsInText(line.text)[0];
+    await loadCoverage(session, origin, isNewest, line.id, drug);
   }
 
   if (interp.advocateOfferedTransfer && session.coverage) {
     if (session.closing === "pending_later") session.closing = "due_now";
   }
 
-  if (interp.memberAgreesTransfer && session.coverage) {
+  if (interp.memberAgreesTransfer && memberConsentLine(line) && session.coverage) {
     upsertNeed(session, "coverage_status", {
       flowStep: "member agreed → awaiting human destination confirm",
     });
+  }
+
+  if (interp.callTypeChange === "Do-not-call") {
+    upsertNeed(session, "unsupported_work", {
+      status: "unresolved_gap",
+      guidance: "invalidated",
+      flowStep: "unsupported request — no DNC workflow in this prototype",
+      sourceUtteranceId: line.id,
+    });
+    showNow(
+      session,
+      limitationCard(
+        "Unsupported work",
+        "Do-not-call / list-removal is out of scope for this prototype. No fake DNC workflow is started.",
+      ),
+      { priority: "answer", needKind: "unsupported_work" },
+    );
+  }
+
+  if (
+    memberConsentLine(line) &&
+    (/\?/.test(line.text) ||
+      /^(how|what|why|when|can you|could you|is my)\b/i.test(line.text.trim()))
+  ) {
+    const servicing =
+      interp.refillCheck !== "none" ||
+      interp.historicalAsked ||
+      interp.ninetyDayAsked ||
+      interp.coverageAsked ||
+      Boolean(interp.quotePharmacy) ||
+      interp.electionMetforminOnly ||
+      interp.comparisonConsent !== "none" ||
+      interp.enrollmentConsent !== "none";
+    const covered = session.needs.some((n) => n.sourceUtteranceId === line.id);
+    if (!servicing && !covered && !interp.smallTalkOnly) {
+      upsertNeed(session, "unrecognized_request", {
+        status: "unresolved_gap",
+        guidance: "invalidated",
+        flowStep: "member question produced no supported need",
+        queryText: line.text,
+        sourceUtteranceId: line.id,
+      });
+      showNow(
+        session,
+        limitationCard(
+          "Unrecognized request",
+          "A member question was heard that did not map to a supported need. Silence must not hide it. COMPLETED_SERVICING is blocked until this is addressed.",
+        ),
+        { priority: "answer", needKind: "unrecognized_request" },
+      );
+    }
   }
 
   if (commitConsent) await maybeCompleteServicing(session);
@@ -1551,7 +1897,23 @@ export async function prefetchMemberRecords(
     classifications: hist.evidence.classifications,
     fast90: edu.evidence.fast90,
     serviceGuide: null,
+    objection: null,
   };
+  const objResp = await fetch(
+    `${origin}/api/simulated/scripting/articles/DEMO-OBJECTION-RETAIL-v1`,
+    { cache: "no-store" },
+  );
+  if (objResp.ok) {
+    const objJson = (await objResp.json()) as {
+      data?: { articleId?: string; body?: string };
+    };
+    if (objJson.data?.body) {
+      session.prefetch.objection = {
+        articleId: objJson.data.articleId ?? "DEMO-OBJECTION-RETAIL-v1",
+        body: objJson.data.body,
+      };
+    }
+  }
   const svcResp = await fetch(
     `${origin}/api/simulated/scripting/articles/DEMO-SERVICE-v1`,
     { cache: "no-store" },
@@ -1659,17 +2021,34 @@ export async function applyGovernedUtteranceRules(
   if (
     line.speaker === "member" &&
     (line.stability === "final" || line.stability === "corrected") &&
+    isDirectNamedQuoteAsk(text)
+  ) {
+    session.consent.comparison = "absolute_yes";
+    session.consent.comparisonScopeKey = "named_quote";
+    session.consent.comparisonUtteranceId = line.id ?? null;
+    if (session.pricing === "not_applicable") session.pricing = "due_now";
+    const ph = /\blakeview\b/i.test(text)
+      ? "lakeview"
+      : /\boak street\b/i.test(text)
+        ? "oak-street"
+        : /\bcenterwell\b/i.test(text)
+          ? "centerwell"
+          : undefined;
+    const drug = namedMedicationsInText(text)[0];
+    await requestQuotes(session, origin, ph, drug);
+  }
+
+  if (
+    line.speaker === "member" &&
+    (line.stability === "final" || line.stability === "corrected") &&
     matchesAll(rules?.splitElection, text)
   ) {
     const deliveryMatch = text.match(
       /delivery for (?:the )?([^.]+?)(?:\.|$)/i,
     );
-    const named = deliveryMatch?.[1]?.replace(/\bonly\b/i, "").trim();
-    if (named) {
-      session.enrollment.medications = [named];
-      session.enrollment.readback = sessionEnrollmentReadback(session);
-      session.enrollment.confirmed = false;
-      session.enrollment.submitted = false;
+    const fromClause = namedMedicationsInText(deliveryMatch?.[1] ?? "");
+    if (fromClause.length) {
+      setEnrollmentMedications(session, fromClause);
       upsertNeed(session, "service_election", {
         status: "active",
         guidance: "ready",
@@ -1685,11 +2064,34 @@ export async function applyGovernedUtteranceRules(
   if (
     line.speaker === "member" &&
     session.enrollment.medications.length > 0 &&
-    !session.enrollment.withdrawn &&
-    matchesAny(rules?.enrollmentAbsolute, text)
+    !session.enrollment.withdrawn
   ) {
-    session.consent.enrollment = "absolute_yes";
-    session.consent.clarification = null;
+    const decision = classifyEnrollmentConsent({
+      rules,
+      speaker: line.speaker,
+      text,
+      stability: line.stability,
+      draftMedications: session.enrollment.medications,
+      readback: session.enrollment.readback,
+      readbackPending: readbackPending(session),
+    });
+    if (decision === "absolute_yes") {
+      session.consent.enrollment = "absolute_yes";
+      session.consent.enrollmentScopeKey = normalizeScopeKey(
+        session.enrollment.medications,
+      );
+      session.consent.enrollmentUtteranceId = line.id ?? null;
+      session.consent.clarification = null;
+    } else if (decision === "hedge" || decision === "clarify") {
+      session.consent.enrollment = "hedge";
+      session.consent.clarification =
+        "To confirm: do you want to submit the enrollment we just read back?";
+      showNow(session, {
+        title: "Clarify enrollment",
+        body: session.consent.clarification,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      }, { priority: "nudge" });
+    }
   }
   if (line.speaker === "member" && matchesAny(rules?.withdraw, text)) {
     applyHumanWithdrawEnrollment(session);
@@ -1761,57 +2163,78 @@ export async function processTranscriptEvent(
     }
   }
   await applyAdvocateObligations(session, line);
-  if (line.stability === "uncertain") return;
-  if (session.identityStatus !== "VALID") return;
-  await applyGovernedUtteranceRules(session, origin, line);
-  void (async () => {
-    if (!interpP) return;
-    const interp = await interpP;
-    if (
-      testDelayApply &&
-      testDelayApply.eventId === line.id &&
-      testDelayApply.ms > 0
-    ) {
-      await new Promise((r) => setTimeout(r, testDelayApply.ms));
-    }
-    appendJsonl(session.sessionId, {
-      kind: "luna_interpret",
-      eventId: line.id,
-      ms: interp.ms,
-      ok: interp.ok,
-      n90: interp.ninetyDayAsked,
-      cc: interp.comparisonConsent,
-      ha: interp.historicalAsked,
-      qp: interp.quotePharmacy,
-      applyMode,
-      seq,
-      raw: interp.raw.slice(0, 180),
-    });
-    session.lastInterpretation = {
-      eventId: line.id,
-      ...interp,
-      raw: interp.raw.slice(0, 500),
-    };
-    if (!interp.ok) {
-      if (line.stability !== "partial") {
-        showNow(session, {
-          title: "Interpretation unavailable",
-          body: "Fast-tier interpretation did not return. No member conclusion was invented.",
-          sourceLabel: "Governed guidance · scripting · simulated",
-        });
-        publishSession(session);
-      }
-      return;
-    }
+  const markApplied = () => {
     if (line.stability === "partial") return;
-    await applyInterpretation(
-      session,
-      origin,
-      line,
-      interp,
-      line.stability === "final" || line.stability === "corrected",
-      { seq, consentAnchor },
-    );
+    session.lastAppliedEventId = line.id;
     publishSession(session);
+  };
+  if (line.stability === "uncertain") {
+    markApplied();
+    return;
+  }
+  if (session.identityStatus !== "VALID") {
+    markApplied();
+    return;
+  }
+  await applyGovernedUtteranceRules(session, origin, line);
+  if (!interpP) {
+    markApplied();
+    return;
+  }
+  if (line.speaker === "advocate") markApplied();
+  void (async () => {
+    try {
+      if (!interpP) return;
+      const interp = await interpP;
+      if (
+        testDelayApply &&
+        testDelayApply.eventId === line.id &&
+        testDelayApply.ms > 0
+      ) {
+        await new Promise((r) => setTimeout(r, testDelayApply!.ms));
+      }
+      appendJsonl(session.sessionId, {
+        kind: "luna_interpret",
+        eventId: line.id,
+        ms: interp.ms,
+        ok: interp.ok,
+        n90: interp.ninetyDayAsked,
+        cc: interp.comparisonConsent,
+        ha: interp.historicalAsked,
+        qp: interp.quotePharmacy,
+        usage: interp.usage,
+        applyMode,
+        seq,
+        raw: interp.raw.slice(0, 180),
+      });
+      session.lastInterpretation = {
+        eventId: line.id,
+        ...interp,
+        raw: interp.raw.slice(0, 500),
+      };
+      if (!interp.ok) {
+        if (line.stability !== "partial") {
+          showNow(session, {
+            title: "Interpretation unavailable",
+            body: "Fast-tier interpretation did not return. No member conclusion was invented.",
+            sourceLabel: "Governed guidance · scripting · simulated",
+          });
+          publishSession(session);
+        }
+        return;
+      }
+      if (line.stability === "partial") return;
+      await applyInterpretation(
+        session,
+        origin,
+        line,
+        interp,
+        line.stability === "final" || line.stability === "corrected",
+        { seq, consentAnchor },
+      );
+      publishSession(session);
+    } finally {
+      if (line.speaker !== "advocate") markApplied();
+    }
   })();
 }

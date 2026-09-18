@@ -1,21 +1,24 @@
 # STATUS
 
-**Milestone:** M3. Freeze except rehearsal defects.
+**Milestone:** M3. Review defects (F1–F35) patched; T01/C06 must be re-walked.
 **Last updated:** 18 Sep 2026
 
 ## Works
-- Per-field luna apply. T01 `00d1a1b6-…` pass. Trigger always applies (priority + hedge kept).
-- Stale discard T01 after: callType 2 / focus 4 / consent 4 / trigger 0. Before `570c747a-…`: 0.
-- Failed compact T01 `f65459fe-…` kept. Consent/C01/stale tests pass.
+- Consent: member+final only; enrollment bound to scopeKey + pending matching readback.
+- Stage-1 amounts are currency-marked; comparatives load from the registry.
+- Greeting/closing write-once after exact; paraphrase needs overlap.
+- `showNow` due-now/nudge outranks answers. Fresh refill/coverage lookup; no evidence `??` literals.
+- Greeting/closing/pricing stitch adjacent same-speaker finals of one reading (§12.4).
+- Driver paint waits `lastAppliedEventId` (member finals wait interpret apply, not HTTP ack).
+- Luna interpret: priority tier, prompt cache key, padded static prefix, early-stop on valid JSON.
 
 ## Broken / incomplete
-- C01 priority max **1176 MISS** (2/20). Interpret **1160 / 1555 MISS** vs 1s.
-- Historical +2800 SEARCH still **MISS** 5s.
+- Interactive T01 + C06 re-tick not done. Live T01/replays not re-run in this session.
 
 ## Next three tasks
-1. Wait for code review; no further changes unless asked.
-2. Present from `SUBMISSION.md` + `runs/TIER2_EVIDENCE.md`.
-3. Rehearsal only if a defect is found.
+1. Interactive T01 walk; keep jsonl; re-tick `tests/c06_checklist.md`.
+2. `RUN_T01=1` and the six replays against localhost.
+3. Confirm T01 wrap contents, `deferred_valid`, and `recheck:true`.
 
 ## Open questions for Harish
-- Keep trigger priority given 2× token price and 2/20 still over 1s?
+- None on product behavior. C06 still needs your T01 presenter walk.

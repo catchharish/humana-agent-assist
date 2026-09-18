@@ -64,7 +64,9 @@ export type NeedKind =
   | "prospective_comparison"
   | "service_education"
   | "service_election"
-  | "coverage_status";
+  | "coverage_status"
+  | "unrecognized_request"
+  | "unsupported_work";
 
 export type NeedRecord = {
   kind: NeedKind;
@@ -134,10 +136,20 @@ export type SessionState = {
       displayName: string;
       body: string;
     } | null;
+    objection: {
+      articleId: string;
+      body: string;
+    } | null;
   } | null;
   callType: string;
   currentNeed: string;
   flowStep: string;
+  nowPriority: number;
+  greetingLocked: boolean;
+  closingLocked: boolean;
+  greetingBuffer: { speaker: string; parts: string[]; lastId: string } | null;
+  greetingDeadlineAt: number | null;
+  pricingExactOffset: number | null;
   identityStatus: string;
   auth: AuthResult | null;
   member: MemberBrief | null;
@@ -157,7 +169,11 @@ export type SessionState = {
     waitingForFocus?: boolean;
   };
   recommendation: {
-    kind: "optional_comparison" | "objection_retail" | "warm_transfer";
+    kind:
+      | "optional_comparison"
+      | "objection_retail"
+      | "warm_transfer"
+      | "lead_review";
     title: string;
     body: string;
     sourceLabel: string;
@@ -180,6 +196,10 @@ export type SessionState = {
     comparison: "none" | "hedge" | "absolute_yes";
     enrollment: "none" | "hedge" | "absolute_yes";
     clarification: string | null;
+    comparisonScopeKey: string | null;
+    enrollmentScopeKey: string | null;
+    comparisonUtteranceId: string | null;
+    enrollmentUtteranceId: string | null;
   };
   nudge: {
     template: string;
@@ -200,6 +220,7 @@ export type SessionState = {
     returnedScope: string[] | null;
     scopeOk: boolean | null;
     withdrawn: boolean;
+    scopeChangedAt: number;
   };
   coverage: {
     caseId: string;
@@ -210,6 +231,8 @@ export type SessionState = {
   handoffDraft: string;
   wrapDraft: string;
   wrapStable: string;
+  flaggedIssues: Array<{ at: string; note: string }>;
+  openEvidence: { title: string; body: string; sourceLabel: string } | null;
   transfer: {
     destinationConfirmed: boolean;
     connectionStatus: string | null;
@@ -230,6 +253,7 @@ export type SessionState = {
   lastTimings: TimingRecord[];
   lunaSeq: number;
   lastInterpretation: Record<string, unknown> | null;
+  lastAppliedEventId: string | null;
   diagnostics: {
     disclosureFetch: string;
     warmup: string;

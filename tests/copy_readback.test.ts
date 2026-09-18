@@ -7,7 +7,6 @@ import {
   outcomeWithout,
   transferOffer,
   CLARIFY_INTEREST,
-  OBJECTION_BODY,
 } from "@/lib/copy";
 import { mintEnrollmentToken, consumeEnrollmentToken } from "@/lib/enrollmentToken";
 
@@ -33,7 +32,7 @@ function memberFacingSamples() {
       outcomeWith({ memberGiven: "Harry" }),
       transferOffer({ caseId: "DEMO-CVR001", requestedMedication: "Jardiance" }),
       CLARIFY_INTEREST,
-      OBJECTION_BODY,
+      "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is.",
     ],
   };
 }

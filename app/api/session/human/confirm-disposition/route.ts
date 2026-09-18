@@ -12,11 +12,18 @@ export async function POST(request: Request) {
   if (!session) {
     return NextResponse.json({ error: "unknown_session" }, { status: 404 });
   }
-  confirmDisposition(session, body.code);
+  const result = confirmDisposition(session, body.code);
   appendJsonl(session.sessionId, {
-    kind: "disposition_confirmed",
+    kind: result.ok ? "disposition_confirmed" : "disposition_refused",
     code: session.disposition.confirmed,
     recommended: session.disposition.recommended,
+    reason: result.reason ?? null,
   });
+  if (!result.ok) {
+    return NextResponse.json(
+      { error: result.reason ?? "refused", session: publicState(session) },
+      { status: 400 },
+    );
+  }
   return NextResponse.json({ session: publicState(session) });
 }

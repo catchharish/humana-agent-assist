@@ -30,6 +30,7 @@ export async function POST(request: Request) {
     headers: {
       "Content-Type": "application/json",
       "x-enrollment-token": body.token,
+      "x-session-id": body.sessionId,
     },
     body: JSON.stringify({
       memberId: session.member?.memberId,
@@ -51,7 +52,17 @@ export async function POST(request: Request) {
       { status: post.status },
     );
   }
-  const id = json.data?.enrollmentId ?? "DEMO-ENR001";
+  const id = json.data?.enrollmentId;
+  if (!id) {
+    appendJsonl(session.sessionId, {
+      kind: "enrollment_submit_rejected",
+      error: "missing_enrollment_id",
+    });
+    return NextResponse.json(
+      { error: "missing_enrollment_id", session: publicState(session) },
+      { status: 502 },
+    );
+  }
   const verify = await fetch(
     `${origin}/api/simulated/pharmacy/enrollments/${id}`,
     {
@@ -69,17 +80,33 @@ export async function POST(request: Request) {
   const got = [...returned].map((s) => s.toLowerCase()).sort();
   const scopeOk =
     expected.length === got.length && expected.every((x, i) => x === got[i]);
+  const returnedId = verified.data?.enrollmentId;
+  if (!returnedId) {
+    return NextResponse.json(
+      { error: "verify_incomplete", session: publicState(session) },
+      { status: 502 },
+    );
+  }
   session.enrollment.submitted = true;
-  session.enrollment.resultId = verified.data?.enrollmentId ?? id;
+  session.enrollment.resultId = returnedId;
   session.enrollment.returnedScope = returned;
   session.enrollment.scopeOk = scopeOk;
   session.nowCard = {
     title: scopeOk ? "Enrollment result" : "Enrollment scope mismatch",
     body: scopeOk
-      ? `${session.enrollment.resultId} is active for ${scope.join(", ") || "the confirmed scope"}. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill.`
-      : `Returned scope ${(returned.join(", ") || "empty")} does not match the confirmed request ${scope.join(", ") || "(empty)"}. Not a success.`,
+      ? `${session.enrollment.resultId} is active for ${scope.join(", ")}. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill.`
+      : `Returned scope ${returned.join(", ") || "empty"} does not match the confirmed request ${scope.join(", ")}. Not a success.`,
     sourceLabel: "System record · pharmacy · simulated",
   };
+  if (!scopeOk) {
+    session.recommendation = {
+      kind: "lead_review",
+      title: "Lead review — wrong returned scope",
+      body: "The enrollment record does not match the confirmed medication scope. Offer a lead review. Do not treat this as success.",
+      sourceLabel: "System record · pharmacy · simulated",
+      status: "pending",
+    };
+  }
   upsertNeedResolved(session);
   appendJsonl(session.sessionId, {
     kind: "enrollment_result",

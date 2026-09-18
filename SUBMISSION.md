@@ -94,7 +94,7 @@ Driver injects transcript, system events, and human clicks. It **never** injects
 | C02 token/scope, pending transfer ≠ connection, HTTP enroll 403 | Pass |
 | C03 no member before auth; retrieved instructions cannot mint/submit | Pass |
 | C05 amount/entity samples (false plan-change, false approval, coercive enroll rejected) | Pass |
-| C06 UI (Resume/auth, due-now title, human Confirm disposition) | Walked on T02A and T04B |
+| C06 UI (Resume/auth, due-now title, human Confirm disposition, View evidence) | Must be re-ticked on an interactive T01 after the 18 Sep review fixes. Prior ticks were T02A/T04B only. |
 | Replays T02A, T03A, T03B, T06A, T08B | Pass |
 | T04B Lakeview `$60` not relabeled as Oak Street | Failed once; pass after invalidation fix |
 | Automated T01 | Pass ~90s |
@@ -130,7 +130,7 @@ Exact wording, scope, identity, and human-only actions **cannot** be weakened to
 
 It shows up three times:
 
-1. **Screen.** Due-now wording takes Now. A ready historical metformin answer waits as an open need (“Answer ready”) while today’s refill is primary (beats 4–5). That deferred answer is the demo of the tradeoff; we would not cut it.
+1. **Screen.** Due-now wording takes Now. A ready historical metformin answer waits as an open need (“Answer ready”) while today’s refill is primary (beats 4–5). The automated driver no longer blocks the refill interrupt on the historical paint, so a passing T01 must show `deferred_valid` and a later `recheck:true` trace. That deferred answer is the demo of the tradeoff; we would not cut it.
 2. **Call.** Optional comparison waits for a natural point and an Offer click. It may never be offered. Firm refusal stops the optional branch (T03B).
 3. **Roadmap.** Wording verification is live in Phase 1; NBA/rebuttals start in shadow.
 
@@ -168,7 +168,7 @@ Rejected paths we did not sneak back in: conversion-led funnel; beat-keyed answe
 - **Members:** Harry interrupts, prefers retail, chooses metformin only — authored case, not a mix rate. Missing evidence narrows the answer; no clinical fill-in.
 - **Advocates:** Early wrong suggestions cost trust faster than later accuracy restores it (hypothesis for shadow-first). Focused screen helps appropriate reliance (hypothesis until users show it).
 - **Data / operations:** Desktop can host this view (unverified). Late exact is better than none (Legal/QA decides; if not, lead measure reverts to total failures). Fictional roles/queues.
-- **Constraints:** Timed text + simulated systems demonstrate behavior, not production ASR or throughput. 1/2/5/8s are prototype targets; luna warm-path was measured with honest 1s misses on a keep-alive sample (median 899 ms, 4/10 over 1s). No savings percentage is supplied.
+- **Constraints:** Timed text + simulated systems demonstrate behavior, not production ASR or throughput. 1/2/5/8s are prototype targets. The 1-second target is met only by code paths (stage-1 triggers, exactness, governed regex). Accepted-run `00d1a1b6` luna interprets: 23/23 finals over 1s (median 1327 ms, max 3967 ms). Do not cite the earlier 16-token warm-up median of 899 ms as the accepted-run figure. No savings percentage is supplied.
 
 ### Experience that shaped this
 

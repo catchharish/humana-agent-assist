@@ -50,6 +50,7 @@ export type RouterEvidence = {
   chargesEstablished: boolean;
   causeSupported: boolean;
   missing: string[];
+  limitation?: string;
   fast90: {
     articleId: string;
     body: string;
@@ -75,9 +76,29 @@ export type RouterResult = {
   evidence: RouterEvidence;
 };
 
-async function getJson(url: string, init?: RequestInit) {
-  const res = await fetch(url, { cache: "no-store", ...init });
-  return res.json() as Promise<{ data?: Record<string, unknown> }>;
+async function getJson(
+  url: string,
+  init?: RequestInit,
+): Promise<{ ok: boolean; status: number; data: Record<string, unknown> | null }> {
+  try {
+    const res = await fetch(url, { cache: "no-store", ...init });
+    if (!res.ok) {
+      return { ok: false, status: res.status, data: null };
+    }
+    const json = (await res.json()) as { data?: Record<string, unknown> };
+    return { ok: true, status: res.status, data: json.data ?? null };
+  } catch {
+    return { ok: false, status: 0, data: null };
+  }
+}
+
+function classForClaim(claim: ClaimRow, rows: ClassRow[]): ClassRow | undefined {
+  const pid = claim.pharmacy?.pharmacyId;
+  return rows.find(
+    (r) =>
+      (!pid || r.pharmacyId === pid) &&
+      (!claim.dateOfService || r.asOfDate === claim.dateOfService),
+  );
 }
 
 export async function routeQuery(args: {
@@ -96,6 +117,9 @@ export async function routeQuery(args: {
   refillMode?: "existing" | "fresh_status";
   injectedDelayMs?: number;
   quotePharmacyId?: string;
+  drugName?: string;
+  audience?: string;
+  asOfDate?: string;
 }): Promise<RouterResult> {
   const t0 = performance.now();
   const headers: Record<string, string> = {};
@@ -117,37 +141,56 @@ export async function routeQuery(args: {
     quotes: [],
     coverage: null,
   };
+  const audience = args.audience ?? "pharmacy_ops";
 
   if (args.need === "refill_status") {
     routesUsed.push("structured_lookup");
-    const existing = await getJson(
-      `${args.origin}/api/simulated/pharmacy/refill-requests/DEMO-RF001`,
+    const list = await getJson(
+      `${args.origin}/api/simulated/pharmacy/refill-requests?memberId=${encodeURIComponent(args.memberId)}`,
       { headers },
     );
-    evidence.refill = existing.data ?? null;
-    const rid = (existing.data?.requestId as string) || "DEMO-RF001";
-    retrieved.push({ id: rid, sourceSystem: "pharmacy" });
-    const pharmacyId = existing.data?.pharmacyId as string | undefined;
-    if (pharmacyId) {
-      const pharmacy = await getJson(
-        `${args.origin}/api/simulated/provider/pharmacies/${pharmacyId}`,
-        { headers },
-      );
-      retrieved.push({
-        id: pharmacyId,
-        sourceSystem: "provider",
-      });
-      if (evidence.refill) {
-        evidence.refill = { ...evidence.refill, provider: pharmacy.data };
+    if (!list.ok || !list.data) {
+      evidence.limitation = `Pharmacy refill lookup failed (${list.status}).`;
+      evidence.missing.push("refill_request");
+    } else {
+      const rows = (list.data.requests as Array<Record<string, unknown>>) ?? [];
+      const match =
+        rows.find((r) =>
+          args.drugName
+            ? String(r.drugName ?? "")
+                .toLowerCase()
+                .includes(args.drugName.toLowerCase())
+            : true,
+        ) ?? rows[0];
+      evidence.refill = match ?? null;
+      if (match) {
+        const rid = String(match.requestId ?? "");
+        retrieved.push({ id: rid, sourceSystem: "pharmacy" });
+        const pharmacyId = match.pharmacyId as string | undefined;
+        if (pharmacyId) {
+          const pharmacy = await getJson(
+            `${args.origin}/api/simulated/provider/pharmacies/${pharmacyId}`,
+            { headers },
+          );
+          if (pharmacy.ok) {
+            retrieved.push({ id: pharmacyId, sourceSystem: "provider" });
+            evidence.refill = { ...match, provider: pharmacy.data };
+          }
+        }
+        if (args.refillMode === "fresh_status" && rid) {
+          const fresh = await getJson(
+            `${args.origin}/api/simulated/pharmacy/refill-requests/${rid}/status`,
+            { headers },
+          );
+          if (!fresh.ok || !fresh.data) {
+            evidence.limitation = `Fresh refill status failed (${fresh.status}).`;
+            evidence.missing.push("refill_status");
+          } else {
+            evidence.refillFresh = fresh.data;
+            retrieved.push({ id: `${rid}:status`, sourceSystem: "pharmacy" });
+          }
+        }
       }
-    }
-    if (args.refillMode === "fresh_status") {
-      const fresh = await getJson(
-        `${args.origin}/api/simulated/pharmacy/refill-requests/DEMO-RF001/status`,
-        { headers },
-      );
-      evidence.refillFresh = fresh.data ?? null;
-      retrieved.push({ id: `${rid}:status`, sourceSystem: "pharmacy" });
     }
   }
 
@@ -158,14 +201,27 @@ export async function routeQuery(args: {
       { headers },
     );
     evidence.claims = (claims.data?.claims as ClaimRow[]) ?? [];
+    if (!claims.ok) {
+      evidence.limitation = `Claims lookup failed (${claims.status}).`;
+    }
     for (const c of evidence.claims) {
       retrieved.push({ id: c.claimId, sourceSystem: "claims" });
     }
-    const net = await getJson(
-      `${args.origin}/api/simulated/benefits/plans/${args.planId}/pharmacy-network`,
-      { headers },
-    );
-    evidence.classifications = (net.data?.rows as ClassRow[]) ?? [];
+    const dates = [
+      ...new Set(evidence.claims.map((c) => c.dateOfService).filter(Boolean)),
+    ] as string[];
+    const classRows: ClassRow[] = [];
+    for (const asOf of dates.length ? dates : [args.asOfDate ?? ""]) {
+      const q = asOf
+        ? `?asOfDate=${encodeURIComponent(asOf)}`
+        : "";
+      const net = await getJson(
+        `${args.origin}/api/simulated/benefits/plans/${args.planId}/pharmacy-network${q}`,
+        { headers },
+      );
+      classRows.push(...((net.data?.rows as ClassRow[]) ?? []));
+    }
+    evidence.classifications = classRows;
     for (const row of evidence.classifications) {
       retrieved.push({ id: row.classificationId, sourceSystem: "benefits" });
     }
@@ -190,9 +246,21 @@ export async function routeQuery(args: {
       );
       const candidates = (search.data?.candidates as SearchCandidate[]) ?? [];
       const remaining: SearchCandidate[] = [];
+      const asOf =
+        args.asOfDate ||
+        dates.sort().slice(-1)[0] ||
+        "2026-09-17";
       for (const cand of candidates) {
         if (cand.planId && cand.planId !== args.planId) {
           rejected.push({ id: cand.id, reason: "rejected: wrong plan" });
+          continue;
+        }
+        if (cand.audience && cand.audience !== audience) {
+          rejected.push({ id: cand.id, reason: "rejected: wrong audience" });
+          continue;
+        }
+        if (cand.effectiveDate && cand.effectiveDate > asOf) {
+          rejected.push({ id: cand.id, reason: "rejected: not yet effective" });
           continue;
         }
         remaining.push(cand);
@@ -212,26 +280,24 @@ export async function routeQuery(args: {
           id: evidence.selectedPolicy.id,
           sourceSystem: "scripting",
         });
+      } else {
+        evidence.missing.push("governing_policy");
       }
     }
 
-    const hasC0818 = evidence.claims.some((c) => c.claimId === "DEMO-C0818");
-    const hasC0916 = evidence.claims.some((c) => c.claimId === "DEMO-C0916");
-    evidence.chargesEstablished = hasC0818 && hasC0916;
-    const hasNet0818 = evidence.classifications.some(
-      (r) => r.classificationId === "DEMO-NET0818",
+    evidence.chargesEstablished = evidence.claims.some(
+      (c) => Boolean(c.memberPaidAmount?.value) && Boolean(c.drugName),
     );
-    const hasNet0916 = evidence.classifications.some(
-      (r) => r.classificationId === "DEMO-NET0916",
+    const unmatched = evidence.claims.filter(
+      (c) => !classForClaim(c, evidence.classifications),
     );
-    const hasCost = evidence.selectedPolicy?.id === "DEMO-POLICY-COST-v1";
-    if (!hasC0818) evidence.missing.push("DEMO-C0818");
-    if (!hasC0916) evidence.missing.push("DEMO-C0916");
-    if (!hasNet0818) evidence.missing.push("DEMO-NET0818");
-    if (!hasNet0916) evidence.missing.push("DEMO-NET0916");
-    if (!hasCost) evidence.missing.push("DEMO-POLICY-COST-v1");
+    for (const c of unmatched) {
+      evidence.missing.push(`classification:${c.claimId}`);
+    }
     evidence.causeSupported =
-      evidence.chargesEstablished && hasNet0818 && hasNet0916 && hasCost;
+      evidence.chargesEstablished &&
+      unmatched.length === 0 &&
+      Boolean(evidence.selectedPolicy);
     if (!evidence.causeSupported) {
       routesUsed.push("partial_withhold");
     }
@@ -243,19 +309,30 @@ export async function routeQuery(args: {
       `${args.origin}/api/simulated/scripting/articles/DEMO-FAST90-v1`,
       { headers },
     );
-    const data = article.data ?? {};
-    evidence.fast90 = {
-      articleId: (data.articleId as string) || "DEMO-FAST90-v1",
-      body: (data.body as string) || "",
-      lineageSourceId: (data.lineageSourceId as string | null) ?? "DEMO-SERVICE-v1",
-      version: data.version as string | undefined,
-    };
-    retrieved.push({ id: "DEMO-FAST90-v1", sourceSystem: "scripting" });
-    if (evidence.fast90.lineageSourceId) {
-      retrieved.push({
-        id: evidence.fast90.lineageSourceId,
-        sourceSystem: "scripting",
-      });
+    if (!article.ok || !article.data) {
+      evidence.limitation = `Derived 90-day article unavailable (${article.status}).`;
+      evidence.missing.push("fast90");
+    } else {
+      const data = article.data;
+      const articleId = data.articleId as string | undefined;
+      if (!articleId) {
+        evidence.limitation = "Derived 90-day article missing id.";
+        evidence.missing.push("fast90");
+      } else {
+        evidence.fast90 = {
+          articleId,
+          body: String(data.body ?? ""),
+          lineageSourceId: (data.lineageSourceId as string | null) ?? null,
+          version: data.version as string | undefined,
+        };
+        retrieved.push({ id: articleId, sourceSystem: "scripting" });
+        if (evidence.fast90.lineageSourceId) {
+          retrieved.push({
+            id: evidence.fast90.lineageSourceId,
+            sourceSystem: "scripting",
+          });
+        }
+      }
     }
   }
 
@@ -267,9 +344,10 @@ export async function routeQuery(args: {
     const qPath = args.quotePharmacyId
       ? `${args.origin}/api/simulated/pharmacy/quotes?pharmacyId=${encodeURIComponent(args.quotePharmacyId)}`
       : `${args.origin}/api/simulated/pharmacy/quotes`;
-    const q = await getJson(qPath, {
-      headers,
-    });
+    const q = await getJson(qPath, { headers });
+    if (!q.ok) {
+      evidence.limitation = `Quote lookup failed (${q.status}).`;
+    }
     evidence.quotes = (q.data?.quotes as Array<Record<string, unknown>>) ?? [];
     for (const row of evidence.quotes) {
       retrieved.push({
@@ -281,24 +359,39 @@ export async function routeQuery(args: {
 
   if (args.need === "coverage_status") {
     routesUsed.push("structured_lookup");
+    const q = new URLSearchParams({ memberId: args.memberId });
+    if (args.drugName) q.set("drug", args.drugName);
     const row = await getJson(
-      `${args.origin}/api/simulated/coverage-review/cases/DEMO-CVR001`,
+      `${args.origin}/api/simulated/coverage-review/cases?${q.toString()}`,
       { headers },
     );
-    const data = row.data ?? {};
-    evidence.coverage = {
-      caseId: String(data.caseId ?? "DEMO-CVR001"),
-      status: String(data.status ?? "pending_review"),
-      requestedMedication: String(data.requestedMedication ?? ""),
-      determination:
-        data.determination === null || data.determination === undefined
-          ? null
-          : String(data.determination),
-    };
-    retrieved.push({
-      id: evidence.coverage.caseId,
-      sourceSystem: "coverage-review",
-    });
+    if (!row.ok || !row.data) {
+      evidence.limitation = `Coverage case lookup failed (${row.status || 404}).`;
+      evidence.missing.push("coverage_case");
+    } else if (row.data.error) {
+      evidence.limitation = "No coverage case for this member and medication.";
+      evidence.missing.push("coverage_case");
+    } else {
+      const data = row.data;
+      if (!data.caseId || !data.status) {
+        evidence.limitation = "Coverage case payload incomplete.";
+        evidence.missing.push("coverage_case");
+      } else {
+        evidence.coverage = {
+          caseId: String(data.caseId),
+          status: String(data.status),
+          requestedMedication: String(data.requestedMedication ?? ""),
+          determination:
+            data.determination === null || data.determination === undefined
+              ? null
+              : String(data.determination),
+        };
+        retrieved.push({
+          id: evidence.coverage.caseId,
+          sourceSystem: "coverage-review",
+        });
+      }
+    }
   }
 
   return {

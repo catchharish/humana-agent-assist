@@ -59,6 +59,14 @@
       "pauseLabel": "T08B: metformin-only readback on screen."
     },
     {
+      "id": "e-readback",
+      "offsetMs": 6000,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "You want to enroll in the CenterWell pharmacy service for future metformin fills. Atorvastatin stays at retail. Today's ready refill stays at Lakeview Pharmacy. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?"
+    },
+    {
       "id": "e-yes",
       "offsetMs": 6400,
       "type": "transcript",

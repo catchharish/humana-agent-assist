@@ -65,7 +65,14 @@
   ],
   "readyForPickup": ["ready for pickup"],
   "splitElection": ["at retail", "delivery for"],
-  "enrollmentAbsolute": ["^yes, for "],
+  "enrollmentAbsolute": [
+    "^yes\\b",
+    "^yeah\\b",
+    "^sure\\b",
+    "^please\\b",
+    "^absolutely\\b",
+    "^ok(ay)?\\b"
+  ],
   "withdraw": ["withdraw", "don'?t want to enroll", "stop the enrollment"],
   "firmRefusal": ["do not want delivery", "keep my retail"]
 }

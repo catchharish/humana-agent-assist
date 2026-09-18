@@ -76,7 +76,8 @@ Payloads are **illustrative shapes — real integration maps to Humana's APIs.**
 ## Known limitations
 
 - Stretch / post-call QA view is off.
-- C06 is a manual UI checklist (`tests/c06_checklist.md`).
-- One of two T01 mains was automated (`RUN_T01=1`); C06 walked the presenter path in the UI. Stretch QA is off.
+- C06 is a manual UI checklist (`tests/c06_checklist.md`) and must be re-walked on interactive T01 after the review fixes.
+- Luna interpret still can miss 1s; record misses honestly. Code paths (stage-1, exactness, utterance rules) remain the 1s-safe path.
+- Compact luna CSV is rejected unless it is valid keyed JSON or exactly 23 valid tokens; malformed output does not invent needs.
 - `SUBMISSION.md` holds the five Humana artifacts (problem, service design, prototype, roadmap, tradeoff).
 - Tier 3 (quick ask, attestation, retry, outage) is not built; those conditions show an honest limitation.

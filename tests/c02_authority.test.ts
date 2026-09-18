@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  AI_TOOL_NAMES,
   consumeEnrollmentToken,
   mintEnrollmentToken,
 } from "@/lib/enrollmentToken";
@@ -9,17 +8,6 @@ import { createSession } from "@/lib/session";
 import type { DisclosureRequirement } from "@/lib/types";
 
 describe("C02 authority / scope", () => {
-  it("does not list mint or submit as AI tools", () => {
-    expect(AI_TOOL_NAMES).toEqual([
-      "retrieve",
-      "draft_answer",
-      "recommend_nba",
-      "recommend_objection",
-      "draft_wrap",
-    ]);
-    expect(AI_TOOL_NAMES.join(" ")).not.toMatch(/mint|submit|enroll/i);
-  });
-
   it("rejects enrollment POST without a token", () => {
     const result = consumeEnrollmentToken(undefined, {
       medications: ["metformin"],

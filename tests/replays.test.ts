@@ -41,14 +41,15 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
     const s = await runScenario({ scenarioId: "t04b", overlay: "T04B" });
     const lake = s.quotes.find((q) => q.quoteId === "DEMO-Q-MET-L");
     const oak = s.quotes.find((q) => q.quoteId === "DEMO-Q-MET-O");
-    if (lake) {
-      expect(lake.validityStatus).toBe("invalidated");
-      expect(lake.pharmacyName).toMatch(/Lakeview/);
-      expect(lake.estimatedMemberCost.value).toBe("60.00");
-    }
+    expect(lake).toBeTruthy();
+    expect(lake?.validityStatus).toBe("invalidated");
+    expect(lake?.pharmacyName).toMatch(/Lakeview/);
+    expect(lake?.estimatedMemberCost.value).toBe("60.00");
     expect(oak?.validityStatus).toBe("valid");
     expect(oak?.estimatedMemberCost.value).toBe("24.00");
     expect(oak?.pharmacyName).toMatch(/Oak Street/);
+    expect(s.nowCard.title).toMatch(/Pricing statement due now|Prospective comparison/i);
+    expect(s.nowCard.body).not.toMatch(/\$24/);
   }, 180_000);
 
   it("T06A omit DEMO-NET0818", async () => {

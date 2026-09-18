@@ -184,7 +184,8 @@ export async function runScenario(opts: {
       }),
     });
     if (ingest.body.session) Object.assign(session, ingest.body.session);
-    if (ev.id === "e-hist-final" || ev.id === "e-return-met") {
+    await waitApplied(session, ev);
+    if (ev.id === "e-return-met") {
       await waitNeedAnswer(session, "historical_price", 12_000);
     }
     if (ev.id === "e-90day" || ev.id === "e-90") {
@@ -285,6 +286,7 @@ export async function measureUtterance(opts: {
       }),
     });
     if (ingest.body.session) Object.assign(session, ingest.body.session);
+    await waitApplied(session, ev);
     const target = ev.id === opts.replaceId;
     if (!target) {
       if (ev.id === "e-hist-final" || ev.id === "e-return-met") {
@@ -344,6 +346,19 @@ async function paint(
 async function refresh(session: SessionState) {
   const st = await json(`/api/session/state?sessionId=${session.sessionId}`);
   if (st.body.session) Object.assign(session, st.body.session);
+}
+
+async function waitApplied(
+  session: SessionState,
+  ev: { id: string; type: string; speaker?: string; stability?: string },
+) {
+  if (ev.type !== "transcript" || ev.stability === "partial") return;
+  await waitUntil(
+    session,
+    (s) => s.lastAppliedEventId === ev.id,
+    20_000,
+    `applied ${ev.id}`,
+  );
 }
 
 async function waitUntil(

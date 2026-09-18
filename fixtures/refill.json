@@ -1,7 +1,7 @@
 {
   "requestId": "DEMO-RF001",
   "memberId": "DEMO-M001",
-  "prescriptionId": "DEMO-RX001",
+  "drugName": "atorvastatin",
   "pharmacyId": "lakeview",
   "pharmacyName": "Lakeview Pharmacy",
   "quantity": 30,

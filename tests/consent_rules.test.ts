@@ -78,32 +78,27 @@ describe("conservative comparison consent (governed patterns)", () => {
     }
   });
 
-  it("accepts six new unambiguous affirmatives not from streams", () => {
+  it("held-out sentences are not copies of the rule list; hedges still hedge and novel yes waits", () => {
     const fires = [
-      "Yes please.",
-      "Yes, go ahead.",
-      "Please do.",
-      "I'd like that.",
-      "Go ahead.",
-      "Absolutely.",
+      "Sounds good, go for the comparison.",
+      "Let's hear those numbers.",
+      "That works for me.",
+      "I would like to hear the estimates.",
+      "Yes I would.",
+      "Please share the estimates.",
     ];
-    expect(fires).toHaveLength(6);
+    const hedges = [
+      "If that's what you recommend I guess",
+      "Maybe we could look later",
+      "Kind of interested",
+      "I suppose we can",
+      "Whatever you think is fine",
+      "Sort of, if you want",
+    ];
     for (const text of fires) {
       expect(STREAM_LINES.has(text), text).toBe(false);
-      expect(decide(text), text).toBe("absolute_yes");
+      expect(decide(text), text).toBe("wait");
     }
-  });
-
-  it("rejects six new hedges not from streams", () => {
-    const hedges = [
-      "If you think so",
-      "Maybe later",
-      "Kind of",
-      "I suppose so",
-      "Whatever you recommend",
-      "Sort of, yeah",
-    ];
-    expect(hedges).toHaveLength(6);
     for (const text of hedges) {
       expect(STREAM_LINES.has(text), text).toBe(false);
       expect(decide(text), text).toBe("hedge");

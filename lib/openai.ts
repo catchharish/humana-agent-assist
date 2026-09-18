@@ -161,6 +161,7 @@ export async function lunaStream(opts: {
   const body = JSON.stringify(payload);
   const t0 = performance.now();
   return new Promise((resolve, reject) => {
+    let settled = false;
     const req = https.request(
       {
         hostname: "api.openai.com",
@@ -179,7 +180,6 @@ export async function lunaStream(opts: {
         let text = "";
         let ttftMs: number | null = null;
         let usage: LunaUsage | null = null;
-        let settled = false;
         const finish = () => {
           if (settled) return;
           settled = true;
@@ -228,7 +228,11 @@ export async function lunaStream(opts: {
               if (delta) {
                 if (ttftMs == null) ttftMs = performance.now() - t0;
                 text += delta;
-                opts.onDelta?.(text);
+                if (opts.onDelta?.(text)) {
+                  finish();
+                  req.destroy();
+                  return;
+                }
               }
             }
             if (type === "response.output_text.done") {
@@ -236,7 +240,11 @@ export async function lunaStream(opts: {
               if (done && !text) {
                 if (ttftMs == null) ttftMs = performance.now() - t0;
                 text = done;
-                opts.onDelta?.(text);
+                if (opts.onDelta?.(text)) {
+                  finish();
+                  req.destroy();
+                  return;
+                }
               }
             }
             if (type === "response.completed") {
@@ -246,10 +254,14 @@ export async function lunaStream(opts: {
           }
         });
         res.on("end", finish);
-        res.on("error", reject);
+        res.on("error", (err) => {
+          if (!settled) reject(err);
+        });
       },
     );
-    req.on("error", reject);
+    req.on("error", (err) => {
+      if (!settled) reject(err);
+    });
     req.write(body);
     req.end();
   });
@@ -272,12 +284,20 @@ export async function terraComplete(input: string, maxOutputTokens = 700) {
   if (!key) {
     return { ok: false, ms: 0, model: MID_MODEL, text: "", usage: null };
   }
-  const res = await post("/v1/responses", {
-    model: MID_MODEL,
-    reasoning: { effort: "none" },
-    max_output_tokens: maxOutputTokens,
-    input,
-  });
+  const res = await Promise.race([
+    post("/v1/responses", {
+      model: MID_MODEL,
+      reasoning: { effort: "none" },
+      max_output_tokens: maxOutputTokens,
+      input,
+    }),
+    new Promise<{ status: number; json: unknown; ms: number }>((resolve) => {
+      setTimeout(
+        () => resolve({ status: 504, json: {}, ms: 8000 }),
+        8000,
+      );
+    }),
+  ]);
   const usage =
     res.json && typeof res.json === "object"
       ? ((res.json as { usage?: unknown }).usage ?? null)

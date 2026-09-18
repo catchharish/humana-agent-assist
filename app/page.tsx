@@ -376,6 +376,36 @@ export default function Page() {
           {session?.nowCard.body ?? "Start the call to load the workspace."}
         </p>
         <p className="source">{session?.nowCard.sourceLabel}</p>
+        {session && (
+          <div className="actions">
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => human("/api/session/human/view-evidence")}
+            >
+              View evidence
+            </button>
+            <button
+              className="secondary"
+              type="button"
+              onClick={() =>
+                human("/api/session/human/flag-issue", {
+                  note: "Advocate flagged the current Now card",
+                })
+              }
+            >
+              Flag issue
+            </button>
+          </div>
+        )}
+        {session?.openEvidence && (
+          <div>
+            <h3 className="subhead">Opened record</h3>
+            <p>{session.openEvidence.title}</p>
+            <p>{session.openEvidence.body}</p>
+            <p className="source">{session.openEvidence.sourceLabel}</p>
+          </div>
+        )}
         {session?.recommendation?.status === "pending" && (
           <div className="actions">
             {session.recommendation.kind === "optional_comparison" && (
@@ -412,7 +442,9 @@ export default function Page() {
         )}
         {session &&
           session.quotes.length > 0 &&
-          quoteAmountsMayRender(session.consent.comparison) && (
+          quoteAmountsMayRender(session.consent.comparison) &&
+          session.pricing !== "due_now" &&
+          session.pricingExactDelivered && (
           <table className="quote-table">
             <thead>
               <tr>
@@ -466,11 +498,23 @@ export default function Page() {
               <button
                 className="secondary"
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  const quoted = [
+                    ...new Set(session.quotes.map((q) => q.drugName)),
+                  ];
+                  const extra = quoted.filter(
+                    (d) =>
+                      !session.enrollment.medications.some(
+                        (m) => m.toLowerCase() === d.toLowerCase(),
+                      ),
+                  );
                   human("/api/session/human/edit-enrollment-scope", {
-                    medications: ["metformin", "atorvastatin"],
-                  })
-                }
+                    medications: [
+                      ...session.enrollment.medications,
+                      ...(extra.length ? extra : ["atorvastatin"]),
+                    ],
+                  });
+                }}
               >
                 Add atorvastatin to draft
               </button>
@@ -488,7 +532,7 @@ export default function Page() {
                 Returned {session.enrollment.resultId} scope{" "}
                 {(session.enrollment.returnedScope ?? []).join(", ")}.{" "}
                 {session.enrollment.scopeOk
-                  ? "Matches metformin-only."
+                  ? `Matches confirmed scope (${(session.enrollment.returnedScope ?? []).join(", ")}).`
                   : "Scope mismatch — not a success."}
               </p>
             )}
@@ -530,7 +574,8 @@ export default function Page() {
         {session?.transfer.connectionStatus && (
           <p>
             {session.transfer.transferId}: {session.transfer.connectionStatus}.
-            Coverage case remains pending.
+            Coverage case {session.coverage?.caseId} remains{" "}
+            {session.coverage?.status ?? "unreturned"}.
           </p>
         )}
         {session?.wrapDraft && (
@@ -569,20 +614,29 @@ export default function Page() {
         {session?.outcomeReady && (
           <div className="outcome">
             <h3 className="subhead">End-of-demo outcome (said once)</h3>
-            <p>
-              {outcomeWithout({
-                historicalNeed:
-                  session.needs.find((n) => n.kind === "historical_price")
-                    ?.answer?.title ?? "historical-charge",
-              })}
-            </p>
-            <p>
-              {outcomeWith({
-                memberGiven: session.member?.name.given ?? "the member",
-              })}{" "}
-              This is not a measured Humana baseline. Do not describe the
-              pricing moment as prevention.
-            </p>
+            {session.pricing === "late_finding" ? (
+              <>
+                <p>
+                  {outcomeWithout({
+                    historicalNeed:
+                      session.needs.find((n) => n.kind === "historical_price")
+                        ?.answer?.title ?? "historical-charge",
+                  })}
+                </p>
+                <p>
+                  {outcomeWith({
+                    memberGiven: session.member?.name.given ?? "the member",
+                  })}{" "}
+                  This is not a measured Humana baseline. Do not describe the
+                  pricing moment as prevention.
+                </p>
+              </>
+            ) : (
+              <p>
+                This run did not record a recovered pricing-timing miss. Outcome
+                copy is not claiming a caught miss.
+              </p>
+            )}
             <p className="source">
               Greeting {session.greeting}; pricing {session.pricing}
               {session.pricingNote ? ` (${session.pricingNote})` : ""}; closing{" "}

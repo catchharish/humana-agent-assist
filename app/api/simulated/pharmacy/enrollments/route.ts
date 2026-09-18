@@ -10,7 +10,11 @@ export async function POST(request: Request) {
     medicationScope?: string[];
   };
   const scope = { medications: body.medicationScope ?? [] };
-  const check = consumeEnrollmentToken(token, scope);
+  const check = consumeEnrollmentToken(
+    token,
+    scope,
+    request.headers.get("x-session-id") ?? undefined,
+  );
   if (!check.ok) {
     return NextResponse.json(envelope("pharmacy", { error: check.error }), {
       status: check.status,

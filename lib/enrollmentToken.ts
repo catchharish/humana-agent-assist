@@ -17,6 +17,14 @@ const g = globalThis as unknown as {
 g.__haaEnrollTokens ??= new Map();
 const tokens = g.__haaEnrollTokens;
 
+export function normalizeScopeKey(medications: string[]): string {
+  return [...medications]
+    .map((m) => m.trim().toLowerCase())
+    .filter(Boolean)
+    .sort()
+    .join("+");
+}
+
 function normalizeScope(scope: EnrollmentScope): string {
   return JSON.stringify({
     medications: [...scope.medications]
@@ -38,6 +46,7 @@ export function mintEnrollmentToken(
 export function consumeEnrollmentToken(
   token: string | undefined,
   scope: EnrollmentScope,
+  sessionId?: string,
 ): { ok: true } | { ok: false; status: number; error: string } {
   if (!token) {
     return { ok: false, status: 403, error: "missing_enrollment_token" };
@@ -48,6 +57,9 @@ export function consumeEnrollmentToken(
   }
   if (rec.used) {
     return { ok: false, status: 403, error: "enrollment_token_used" };
+  }
+  if (sessionId && rec.sessionId !== sessionId) {
+    return { ok: false, status: 403, error: "session_mismatch" };
   }
   if (normalizeScope(rec.scope) !== normalizeScope(scope)) {
     return { ok: false, status: 403, error: "scope_mismatch" };
@@ -61,12 +73,3 @@ export function invalidateSessionTokens(sessionId: string) {
     if (rec.sessionId === sessionId) tokens.delete(token);
   }
 }
-
-/** Intentionally no list/read API for AI tools. */
-export const AI_TOOL_NAMES = [
-  "retrieve",
-  "draft_answer",
-  "recommend_nba",
-  "recommend_objection",
-  "draft_wrap",
-] as const;

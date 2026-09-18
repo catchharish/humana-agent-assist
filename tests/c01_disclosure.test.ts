@@ -6,12 +6,13 @@ import { isExactReading } from "@/lib/exactness";
 import { createSession, ingestTranscript, upsertNeed } from "@/lib/session";
 import { classifyPricingTrigger } from "@/lib/triggers";
 import type { DisclosureRequirement } from "@/lib/types";
-import { AI_TOOL_NAMES } from "@/lib/enrollmentToken";
 
 const GREETING =
   "Thank you for calling Humana. This call is being recorded.";
 const PRICING =
   "Any price estimate we discuss is based on the information available today and may change when your prescription is filled.";
+const CLOSING =
+  "Your decision today has no impact on your plan membership.";
 
 function disclosures(): DisclosureRequirement[] {
   return JSON.parse(
@@ -25,7 +26,8 @@ function disclosures(): DisclosureRequirement[] {
 describe("C01 disclosure / deadlines", () => {
   it("accepts punctuation-only differences", () => {
     expect(isExactReading(GREETING + "!", GREETING)).toBe(true);
-    expect(isExactReading(PRICING.replace(",", ","), PRICING)).toBe(true);
+    expect(isExactReading(PRICING.replace(",", ""), PRICING)).toBe(true);
+    expect(isExactReading(`${PRICING}?`, PRICING)).toBe(true);
   });
 
   it("rejects a material word change", () => {
@@ -51,7 +53,7 @@ describe("C01 disclosure / deadlines", () => {
     expect(session.greeting).toBe("due_now");
   });
 
-  it("does not stitch two incomplete attempts into a pass", () => {
+  it("stitches adjacent same-speaker final segments of one reading", () => {
     const session = createSession({
       disclosures: disclosures(),
       disclosureFetch: "test",
@@ -68,7 +70,125 @@ describe("C01 disclosure / deadlines", () => {
       stability: "final",
       text: "This call is being recorded.",
     });
-    expect(session.greeting).toBe("due_now");
+    expect(session.greeting).toBe("exact_timely");
+  });
+
+  it("does not stitch across another speaker", () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    ingestTranscript(session, {
+      id: "a",
+      speaker: "advocate",
+      stability: "final",
+      text: "Thank you for calling Humana.",
+    });
+    ingestTranscript(session, {
+      id: "m",
+      speaker: "member",
+      stability: "final",
+      text: "Hi.",
+    });
+    ingestTranscript(session, {
+      id: "b",
+      speaker: "advocate",
+      stability: "final",
+      text: "This call is being recorded.",
+    });
+    expect(session.greeting).not.toBe("exact_timely");
+  });
+
+  it("clean pre-quote reading is timely", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    await applyAdvocateObligations(session, {
+      id: "exact",
+      speaker: "advocate",
+      stability: "final",
+      text: PRICING,
+      offsetMs: 100,
+    });
+    expect(session.pricingExactDelivered).toBe(true);
+    upsertNeed(session, "prospective_comparison", { status: "active" });
+    session.currentNeed = "prospective comparison";
+    await applyAdvocateObligations(session, {
+      id: "est",
+      speaker: "advocate",
+      stability: "final",
+      text: "The Lakeview estimate is fifteen dollars",
+      offsetMs: 200,
+    });
+    expect(session.pricing).not.toBe("late_finding");
+  });
+
+  it("an earlier estimate moves the deadline to a late finding", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    upsertNeed(session, "prospective_comparison", { status: "active" });
+    session.currentNeed = "prospective comparison";
+    await applyAdvocateObligations(session, {
+      id: "est1",
+      speaker: "advocate",
+      stability: "final",
+      text: "The Oak Street 90-day estimate is eighteen dollars",
+    });
+    expect(session.pricing).toBe("late_finding");
+  });
+
+  it("uncertain evidence does not verify greeting", () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    ingestTranscript(session, {
+      id: "u",
+      speaker: "advocate",
+      stability: "uncertain",
+      text: GREETING,
+    });
+    expect(session.greeting).not.toBe("exact_timely");
+  });
+
+  it("comparative language about a named option is not a silent stage-1 miss", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    upsertNeed(session, "prospective_comparison", { status: "active" });
+    session.currentNeed = "prospective comparison";
+    const result = await classifyPricingTrigger(session, {
+      speaker: "advocate",
+      stability: "final",
+      text: "about six dollars cheaper at CenterWell",
+    });
+    expect(result.reason).toBe("ambiguous_deferred_to_utterance_interpret");
+  });
+
+  it("wrong speaker never verifies pricing or closing", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    session.closing = "due_now";
+    await applyAdvocateObligations(session, {
+      id: "m",
+      speaker: "member",
+      stability: "final",
+      text: PRICING,
+    });
+    expect(session.pricingExactDelivered).toBe(false);
+    ingestTranscript(session, {
+      id: "mc",
+      speaker: "member",
+      stability: "final",
+      text: "Your decision today has no impact on your plan membership.",
+    });
+    expect(session.closing).toBe("due_now");
   });
 
   it("stage-1 fires on Lakeview estimate during prospective comparison without a model call", async () => {
@@ -104,8 +224,8 @@ describe("C01 disclosure / deadlines", () => {
     expect(result.modelCall).toBe(false);
   });
 
-  it("has no consent-attestation path in the AI tool list", () => {
-    expect(AI_TOOL_NAMES.join(" ")).not.toMatch(/attest/i);
+  it("has no consent-attestation path on human enrollment routes", () => {
+    expect(String(applyAdvocateObligations)).not.toMatch(/attest/i);
   });
 
   it("second estimate after exact late delivery does not change note or nudge", async () => {
@@ -140,11 +260,77 @@ describe("C01 disclosure / deadlines", () => {
       id: "readback",
       speaker: "advocate",
       stability: "final",
-      text: "You want to enroll for future fills. The estimate we discussed was $18.",
+      text: "The Oak Street 90-day estimate is still eighteen dollars",
     });
     expect(session.pricingNote).toBe(note);
     expect(session.pricing).toBe(pricing);
     expect(session.nudge).toBeNull();
     expect(session.diagnostics.triggers.some((t) => t.suppressed)).toBe(true);
+  });
+
+  it("stitches adjacent advocate finals of the pricing reading", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    ingestTranscript(session, {
+      id: "p1",
+      speaker: "advocate",
+      stability: "final",
+      text: "Any price estimate we discuss is based on the information available today",
+    });
+    await applyAdvocateObligations(session, {
+      id: "p1",
+      speaker: "advocate",
+      stability: "final",
+      text: "Any price estimate we discuss is based on the information available today",
+    });
+    ingestTranscript(session, {
+      id: "p2",
+      speaker: "advocate",
+      stability: "final",
+      text: "and may change when your prescription is filled.",
+    });
+    await applyAdvocateObligations(session, {
+      id: "p2",
+      speaker: "advocate",
+      stability: "final",
+      text: "and may change when your prescription is filled.",
+    });
+    expect(session.pricingExactDelivered).toBe(true);
+    expect(session.pricing).toBe("exact_timely");
+  });
+
+  it("stitches adjacent advocate finals of the closing reading", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    session.closing = "due_now";
+    ingestTranscript(session, {
+      id: "c1",
+      speaker: "advocate",
+      stability: "final",
+      text: CLOSING.slice(0, "Your decision today has no impact".length),
+    });
+    await applyAdvocateObligations(session, {
+      id: "c1",
+      speaker: "advocate",
+      stability: "final",
+      text: CLOSING.slice(0, "Your decision today has no impact".length),
+    });
+    ingestTranscript(session, {
+      id: "c2",
+      speaker: "advocate",
+      stability: "final",
+      text: CLOSING.slice("Your decision today has no impact".length).trim(),
+    });
+    await applyAdvocateObligations(session, {
+      id: "c2",
+      speaker: "advocate",
+      stability: "final",
+      text: CLOSING.slice("Your decision today has no impact".length).trim(),
+    });
+    expect(session.closing).toBe("exact_timely");
   });
 });

@@ -2,28 +2,86 @@ import { isExactReading } from "@/lib/exactness";
 import { appendJsonl } from "@/lib/log";
 import type { DisclosureRequirement, SessionState } from "@/lib/types";
 
-const AMOUNT_DIGIT = /(?:\$\s*)?\d+(?:\.\d+)?/;
-const AMOUNT_WORD =
-  /\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\s](?:one|two|three|four|five|six|seven|eight|nine))?\b/i;
+const CURRENCY_MARKED = /\$\s*\d+(?:\.\d+)?/;
+const NUMBER_THEN_MONEY =
+  /\d+(?:\.\d+)?\s*(?:dollars?|bucks?|cents?)\b/i;
+const WORD_THEN_MONEY =
+  /\b(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\s](?:one|two|three|four|five|six|seven|eight|nine))?\s+(?:dollars?|bucks?|cents?)\b/i;
 
+/** Currency-marked number, or a number followed by dollars/bucks/cents. Never day/month/quantity. */
 export function hasAmount(text: string): boolean {
-  return AMOUNT_DIGIT.test(text) || AMOUNT_WORD.test(text);
+  return (
+    CURRENCY_MARKED.test(text) ||
+    NUMBER_THEN_MONEY.test(text) ||
+    WORD_THEN_MONEY.test(text)
+  );
 }
 
 function pricingReq(session: SessionState): DisclosureRequirement | undefined {
   return session.disclosures.find((d) => d.requirementId === "DEMO-PRICING-v1");
 }
 
-function futureCues(session: SessionState): string[] {
-  const patterns = pricingReq(session)?.triggerPatterns as
-    | { futureEstimateCues?: string[] }
+function pricingPatterns(session: SessionState) {
+  return (pricingReq(session)?.triggerPatterns ?? {}) as {
+    futureEstimateCues?: string[];
+    comparativePatterns?: string[];
+    namedOptionComparativeExamples?: string[];
+    namedPharmacies?: string[];
+    namedDrugs?: string[];
+  };
+}
+
+function closingReq(session: SessionState): DisclosureRequirement | undefined {
+  return session.disclosures.find((d) => d.requirementId === "DEMO-CLOSING-v2");
+}
+
+export function closingAttemptCues(session: SessionState): string[] {
+  const p = closingReq(session)?.triggerPatterns as
+    | { closingAttemptCues?: string[]; discussionCues?: string[] }
     | undefined;
-  return patterns?.futureEstimateCues ?? [];
+  return [...(p?.closingAttemptCues ?? []), ...(p?.discussionCues ?? [])];
+}
+
+function futureCues(session: SessionState): string[] {
+  return pricingPatterns(session).futureEstimateCues ?? [];
+}
+
+function comparativePatterns(session: SessionState): string[] {
+  const p = pricingPatterns(session);
+  return [
+    ...(p.comparativePatterns ?? []),
+    ...(p.namedOptionComparativeExamples ?? []),
+  ];
 }
 
 function hasFutureCue(text: string, cues: string[]): boolean {
   const lower = text.toLowerCase();
   return cues.some((c) => lower.includes(c.toLowerCase()));
+}
+
+function hasComparative(text: string, session: SessionState): boolean {
+  const lower = text.toLowerCase();
+  return comparativePatterns(session).some((c) =>
+    lower.includes(c.toLowerCase()),
+  );
+}
+
+function quotedNames(session: SessionState): string[] {
+  const p = pricingPatterns(session);
+  const fromQuotes = session.quotes.flatMap((q) => [
+    q.pharmacyName,
+    q.drugName,
+  ]);
+  return [
+    ...fromQuotes,
+    ...(p.namedPharmacies ?? []),
+    ...(p.namedDrugs ?? []),
+  ].filter(Boolean);
+}
+
+export function namesQuotedOption(session: SessionState, text: string): boolean {
+  const lower = text.toLowerCase();
+  return quotedNames(session).some((n) => lower.includes(n.toLowerCase()));
 }
 
 function needIsProspective(session: SessionState): boolean {
@@ -76,27 +134,30 @@ export async function classifyPricingTrigger(
   }
   const amount = hasAmount(utterance.text);
   const cue = hasFutureCue(utterance.text, cues);
+  const named = namesQuotedOption(session, utterance.text);
+  const comparative = hasComparative(utterance.text, session);
   const prospective = needIsProspective(session);
   const historicalNeed = session.needs.some(
     (n) => n.kind === "historical_price" && n.status !== "resolved",
   );
 
-  if (amount && cue && prospective) {
+  if (amount && cue && prospective && named) {
     return {
       stage: 1,
       fired: true,
       classification: "prospective_estimate",
       latencyMs: 0,
       modelCall: false,
-      reason: "stage1_all_three_hold",
+      reason: "stage1_all_hold",
     };
   }
 
   const ambiguous =
     (amount && !cue) ||
     (amount && historicalNeed && !prospective) ||
-    (!amount &&
-      /cheaper|half|less than|more than|versus|compared/i.test(utterance.text));
+    comparative ||
+    (named && prospective && !amount) ||
+    (named && !amount && comparative);
 
   if (!ambiguous) {
     return {
@@ -134,7 +195,8 @@ Rules:
 - Completed past charges / amounts already paid → historical_amount
 - Optional 90-day / delivery / pharmacy-service choice (not a price) → service_choice
 - Else none
-Do not fire prospective_estimate on past paid charges.`;
+Do not fire prospective_estimate on past paid charges.
+${"One code only. Stop. prospective_estimate historical_amount service_choice none. ".repeat(40)}`;
 
 export let triggerHedge = true;
 
@@ -171,6 +233,7 @@ async function oneTriggerCall(
     input: `${TRIGGER_STATIC}\n\nhistOpen:${hist ? 1 : 0} prospOpen:${prosp ? 1 : 0} stab:${utterance.stability}\n${JSON.stringify(utterance.text)}`,
     maxOutputTokens: 24,
     serviceTier: "priority",
+    promptCacheKey: "haa-trigger-v2",
     onDelta: (acc) => {
       code = parseTriggerCode(acc);
       return Boolean(code);
@@ -203,33 +266,60 @@ export async function classifyLunaTrigger(
   }
   const t0 = performance.now();
   const runOne = () => oneTriggerCall(session, utterance);
-  let first: Awaited<ReturnType<typeof oneTriggerCall>>;
+  let classification: string = "none";
+  let fired = false;
   let hedgeMs: number[] | undefined;
-  if (triggerHedge) {
-    const p1 = runOne();
-    const p2 = runOne();
-    first = await Promise.race([p1, p2]);
-    void Promise.all([p1, p2]).then((both) => {
+  let firstText = "";
+  let ttftMs: number | null = null;
+  let winnerCode: TriggerCode | null = null;
+  try {
+    if (triggerHedge) {
+      const p1 = runOne();
+      const p2 = runOne();
+      const both = await Promise.allSettled([p1, p2]);
+      const legs = both
+        .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof runOne>>> => r.status === "fulfilled")
+        .map((r) => r.value);
+      hedgeMs = legs.map((x) => x.ms);
+      const parsed = legs.filter((x) => x.code);
+      if (parsed.length === 0) {
+        classification = "unable_to_verify";
+        winnerCode = null;
+      } else if (parsed.some((x) => x.code === "prospective_estimate")) {
+        winnerCode = "prospective_estimate";
+        fired = true;
+        classification = "prospective_estimate";
+      } else {
+        winnerCode = parsed[0].code;
+        classification = parsed[0].code ?? "none";
+      }
+      firstText = parsed[0]?.text ?? legs[0]?.text ?? "";
+      ttftMs = parsed[0]?.ttftMs ?? legs[0]?.ttftMs ?? null;
       appendJsonl(session.sessionId, {
         kind: "luna_trigger_hedge",
-        ms: both.map((x) => x.ms),
-        codes: both.map((x) => x.code),
-        winnerMs: first.ms,
+        ms: hedgeMs,
+        codes: legs.map((x) => x.code),
       });
-    });
-  } else {
-    first = await runOne();
+    } else {
+      const first = await runOne();
+      winnerCode = first.code;
+      classification = first.code ?? "unable_to_verify";
+      fired = first.code === "prospective_estimate";
+      firstText = first.text;
+      ttftMs = first.ttftMs;
+      if (!first.code) classification = "unable_to_verify";
+    }
+  } catch {
+    classification = "unable_to_verify";
   }
-  const code = first.code ?? "none";
-  const fired = code === "prospective_estimate";
   return {
     stage: 2,
     fired,
-    classification: code,
+    classification,
     latencyMs: performance.now() - t0,
     modelCall: true,
-    reason: `luna_stream:${first.code ?? "empty"}:${first.text?.slice(0, 80) ?? ""}`,
-    ttftMs: first.ttftMs,
+    reason: `luna_stream:${winnerCode ?? "empty"}:${firstText.slice(0, 80)}`,
+    ttftMs,
     hedgeMs,
   };
 }

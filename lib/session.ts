@@ -1,4 +1,4 @@
-import { isExactReading } from "@/lib/exactness";
+import { isExactReading, isWordingAttempt, stitchedReading } from "@/lib/exactness";
 import { appendJsonl } from "@/lib/log";
 import type {
   AuthResult,
@@ -62,9 +62,15 @@ export function createSession(init: {
     injectedDelayMs: init.injectedDelayMs ?? 0,
     pricingExactDelivered: false,
     prefetch: null,
-    callType: "Refill",
+    callType: "General inquiry / unclassified",
     currentNeed: "opening",
     flowStep: "verify greeting → await identity",
+    nowPriority: 0,
+    greetingLocked: false,
+    closingLocked: false,
+    greetingBuffer: null,
+    greetingDeadlineAt: null,
+    pricingExactOffset: null,
     identityStatus: "unverified",
     auth: null,
     member: null,
@@ -91,6 +97,10 @@ export function createSession(init: {
       comparison: "none",
       enrollment: "none",
       clarification: null,
+      comparisonScopeKey: null,
+      enrollmentScopeKey: null,
+      comparisonUtteranceId: null,
+      enrollmentUtteranceId: null,
     },
     nudge: null,
     pricingNote: null,
@@ -105,11 +115,14 @@ export function createSession(init: {
       returnedScope: null,
       scopeOk: null,
       withdrawn: false,
+      scopeChangedAt: 0,
     },
     coverage: null,
     handoffDraft: "",
     wrapDraft: "",
     wrapStable: "",
+    flaggedIssues: [],
+    openEvidence: null,
     transfer: {
       destinationConfirmed: false,
       connectionStatus: null,
@@ -126,6 +139,7 @@ export function createSession(init: {
     lastTimings: [],
     lunaSeq: 0,
     lastInterpretation: null,
+    lastAppliedEventId: null,
     diagnostics: {
       disclosureFetch: init.disclosureFetch,
       warmup: "luna warmup started fire-and-forget at connect (not awaited)",
@@ -186,7 +200,7 @@ export function recordClientPaint(
     tPaint: rec.tPaint,
     paintMs: measured ? paintMs : null,
     measured,
-    excludedPauseMs: 0,
+    excludedPauseMs: session.totalPauseMs,
   };
   session.lastTimings = [...session.lastTimings, timing];
   appendJsonl(session.sessionId, {
@@ -202,14 +216,35 @@ function greetingRequirement(session: SessionState) {
 }
 
 function applyGreeting(session: SessionState, line: TranscriptLine) {
+  if (line.speaker === "member" && line.stability === "final") {
+    if (session.greetingDeadlineAt == null) {
+      session.greetingDeadlineAt = line.receivedAt;
+    }
+  }
   if (line.speaker !== "advocate") return;
-  if (line.stability === "partial" || line.stability === "uncertain") return;
+  if (line.stability === "partial") return;
   const req = greetingRequirement(session);
   if (!req) return;
-  if (isExactReading(line.text, req.verbatimText)) {
-    session.greeting = "exact_timely";
+  if (session.greetingLocked && session.greeting === "exact_timely") return;
+  if (line.stability === "uncertain") {
+    if (!session.greetingLocked) session.greeting = "unable_to_verify";
+    return;
+  }
+  const combined = stitchedReading(session.transcript, line, req.verbatimText);
+  session.greetingBuffer = {
+    speaker: "advocate",
+    parts: combined.split(/\s+/).length ? [combined] : [line.text],
+    lastId: line.id,
+  };
+  if (isExactReading(line.text, req.verbatimText) || isExactReading(combined, req.verbatimText)) {
+    const late =
+      session.greetingDeadlineAt != null ||
+      session.identityStatus === "VALID" ||
+      Boolean(session.auth);
+    session.greeting = late ? "late_finding" : "exact_timely";
+    session.greetingLocked = true;
     session.flowStep = "greeting verified · await identity";
-    if (session.ivrReason) {
+    if (session.ivrReason && !late) {
       session.nowCard = {
         title: "IVR routing (simulated)",
         body: `Provisional hint: ${session.ivrReason}. Not identity evidence. Greeting matched on the rail.`,
@@ -219,8 +254,13 @@ function applyGreeting(session: SessionState, line: TranscriptLine) {
     appendJsonl(session.sessionId, {
       kind: "greeting_verified",
       eventId: line.id,
+      timely: !late,
       note: "paint timing recorded separately as event_to_client_paint",
     });
+    return;
+  }
+  if (!session.greetingLocked && isWordingAttempt(combined, req.verbatimText)) {
+    session.greeting = "paraphrased";
   }
 }
 
@@ -245,6 +285,8 @@ export function ingestTranscript(
 
 export function setIvrHint(session: SessionState, ivrReason: string) {
   session.ivrReason = ivrReason;
+  if (/refill/i.test(ivrReason)) session.callType = "Refill";
+  else if (/pric/i.test(ivrReason)) session.callType = "Pricing";
   session.nowCard = {
     title: "IVR routing (simulated)",
     body: `Provisional hint: ${ivrReason}. Not identity evidence. Greeting still due.`,
@@ -294,6 +336,12 @@ export function applyAuth(
   session.member = member;
   session.identityStatus =
     auth.decision.toLowerCase() === "valid" ? "VALID" : auth.decision;
+  if (session.greetingDeadlineAt == null) {
+    session.greetingDeadlineAt = now();
+  }
+  if (session.greeting === "due_now" && !session.greetingLocked) {
+    session.greeting = "late_finding";
+  }
   session.flowStep = "identity verified · refill workflow";
   session.currentNeed = "refill status";
   if (member && auth.decision.toLowerCase() === "valid") {
@@ -355,10 +403,49 @@ export function pushTriggerTrace(session: SessionState, trace: TriggerTrace) {
   appendJsonl(session.sessionId, { kind: "trigger_classification", ...trace });
 }
 
+export const NOW_PRIORITY = {
+  info: 5,
+  answer: 10,
+  due_now: 30,
+  nudge: 40,
+} as const;
+
+export type NowPriorityKind = keyof typeof NOW_PRIORITY;
+
+function focusMatches(currentNeed: string, kind: NeedKind) {
+  return currentNeed.replace(/_/g, " ") === kind.replace(/_/g, " ");
+}
+
 export function showNow(
   session: SessionState,
   card: SessionState["nowCard"],
+  opts?: { priority?: NowPriorityKind; needKind?: NeedKind },
 ) {
+  const priority = NOW_PRIORITY[opts?.priority ?? "answer"];
+  const kind = opts?.needKind;
+  if (kind && !focusMatches(session.currentNeed, kind) && priority <= NOW_PRIORITY.answer) {
+    upsertNeed(session, kind, {
+      answer: {
+        title: card.title,
+        body: card.body,
+        sourceLabel: card.sourceLabel,
+      },
+    });
+    return;
+  }
+  if (priority < session.nowPriority && session.nowPriority >= NOW_PRIORITY.due_now) {
+    if (kind) {
+      upsertNeed(session, kind, {
+        answer: {
+          title: card.title,
+          body: card.body,
+          sourceLabel: card.sourceLabel,
+        },
+      });
+    }
+    return;
+  }
+  session.nowPriority = priority;
   session.nowCard = card;
 }
 

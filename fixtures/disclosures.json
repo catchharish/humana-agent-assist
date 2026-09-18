@@ -38,8 +38,21 @@
         ],
         "namedOptionComparativeExamples": [
           "about six dollars cheaper at CenterWell",
-          "roughly half"
+          "roughly half",
+          "roughly a third of the Lakeview price"
         ],
+        "comparativePatterns": [
+          "cheaper",
+          "half",
+          "less than",
+          "more than",
+          "versus",
+          "compared",
+          "a third of",
+          "third of the"
+        ],
+        "namedPharmacies": ["Lakeview", "Oak Street", "CenterWell"],
+        "namedDrugs": ["metformin", "atorvastatin"],
         "notAnEstimateExamples": ["prices can vary by pharmacy"]
       }
     },
@@ -59,6 +72,12 @@
           "90-day option",
           "pharmacy service",
           "mail"
+        ],
+        "closingAttemptCues": [
+          "decision",
+          "membership",
+          "plan membership",
+          "no impact on your plan"
         ]
       }
     }

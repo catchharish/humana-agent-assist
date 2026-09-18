@@ -224,6 +224,7 @@ describe("per-field luna apply", () => {
       classifications: [],
       fast90: null,
       serviceGuide: null,
+      objection: null,
     };
     copilot.setLunaTestHooks({
       interpret: async (_s, line) => {
