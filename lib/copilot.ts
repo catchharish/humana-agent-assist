@@ -1,5 +1,5 @@
 import { invalidateSessionTokens } from "@/lib/enrollmentToken";
-import { interpretUtterance, type Interpretation } from "@/lib/interpret";
+import { interpretUtterance, finalCompatibleWithPartial, type Interpretation } from "@/lib/interpret";
 import { terraComplete, parseJsonObject } from "@/lib/openai";
 import { routeQuery, type RouterResult } from "@/lib/queryRouter";
 import { publishSession } from "@/lib/sse";
@@ -30,9 +30,34 @@ import {
   matchesAny,
 } from "@/lib/utteranceRules";
 import type { SessionState } from "@/lib/types";
-import { classifyPricingTrigger } from "@/lib/triggers";
+import { classifyLunaTrigger, classifyPricingTrigger } from "@/lib/triggers";
 
 const historicalJobs = new Set<string>();
+
+export let testInterpretFactory: ((
+  session: SessionState,
+  line: { id: string; speaker: string; text: string; stability: string },
+) => Promise<Interpretation>) | null = null;
+
+export let testDelayApply: { eventId: string; ms: number } | null = null;
+
+export function setLunaTestHooks(opts: {
+  interpret?: typeof testInterpretFactory;
+  delayApply?: typeof testDelayApply;
+}) {
+  if ("interpret" in opts) testInterpretFactory = opts.interpret ?? null;
+  if ("delayApply" in opts) testDelayApply = opts.delayApply ?? null;
+}
+
+export function resetLunaTestHooks() {
+  testInterpretFactory = null;
+  testDelayApply = null;
+}
+
+const partialJobs = new Map<
+  string,
+  { text: string; promise: Promise<Interpretation> }
+>();
 
 const scriptMarks = new Map<
   string,
@@ -933,7 +958,34 @@ export async function applyAdvocateObligations(
   },
 ): Promise<void> {
   if (line.speaker !== "advocate") return;
-  const trigger = await classifyPricingTrigger(session, line);
+  const triggerCode = await classifyPricingTrigger(session, line);
+  let trigger = triggerCode;
+  if (triggerCode.reason === "ambiguous_deferred_to_utterance_interpret") {
+    const seq = session.lunaSeq;
+    const luna = await classifyLunaTrigger(session, line);
+    if (seq !== session.lunaSeq) {
+      appendJsonl(session.sessionId, {
+        kind: "luna_stale_discard",
+        eventId: line.id,
+        seq,
+        currentSeq: session.lunaSeq,
+        applyMode: "trigger",
+      });
+      assessClosing(session, line);
+      return;
+    }
+    trigger = luna;
+    appendJsonl(session.sessionId, {
+      kind: "luna_trigger",
+      eventId: line.id,
+      ms: luna.latencyMs,
+      ttftMs: luna.ttftMs,
+      classification: luna.classification,
+      fired: luna.fired,
+      hedgeMs: luna.hedgeMs,
+      seq,
+    });
+  }
   const suppressRepeat = Boolean(trigger.fired && session.pricingExactDelivered);
   pushTriggerTrace(session, {
     at: line.id,
@@ -1557,12 +1609,66 @@ export async function processTranscriptEvent(
     offsetMs?: number;
   },
 ) {
+  const jobKey = `${session.sessionId}:${line.speaker}`;
+  let interpP: Promise<Interpretation> | null = null;
+  let applyMode: "none" | "applied_partial" | "rerun" = "none";
+  let seq = session.lunaSeq;
+  if (line.stability === "final" || line.stability === "corrected") {
+    session.lunaSeq += 1;
+    seq = session.lunaSeq;
+  }
+  const pending = partialJobs.get(jobKey);
+  const runInterpret = () =>
+    testInterpretFactory
+      ? testInterpretFactory(session, line)
+      : interpretUtterance(session, line);
+  if (
+    line.stability !== "uncertain" &&
+    session.identityStatus === "VALID"
+  ) {
+    if (line.stability === "partial") {
+      interpP = runInterpret();
+      partialJobs.set(jobKey, { text: line.text, promise: interpP });
+    } else if (
+      pending &&
+      finalCompatibleWithPartial(pending.text, line.text)
+    ) {
+      interpP = pending.promise;
+      applyMode = "applied_partial";
+      partialJobs.delete(jobKey);
+    } else {
+      interpP = runInterpret();
+      applyMode = "rerun";
+      partialJobs.delete(jobKey);
+    }
+  }
   await applyAdvocateObligations(session, line);
   if (line.stability === "uncertain") return;
   if (session.identityStatus !== "VALID") return;
   await applyGovernedUtteranceRules(session, origin, line);
   void (async () => {
-    const interp = await interpretUtterance(session, line);
+    if (!interpP) return;
+    const interp = await interpP;
+    if (
+      testDelayApply &&
+      testDelayApply.eventId === line.id &&
+      testDelayApply.ms > 0
+    ) {
+      await new Promise((r) => setTimeout(r, testDelayApply.ms));
+    }
+    if (
+      (line.stability === "final" || line.stability === "corrected") &&
+      seq !== session.lunaSeq
+    ) {
+      appendJsonl(session.sessionId, {
+        kind: "luna_stale_discard",
+        eventId: line.id,
+        seq,
+        currentSeq: session.lunaSeq,
+        applyMode,
+      });
+      return;
+    }
     appendJsonl(session.sessionId, {
       kind: "luna_interpret",
       eventId: line.id,
@@ -1572,6 +1678,8 @@ export async function processTranscriptEvent(
       cc: interp.comparisonConsent,
       ha: interp.historicalAsked,
       qp: interp.quotePharmacy,
+      applyMode,
+      seq,
       raw: interp.raw.slice(0, 180),
     });
     session.lastInterpretation = {

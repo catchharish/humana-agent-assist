@@ -8,6 +8,7 @@ import {
   quoteAmountsMayRender,
   type UtteranceRules,
 } from "@/lib/utteranceRules";
+import { finalCompatibleWithPartial } from "@/lib/interpret";
 import { applyGovernedUtteranceRules } from "@/lib/copilot";
 import type { DisclosureRequirement } from "@/lib/types";
 
@@ -221,6 +222,15 @@ describe("conservative comparison consent (governed patterns)", () => {
       expect(session.consent.comparison, text).toBe("absolute_yes");
       expect(quoteAmountsMayRender(session.consent.comparison), text).toBe(true);
     }
+  });
+
+  it("reuses a partial when the final only adds trailing punctuation", () => {
+    expect(
+      finalCompatibleWithPartial("yes", "yes."),
+    ).toBe(true);
+    expect(
+      finalCompatibleWithPartial("yes", "yes, I guess"),
+    ).toBe(false);
   });
 
   it("does not render amounts when quotes exist but consent is not absolute yes", () => {

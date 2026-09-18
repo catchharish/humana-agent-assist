@@ -102,27 +102,168 @@ export function parseJsonObject<T>(text: string): T | null {
   }
 }
 
-export async function lunaComplete(input: string, maxOutputTokens = 400) {
+export type LunaUsage = {
+  input_tokens: number;
+  output_tokens: number;
+  cached_tokens: number;
+};
+
+export type LunaStreamResult = {
+  ok: boolean;
+  ms: number;
+  ttftMs: number | null;
+  text: string;
+  usage: LunaUsage | null;
+  model: string;
+};
+
+function usageFrom(json: unknown): LunaUsage | null {
+  if (!json || typeof json !== "object") return null;
+  const u = (json as { usage?: Record<string, unknown> }).usage;
+  if (!u) return null;
+  const details = (u.input_tokens_details ?? u.prompt_tokens_details) as
+    | Record<string, unknown>
+    | undefined;
+  return {
+    input_tokens: Number(u.input_tokens ?? u.prompt_tokens ?? 0),
+    output_tokens: Number(u.output_tokens ?? u.completion_tokens ?? 0),
+    cached_tokens: Number(details?.cached_tokens ?? 0),
+  };
+}
+
+export async function lunaStream(opts: {
+  input: unknown;
+  maxOutputTokens: number;
+  promptCacheKey?: string;
+  serviceTier?: "priority" | "fast";
+  onDelta?: (acc: string) => boolean | void;
+}): Promise<LunaStreamResult> {
   const key = readOpenAiKey();
   if (!key) {
-    return { ok: false, ms: 0, model: FAST_MODEL, text: "", usage: null };
+    return {
+      ok: false,
+      ms: 0,
+      ttftMs: null,
+      text: "",
+      usage: null,
+      model: FAST_MODEL,
+    };
   }
-  const res = await post("/v1/responses", {
+  const payload: Record<string, unknown> = {
     model: FAST_MODEL,
     reasoning: { effort: "none" },
-    max_output_tokens: maxOutputTokens,
-    input,
+    max_output_tokens: opts.maxOutputTokens,
+    input: opts.input,
+    stream: true,
+  };
+  if (opts.promptCacheKey) payload.prompt_cache_key = opts.promptCacheKey;
+  if (opts.serviceTier) payload.service_tier = opts.serviceTier;
+  const body = JSON.stringify(payload);
+  const t0 = performance.now();
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: "api.openai.com",
+        path: "/v1/responses",
+        method: "POST",
+        agent,
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          Connection: "keep-alive",
+        },
+      },
+      (res: http.IncomingMessage) => {
+        let buf = "";
+        let text = "";
+        let ttftMs: number | null = null;
+        let usage: LunaUsage | null = null;
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          resolve({
+            ok: (res.statusCode ?? 500) < 400 || Boolean(text),
+            ms: performance.now() - t0,
+            ttftMs,
+            text,
+            usage,
+            model: FAST_MODEL,
+          });
+        };
+        res.on("data", (chunk: Buffer) => {
+          buf += chunk.toString("utf8");
+          if (buf.includes("{") && !buf.includes("data:")) {
+            try {
+              const errJson = JSON.parse(buf) as {
+                error?: { message?: string };
+                usage?: unknown;
+              };
+              if (errJson.error) {
+                usage = usageFrom(errJson);
+                finish();
+                return;
+              }
+            } catch {
+              /* still accumulating SSE */
+            }
+          }
+          const parts = buf.split("\n");
+          buf = parts.pop() ?? "";
+          for (const line of parts) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+            const data = trimmed.slice(5).trim();
+            if (!data || data === "[DONE]") continue;
+            let ev: Record<string, unknown>;
+            try {
+              ev = JSON.parse(data) as Record<string, unknown>;
+            } catch {
+              continue;
+            }
+            const type = String(ev.type ?? "");
+            if (type === "response.output_text.delta") {
+              const delta = String(ev.delta ?? "");
+              if (delta) {
+                if (ttftMs == null) ttftMs = performance.now() - t0;
+                text += delta;
+                opts.onDelta?.(text);
+              }
+            }
+            if (type === "response.output_text.done") {
+              const done = String(ev.text ?? "");
+              if (done && !text) {
+                if (ttftMs == null) ttftMs = performance.now() - t0;
+                text = done;
+                opts.onDelta?.(text);
+              }
+            }
+            if (type === "response.completed") {
+              const resp = ev.response as { usage?: unknown } | undefined;
+              usage = usageFrom(resp ?? ev);
+            }
+          }
+        });
+        res.on("end", finish);
+        res.on("error", reject);
+      },
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
   });
-  const usage =
-    res.json && typeof res.json === "object"
-      ? ((res.json as { usage?: unknown }).usage ?? null)
-      : null;
+}
+
+export async function lunaComplete(input: string, maxOutputTokens = 400) {
+  const streamed = await lunaStream({ input, maxOutputTokens });
   return {
-    ok: res.status < 400,
-    ms: res.ms,
-    model: FAST_MODEL,
-    text: extractOutputText(res.json),
-    usage,
+    ok: streamed.ok,
+    ms: streamed.ms,
+    ttftMs: streamed.ttftMs,
+    model: streamed.model,
+    text: streamed.text,
+    usage: streamed.usage,
   };
 }
 

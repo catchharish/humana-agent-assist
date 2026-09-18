@@ -191,10 +191,10 @@ export async function runScenario(opts: {
       await waitNeedAnswer(session, "service_education", 12_000);
     }
     if (ev.id === "e-yes-compare") {
-      await waitUntil(session, (s) => s.quotes.length > 0, 12_000);
+      await waitUntil(session, (s) => s.quotes.length > 0, 12_000, "quotes");
     }
     if (ev.id === "e-jardiance") {
-      await waitUntil(session, (s) => Boolean(s.coverage), 12_000);
+      await waitUntil(session, (s) => Boolean(s.coverage), 12_000, "coverage");
     }
     await paint(session.sessionId, ev.id, ev.type, tEvent);
     await refresh(session);
@@ -206,6 +206,31 @@ export async function runScenario(opts: {
       });
       if (resumed.body.session) Object.assign(session, resumed.body.session);
     }
+  }
+  if (opts.scenarioId === "t01_m2a") {
+    await waitUntil(
+      session,
+      (s) =>
+        s.diagnostics.triggers.some(
+          (t) => t.classification === "prospective_estimate" || t.fired,
+        ) ||
+        s.pricing === "late_finding" ||
+        s.pricing === "exact_timely",
+      12_000,
+      "pricing trigger classification",
+    );
+    await waitUntil(
+      session,
+      (s) => Boolean(s.wrapDraft),
+      20_000,
+      "wrap draft",
+    );
+    await waitUntil(
+      session,
+      (s) => Boolean(s.handoffDraft),
+      20_000,
+      "handoff draft",
+    );
   }
   if (opts.overlay === "T04B" || opts.overlay === "T06A" || opts.scenarioId === "t06a") {
     await new Promise((r) => setTimeout(r, 3500));
@@ -276,6 +301,7 @@ export async function measureUtterance(opts: {
           (s) =>
             s.consent.comparison === "absolute_yes" && s.quotes.length > 0,
           20_000,
+          "absolute_yes quotes",
         );
       }
     }
@@ -324,6 +350,7 @@ async function waitUntil(
   session: SessionState,
   pred: (s: SessionState) => boolean,
   ms: number,
+  label = "condition",
 ) {
   const t0 = Date.now();
   while (Date.now() - t0 < ms) {
@@ -332,6 +359,11 @@ async function waitUntil(
     await new Promise((r) => setTimeout(r, 200));
   }
   await refresh(session);
+  if (!pred(session)) {
+    throw new Error(
+      `waitUntil timed out after ${ms}ms waiting for ${label} (session ${session.sessionId})`,
+    );
+  }
 }
 
 async function waitNeedAnswer(
@@ -343,6 +375,7 @@ async function waitNeedAnswer(
     session,
     (s) => Boolean(s.needs.find((n) => n.kind === kind)?.answer),
     ms,
+    `${kind} answer`,
   );
 }
 

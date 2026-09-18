@@ -228,6 +228,7 @@ export type SessionState = {
   outcomeReady: boolean;
   warmup: { ok: boolean; ms: number; model: string; at: string } | null;
   lastTimings: TimingRecord[];
+  lunaSeq: number;
   lastInterpretation: Record<string, unknown> | null;
   diagnostics: {
     disclosureFetch: string;

@@ -1,0 +1,8 @@
+{
+  "sessionId": "f65459fe-8069-4cfc-9419-afdbab2e1dbf",
+  "scenarioId": "t01_m2a",
+  "result": "FAIL",
+  "reason": "Compact positional CSV dropped ha/cv; coverage never loaded. waitUntil expired without throwing.",
+  "jsonl": "runs/f65459fe-8069-4cfc-9419-afdbab2e1dbf.jsonl",
+  "evidence": "runs/f65459fe-8069-4cfc-9419-afdbab2e1dbf.evidence.json"
+}

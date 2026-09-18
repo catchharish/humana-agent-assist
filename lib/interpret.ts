@@ -1,4 +1,4 @@
-import { lunaComplete, parseJsonObject } from "@/lib/openai";
+import { lunaStream, parseJsonObject } from "@/lib/openai";
 import type { NeedKind, SessionState } from "@/lib/types";
 
 export type Interpretation = {
@@ -27,6 +27,8 @@ export type Interpretation = {
   focusKind: NeedKind | null;
   raw: string;
   ms: number;
+  ttftMs: number | null;
+  usage: { input_tokens: number; output_tokens: number; cached_tokens: number } | null;
   ok: boolean;
 };
 
@@ -99,84 +101,132 @@ type Compact = {
   fk?: keyof typeof FOCUS | null;
 };
 
-function bit(v: unknown): boolean {
-  return v === 1 || v === true;
+function on(v: unknown) {
+  return v === 1 || v === true || v === "1";
+}
+
+const INTERPRET_STATIC = `Classify one utterance. Output exactly 23 space-separated tokens, no keys, no prose, no commas, no pipes:
+ct rf ha rt cr n90 rh si cc ec el em cv ma ao fr st we qp qc qd pt fk
+Allowed: ct - R P E D G ; rf n ex rd ; bits 0 or 1 only ; cc ec n h y ; em - or metformin or metformin+atorvastatin ; qp - l o c ; qd - metformin atorvastatin jardiance ; pt n h p ; fk - rs hp pc se sel cs
+Rules: hist price stays R. D only if they ask not to be called. E only if advocate introduces 90-day/delivery or member asks how it works. rf=ex already-submitted refill; rd ready today. st=1 small talk only. ha=1 question about past paid amounts (then fk=hp). rt=1 return to deferred price. n90=1 how 90-day option works; n90=0 for estimate-at-pharmacy (use qp qd). rh=1 unsure delivery while keeping retail. fr=1 keep retail/no delivery. si=1 advocate introduces service. cc=h hedge; cc=y clear yes to scoped compare. qp/qd for named-pharmacy estimate. qc=1 pharmacy correction. el=1 split election; em delivery drugs. ec=y yes after scoped readback. we=1 withdraw. cv=1 pending coverage/approval status (then fk=cs). ao=1 advocate offers Coverage Review. ma=1 member agrees to transfer. pt=p future estimate; pt=h past charges.
+Shots (invented, copy this layout):
+last fill eleven vs forty → R n 1 0 0 0 0 0 n n 0 - 0 0 0 0 0 0 - 0 - n hp
+SGLT2 request signed off yet → G n 0 0 0 0 0 0 n n 0 - 1 0 0 0 0 0 - 0 - n cs
+walk me through ninety-day mail → E n 0 0 0 1 0 0 n n 0 - 0 0 0 0 0 0 - 0 - n se
+ready if I drive today → R rd 0 0 1 0 0 0 n n 0 - 0 0 0 0 0 0 - 0 - n rs
+yes I want you to compare both → E n 0 0 0 0 0 0 y n 0 - 0 0 0 0 0 0 - 0 - n pc
+Defaults: n 0 -.`;
+
+const CLASS_CHANGE =
+  /\b(yes|no|not|guess|maybe|whatever|enroll|compare|ninety|90|three[- ]month|dollar|estimate|lakeview|oak|centerwell|withdraw|please|sure|kind of|sort of|absolutely)\b/i;
+
+export function finalCompatibleWithPartial(partial: string, final: string) {
+  const p = partial.trim().replace(/[.!?,;:]+$/g, "").toLowerCase();
+  const f = final.trim().replace(/[.!?,;:]+$/g, "").toLowerCase();
+  if (!p || !f) return false;
+  if (f === p) return true;
+  if (!f.startsWith(p)) return false;
+  const extra = f.slice(p.length);
+  if (/^[\s'!?.,"]*$/.test(extra)) return true;
+  if (CLASS_CHANGE.test(extra)) return false;
+  return extra.trim().split(/\s+/).filter(Boolean).length <= 3;
+}
+
+function lastTurns(session: SessionState) {
+  return session.transcript
+    .slice(-4)
+    .map((t) => `${t.speaker[0]}:${t.stability[0]}:${t.text}`)
+    .join(" | ");
+}
+
+function parseCsvInterp(text: string) {
+  const lines = text
+    .trim()
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const line =
+    lines.find((l) => !/^ct\b/i.test(l) && /[RPEGD]|ha|cv|fk/.test(l)) ??
+    lines[0] ??
+    "";
+  const p = line.split(/[\s,|]+/).filter(Boolean);
+  const start = p[0] === "ct" ? 1 : 0;
+  const at = (i: number) => p[start + i] ?? "-";
+  return {
+    ct: at(0),
+    rf: at(1),
+    ha: at(2),
+    rt: at(3),
+    cr: at(4),
+    n90: at(5),
+    rh: at(6),
+    si: at(7),
+    cc: at(8),
+    ec: at(9),
+    el: at(10),
+    em: at(11),
+    cv: at(12),
+    ma: at(13),
+    ao: at(14),
+    fr: at(15),
+    st: at(16),
+    we: at(17),
+    qp: at(18),
+    qc: at(19),
+    qd: at(20),
+    pt: at(21),
+    fk: at(22),
+  };
 }
 
 export async function interpretUtterance(
   session: SessionState,
   utterance: { speaker: string; text: string; stability: string },
 ): Promise<Interpretation> {
-  const luna = await lunaComplete(
-    `Classify one utterance. JSON only. No prose. No rationale. Keys:
-ct:null|R|P|E|D|G rf:n|ex|rd ha,rt,cr,n90,rh,si,el,cv,ma,ao,fr,st,we,qc:0|1 cc,ec:n|h|y em:[] qp:null|l|o|c qd:null|metformin|atorvastatin|jardiance pt:n|h|p fk:null|rs|hp|pc|se|sel|cs
-
-Rules:
-- Historical price stays inside Refill; do not change ct for a focus change.
-- ct=E only if advocate introduces optional 90-day/delivery/pharmacy service, or member asks how that option works.
-- rf=ex already-submitted refill; rf=rd ready today.
-- st=1 only harmless small talk with no servicing ask.
-- ha=1 completed past charges (different amounts on different days counts). rt=1 return to a deferred price question.
-- n90=1 ask how a 90-day/ninety-day/three-month option works. n90=0 for ran-out / already-on-90-day / a price or estimate at a named pharmacy (use qp/qd).
-- rh=1 uncertainty about delivery plus keep speaking with retail pharmacist. fr=1 explicit keep-retail/no-delivery.
-- si=1 advocate introduces the optional service.
-- cc=h hedged compare reply; cc=y clear yes to a scoped compare question. Hearing prices is not enrollment.
-- qp/qd REQUIRED when the member asks a prospective estimate at a named pharmacy (l=lakeview, o=oak-street, c=centerwell). qc=1 pharmacy correction.
-- el=1 split election; em=delivery drugs from {metformin,atorvastatin} only.
-- ec=y clear yes after scoped enrollment readback. we=1 withdraw.
-- cv=1 pending coverage-status ask. ao=1 advocate offers Coverage Review. ma=1 member agrees to that connection.
-- pt=p future fill estimate spoken as estimate; pt=h completed past charges; else n.
-
-Shots (invented; not test streams):
-{"rf":"ex"} refill I already submitted
-{"rf":"rd"} ready if I drive over today
-{"ha":1} last fill eleven at one store forty at another
-{"rt":1} back to that cost question
-{"n90":1} walk me through the ninety-day mail option
-{"rh":1} unsure about mail; like the counter conversation
-{"fr":1} keep retail; do not set up delivery
-{"cc":"h"} yeah I guess sure after a compare ask
-{"cc":"y"} yes I want you to compare both pharmacies she named
-{"qp":"l","qd":"metformin"} 90-day estimate at the first retail pharmacy she named for the blood-pressure tablet
-{"qc":1,"qp":"o"} not that first retail pharmacy — the other retail location she listed
-{"el":1,"em":["metformin"]} leave cholesterol at the counter; delivery for the blood-pressure tablet only
-{"ec":"y"} yes for the one we just scoped
-{"we":1} please withdraw that enrollment
-{"cv":1} has the pending request for that SGLT2 been approved
-
-Omit fields that are default n/0/null.
-Call type: ${session.callType}
-Need: ${session.currentNeed}
-Open: ${session.needs.map((n) => n.kind + ":" + n.status).join(",") || "none"}
-HistQ: ${Boolean(getNeedQuery(session, "historical_price"))}
-Who: ${utterance.speaker}
-Stab: ${utterance.stability}
-Utt: ${JSON.stringify(utterance.text)}`,
-    128,
-  );
-  const parsed = (parseJsonObject<Record<string, unknown>>(luna.text) ??
-    {}) as Record<string, unknown>;
-  const qpRaw = parsed.qp ?? parsed.quotePharmacy;
-  const qdRaw = parsed.qd ?? parsed.quoteDrug;
-  const ccRaw = parsed.cc ?? parsed.comparisonConsent;
-  const ecRaw = parsed.ec ?? parsed.enrollmentConsent;
-  const rfRaw = parsed.rf ?? parsed.refillCheck;
-  const ptRaw = parsed.pt ?? parsed.pricingTrigger;
-  const fkRaw = parsed.fk ?? parsed.focusKind;
-  const ctRaw = parsed.ct ?? parsed.callTypeChange;
-  const electedSrc = parsed.em ?? parsed.electedMedications;
+  const dynamic = `ct:${session.callType} need:${session.currentNeed} open:${session.needs.map((n) => n.kind[0] + n.status[0]).join(",") || "-"} histQ:${getNeedQuery(session, "historical_price") ? 1 : 0}
+turns:${lastTurns(session)}
+who:${utterance.speaker} stab:${utterance.stability}
+utt:${JSON.stringify(utterance.text)}`;
+  const luna = await lunaStream({
+    input: `${INTERPRET_STATIC}\n---\n${dynamic}`,
+    maxOutputTokens: 48,
+  });
+  const csv = parseCsvInterp(luna.text);
+  const json = luna.text.includes("{")
+    ? parseJsonObject<Record<string, unknown>>(luna.text)
+    : null;
+  const parsed = json ?? {};
+  const qpRaw = csv.qp !== "-" ? csv.qp : parsed.qp ?? parsed.quotePharmacy;
+  const qdRaw = csv.qd !== "-" ? csv.qd : parsed.qd ?? parsed.quoteDrug;
+  const ccRaw = csv.cc !== "-" ? csv.cc : parsed.cc ?? parsed.comparisonConsent;
+  const ecRaw = csv.ec !== "-" ? csv.ec : parsed.ec ?? parsed.enrollmentConsent;
+  const rfRaw = csv.rf !== "-" ? csv.rf : parsed.rf ?? parsed.refillCheck;
+  const ptRaw = csv.pt !== "-" ? csv.pt : parsed.pt ?? parsed.pricingTrigger;
+  const fkRaw = csv.fk !== "-" ? csv.fk : parsed.fk ?? parsed.focusKind;
+  const ctRaw = csv.ct !== "-" ? csv.ct : parsed.ct ?? parsed.callTypeChange;
+  const electedSrc =
+    csv.em && csv.em !== "-"
+      ? csv.em.split("+")
+      : parsed.em ?? parsed.electedMedications;
   const elected = Array.isArray(electedSrc)
     ? electedSrc.filter((x): x is string =>
         DRUGS.includes(x as (typeof DRUGS)[number]),
       )
     : [];
   const callValues = Object.values(CALL);
-  const ct =
+  let ct: Interpretation["callTypeChange"] =
     typeof ctRaw === "string" && ctRaw in CALL
       ? CALL[ctRaw as keyof typeof CALL]
-      : typeof ctRaw === "string" && callValues.includes(ctRaw as (typeof CALL)[keyof typeof CALL])
+      : typeof ctRaw === "string" &&
+          callValues.includes(ctRaw as (typeof CALL)[keyof typeof CALL])
         ? (ctRaw as Interpretation["callTypeChange"])
         : null;
+  if (
+    ct === "Do-not-call" &&
+    !/\b(do not call|don't call|remove me|stop calling)\b/i.test(utterance.text)
+  ) {
+    ct = null;
+  }
   const qp =
     qpRaw === "l" || qpRaw === "lakeview"
       ? ("lakeview" as const)
@@ -219,28 +269,40 @@ Utt: ${JSON.stringify(utterance.text)}`,
   return {
     callTypeChange: ct,
     refillCheck: rf,
-    historicalAsked: bit(parsed.ha) || bit(parsed.historicalAsked),
-    returnToHistorical: bit(parsed.rt) || bit(parsed.returnToHistorical),
+    historicalAsked:
+      on(csv.ha) ||
+      on(parsed.ha) ||
+      on(parsed.historicalAsked) ||
+      fk === "historical_price",
+    returnToHistorical: on(csv.rt) || on(parsed.rt) || on(parsed.returnToHistorical),
     communicatedRefillReadiness:
-      bit(parsed.cr) || bit(parsed.communicatedRefillReadiness),
-    ninetyDayAsked: bit(parsed.n90) || bit(parsed.ninetyDayAsked),
-    retailHesitation: bit(parsed.rh) || bit(parsed.retailHesitation),
+      on(csv.cr) || on(parsed.cr) || on(parsed.communicatedRefillReadiness),
+    ninetyDayAsked: on(csv.n90) || on(parsed.n90) || on(parsed.ninetyDayAsked),
+    retailHesitation: on(csv.rh) || on(parsed.rh) || on(parsed.retailHesitation),
     serviceIntroducedByAdvocate:
-      bit(parsed.si) || bit(parsed.serviceIntroducedByAdvocate),
+      on(csv.si) || on(parsed.si) || on(parsed.serviceIntroducedByAdvocate),
     comparisonConsent: cc,
     enrollmentConsent: ec,
-    electionMetforminOnly: bit(parsed.el) || bit(parsed.electionMetforminOnly),
+    electionMetforminOnly: on(csv.el) || on(parsed.el) || on(parsed.electionMetforminOnly),
     electedMedications: elected,
-    coverageAsked: bit(parsed.cv) || bit(parsed.coverageAsked),
-    memberAgreesTransfer: bit(parsed.ma) || bit(parsed.memberAgreesTransfer),
+    coverageAsked:
+      on(csv.cv) ||
+      on(parsed.cv) ||
+      on(parsed.coverageAsked) ||
+      fk === "coverage_status",
+    memberAgreesTransfer: on(csv.ma) || on(parsed.ma) || on(parsed.memberAgreesTransfer),
     advocateOfferedTransfer:
-      bit(parsed.ao) || bit(parsed.advocateOfferedTransfer),
-    firmRefusal: bit(parsed.fr) || bit(parsed.firmRefusal),
-    smallTalkOnly: bit(parsed.st) || bit(parsed.smallTalkOnly),
-    withdrawEnrollment: bit(parsed.we) || bit(parsed.withdrawEnrollment),
+      on(csv.ao) || on(parsed.ao) || on(parsed.advocateOfferedTransfer),
+    firmRefusal: on(csv.fr) || on(parsed.fr) || on(parsed.firmRefusal),
+    smallTalkOnly: on(csv.st) || on(parsed.st) || on(parsed.smallTalkOnly),
+    withdrawEnrollment:
+      (on(csv.we) || on(parsed.we) || on(parsed.withdrawEnrollment)) &&
+      /\b(withdraw|never mind|don't enroll|do not enroll|changed my mind)\b/i.test(
+        utterance.text,
+      ),
     quotePharmacy: qp,
     quotePharmacyCorrection:
-      bit(parsed.qc) || bit(parsed.quotePharmacyCorrection),
+      on(csv.qc) || on(parsed.qc) || on(parsed.quotePharmacyCorrection),
     quoteDrug:
       typeof qdRaw === "string" &&
       DRUGS.includes(qdRaw as (typeof DRUGS)[number])
@@ -250,6 +312,8 @@ Utt: ${JSON.stringify(utterance.text)}`,
     focusKind: fk,
     raw: luna.text,
     ms: luna.ms,
+    ttftMs: luna.ttftMs ?? null,
+    usage: luna.usage ?? null,
     ok: luna.ok,
   };
 }

@@ -124,6 +124,7 @@ export function createSession(init: {
     outcomeReady: false,
     warmup: null,
     lastTimings: [],
+    lunaSeq: 0,
     lastInterpretation: null,
     diagnostics: {
       disclosureFetch: init.disclosureFetch,
