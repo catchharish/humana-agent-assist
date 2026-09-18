@@ -1,0 +1,149 @@
+{
+  "sessionId": "fa5571bf-28fc-454a-9f84-dc701c5e5fce",
+  "scenarioId": "t02a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-said-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Optional work stopped",
+    "body": "Member declined delivery and asked to keep retail. Stop comparison, enrollment, and repeated rebuttals. Today's pickup and any real open need stay. Closing remains applicable if the service was discussed. No inferred negative plan effect.",
+    "sourceLabel": "Governed guidance · scripting · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": "COMPLETED_SERVICING",
+    "confirmed": "COMPLETED_SERVICING"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789758594831,
+      "tPaint": 1789758595182,
+      "paintMs": 351,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789758595410,
+      "tPaint": 1789758595422,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789758595488,
+      "tPaint": 1789758595502,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789758595716,
+      "tPaint": 1789758597294,
+      "paintMs": 1578,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-smalltalk",
+      "kind": "transcript",
+      "tEvent": 1789758597419,
+      "tPaint": 1789758597475,
+      "paintMs": 56,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-ready",
+      "kind": "transcript",
+      "tEvent": 1789758597600,
+      "tPaint": 1789758597627,
+      "paintMs": 27,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-ready",
+      "kind": "pause_gate",
+      "tEvent": 1789758597794,
+      "tPaint": 1789758597804,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-said-ready",
+      "kind": "transcript",
+      "tEvent": 1789758597892,
+      "tPaint": 1789758597905,
+      "paintMs": 13,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-disp",
+      "kind": "pause_gate",
+      "tEvent": 1789758597968,
+      "tPaint": 1789758597983,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 0
+    }
+  ],
+  "needPaths": []
+}

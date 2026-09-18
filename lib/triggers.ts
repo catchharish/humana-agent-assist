@@ -67,21 +67,22 @@ function hasComparative(text: string, session: SessionState): boolean {
 }
 
 function quotedNames(session: SessionState): string[] {
-  const p = pricingPatterns(session);
-  const fromQuotes = session.quotes.flatMap((q) => [
-    q.pharmacyName,
-    q.drugName,
-  ]);
-  return [
-    ...fromQuotes,
-    ...(p.namedPharmacies ?? []),
-    ...(p.namedDrugs ?? []),
-  ].filter(Boolean);
+  return session.quotes
+    .flatMap((q) => [q.pharmacyName, q.drugName])
+    .filter(Boolean);
 }
 
 export function namesQuotedOption(session: SessionState, text: string): boolean {
   const lower = text.toLowerCase();
-  return quotedNames(session).some((n) => lower.includes(n.toLowerCase()));
+  const names = [
+    ...quotedNames(session),
+    ...(session.prefetch?.prescriptions ?? []).map((p) => p.drugName),
+  ].filter(Boolean);
+  return names.some((n) => {
+    const ln = n.toLowerCase();
+    if (lower.includes(ln)) return true;
+    return ln.split(/[\s/-]+/).some((w) => w.length > 3 && lower.includes(w));
+  });
 }
 
 function needIsProspective(session: SessionState): boolean {
@@ -140,6 +141,17 @@ export async function classifyPricingTrigger(
   const historicalNeed = session.needs.some(
     (n) => n.kind === "historical_price" && n.status !== "resolved",
   );
+
+  if (amount && cue && named && !historicalNeed) {
+    return {
+      stage: 1,
+      fired: true,
+      classification: "prospective_estimate",
+      latencyMs: 0,
+      modelCall: false,
+      reason: "stage1_spoken_estimate",
+    };
+  }
 
   if (amount && cue && prospective && named) {
     return {

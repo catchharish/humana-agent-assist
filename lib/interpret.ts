@@ -108,10 +108,10 @@ function on(v: unknown) {
 const INTERPRET_STATIC = `Classify one utterance. JSON object only, no prose. Keys: ct rf ha rt cr n90 rh si cc ec el em cv ma ao fr st we qp qc qd pt fk
 Allowed: ct R|P|E|D|G|- ; rf n|ex|rd ; bits 0 or 1 ; cc ec n|h|y ; em [] ; qp -|l|o|c ; qd - or named drug from Entities ; pt n|h|p ; fk -|rs|hp|pc|se|sel|cs
 Rules: hist price stays R. D only if they ask not to be called. E only if advocate introduces 90-day/delivery or member asks how it works. rf=ex already-submitted refill; rd ready today. st=1 small talk only. ha=1 question about past paid amounts (then fk=hp). rt=1 return to deferred price. n90=1 how 90-day option works. rh=1 unsure delivery while keeping retail. fr=1 keep retail/no delivery. si=1 advocate introduces service. cc=h hedge; cc=y clear yes to scoped compare. qp/qd for named-pharmacy estimate. qc=1 pharmacy correction. el=1 split election; em delivery drugs. ec=y yes after scoped readback. we=1 withdraw. cv=1 pending coverage/approval status (then fk=cs). ao=1 advocate offers Coverage Review. ma=1 member agrees to transfer. pt=p future estimate; pt=h past charges.
-Shots (unrelated invented layout only):
-{"ct":"R","rf":"n","ha":1,"rt":0,"cr":0,"n90":0,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":0,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"hp"}
-{"ct":"G","rf":"n","ha":0,"rt":0,"cr":0,"n90":0,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":1,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"cs"}
-{"ct":"E","rf":"n","ha":0,"rt":0,"cr":0,"n90":1,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":0,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"se"}
+Shots (invented layout only; input then object):
+paid-last-April-at-other-counter → {"ct":"R","rf":"n","ha":1,"rt":0,"cr":0,"n90":0,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":0,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"hp"}
+has-that-new-card-been-reviewed → {"ct":"G","rf":"n","ha":0,"rt":0,"cr":0,"n90":0,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":1,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"cs"}
+how-does-the-mail-option-work → {"ct":"E","rf":"n","ha":0,"rt":0,"cr":0,"n90":1,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":0,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"se"}
 Cache prefix (ignore): JSON schema reminder. Output one object. Unknown fields stay default n or 0 or -. Never invent drugs. Never mint or submit. Bits are 0 or 1. ${"Follow the schema. One JSON object. Defaults n 0 -. ".repeat(48)}`;
 
 export function finalCompatibleWithPartial(partial: string, final: string) {
@@ -220,7 +220,7 @@ who:${utterance.speaker} stab:${utterance.stability}
 utt:${JSON.stringify(utterance.text)}`;
   const luna = await lunaStream({
     input: `${INTERPRET_STATIC}\n---\n${dynamic}`,
-    maxOutputTokens: 80,
+    maxOutputTokens: 160,
     serviceTier: "priority",
     promptCacheKey: "haa-interpret-v3",
     onDelta: (acc) => Boolean(parseCsvInterp(acc)),

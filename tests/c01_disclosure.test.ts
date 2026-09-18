@@ -23,6 +23,29 @@ function disclosures(): DisclosureRequirement[] {
   ).requirements;
 }
 
+function seedQuotes(session: ReturnType<typeof createSession>) {
+  session.quotes = [
+    {
+      quoteId: "q-lv",
+      drugName: "atorvastatin",
+      pharmacyName: "Lakeview Pharmacy",
+      estimatedMemberCost: { value: "15", currency: "USD" },
+      daysSupply: 90,
+      quantity: 1,
+      validityStatus: "valid",
+    },
+    {
+      quoteId: "q-os",
+      drugName: "metformin",
+      pharmacyName: "Oak Street",
+      estimatedMemberCost: { value: "18", currency: "USD" },
+      daysSupply: 90,
+      quantity: 1,
+      validityStatus: "valid",
+    },
+  ];
+}
+
 describe("C01 disclosure / deadlines", () => {
   it("accepts punctuation-only differences", () => {
     expect(isExactReading(GREETING + "!", GREETING)).toBe(true);
@@ -114,6 +137,7 @@ describe("C01 disclosure / deadlines", () => {
     expect(session.pricingExactDelivered).toBe(true);
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
+    seedQuotes(session);
     await applyAdvocateObligations(session, {
       id: "est",
       speaker: "advocate",
@@ -131,6 +155,7 @@ describe("C01 disclosure / deadlines", () => {
     });
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
+    seedQuotes(session);
     await applyAdvocateObligations(session, {
       id: "est1",
       speaker: "advocate",
@@ -161,6 +186,7 @@ describe("C01 disclosure / deadlines", () => {
     });
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
+    seedQuotes(session);
     const result = await classifyPricingTrigger(session, {
       speaker: "advocate",
       stability: "final",
@@ -198,6 +224,7 @@ describe("C01 disclosure / deadlines", () => {
     });
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
+    seedQuotes(session);
     const result = await classifyPricingTrigger(session, {
       speaker: "advocate",
       stability: "final",
@@ -235,6 +262,7 @@ describe("C01 disclosure / deadlines", () => {
     });
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
+    seedQuotes(session);
     await applyAdvocateObligations(session, {
       id: "est1",
       speaker: "advocate",
@@ -332,5 +360,30 @@ describe("C01 disclosure / deadlines", () => {
       text: CLOSING.slice("Your decision today has no impact".length).trim(),
     });
     expect(session.closing).toBe("exact_timely");
+  });
+
+  it("T01 paraphrase after a pricing nudge is an attempt even with low overlap", async () => {
+    const session = createSession({
+      disclosures: disclosures(),
+      disclosureFetch: "test",
+    });
+    upsertNeed(session, "prospective_comparison", { status: "active" });
+    session.currentNeed = "prospective comparison";
+    seedQuotes(session);
+    await applyAdvocateObligations(session, {
+      id: "est1",
+      speaker: "advocate",
+      stability: "final",
+      text: "The Oak Street 90-day estimate is eighteen dollars",
+    });
+    expect(session.nudge?.template).toBeTruthy();
+    await applyAdvocateObligations(session, {
+      id: "e-paraphrase",
+      speaker: "advocate",
+      stability: "final",
+      text: "These prices might change.",
+    });
+    expect(session.nudge?.heard).toMatch(/prices might change/i);
+    expect(session.nudge?.missingFromHeard?.length).toBeGreaterThan(0);
   });
 });

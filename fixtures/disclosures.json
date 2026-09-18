@@ -51,8 +51,6 @@
           "a third of",
           "third of the"
         ],
-        "namedPharmacies": ["Lakeview", "Oak Street", "CenterWell"],
-        "namedDrugs": ["metformin", "atorvastatin"],
         "notAnEstimateExamples": ["prices can vary by pharmacy"]
       }
     },

@@ -1,0 +1,172 @@
+{
+  "sessionId": "4a7c2a0a-f1ad-4f9b-9c81-fd51df4aa7d7",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "structured_lookup",
+        "knowledge_search",
+        "partial_withhold"
+      ],
+      "latencyMs": 485.0690830000676,
+      "retrieved": [
+        {
+          "id": "DEMO-C0818",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-C0916",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-NET0916",
+          "sourceSystem": "benefits"
+        },
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "ranked": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "score": 0.5520970806077592
+        },
+        {
+          "id": "DEMO-OBJECTION-RETAIL-v1",
+          "score": 0.3009865361574758
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "score": 0.25078770246530735
+        },
+        {
+          "id": "DEMO-FAST90-v1",
+          "score": 0.2356324788565504
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Completed metformin charges are confirmed",
+    "body": "The completed charges are established: $8.00 at Oak Street Pharmacy on August 18, 2026, and $27.00 at Lakeview Pharmacy on September 16, 2026, for matched 30-day supplies of metformin 500 mg tablets. The cause of the difference is not established because support is missing for classification:DEMO-C0818. Lakeview Pharmacy is classified as standard retail, but there is no supporting classification for the Oak Street Pharmacy claim.",
+    "sourceLabel": "System record · claims · simulated",
+    "causeSupported": false,
+    "chargesEstablished": true
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Completed metformin charges are confirmed",
+    "body": "The completed charges are established: $8.00 at Oak Street Pharmacy on August 18, 2026, and $27.00 at Lakeview Pharmacy on September 16, 2026, for matched 30-day supplies of metformin 500 mg tablets. The cause of the difference is not established because support is missing for classification:DEMO-C0818. Lakeview Pharmacy is classified as standard retail, but there is no supporting classification for the Oak Street Pharmacy claim.",
+    "sourceLabel": "System record · claims · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789766538234,
+      "tPaint": 1789766538250,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789766538303,
+      "tPaint": 1789766538320,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789766538371,
+      "tPaint": 1789766538379,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789766538444,
+      "tPaint": 1789766538644,
+      "paintMs": 200,
+      "measured": true,
+      "excludedPauseMs": 24
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789766538723,
+      "tPaint": 1789766539865,
+      "paintMs": 1142,
+      "measured": true,
+      "excludedPauseMs": 24
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789766539935,
+      "tPaint": 1789766539947,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 24
+    }
+  ],
+  "needPaths": []
+}

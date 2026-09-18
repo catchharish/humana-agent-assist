@@ -1,24 +1,21 @@
 # STATUS
 
-**Milestone:** M3. Review defects (F1–F35) patched; T01/C06 must be re-walked.
+**Milestone:** M3. Due-now wording owns Now (§14 / D11). Interactive T01 on `:3005` shows pricing sentence on Now with quotes demoted in the drawer.
 **Last updated:** 18 Sep 2026
 
 ## Works
-- Consent: member+final only; enrollment bound to scopeKey + pending matching readback.
-- Stage-1 amounts are currency-marked; comparatives load from the registry.
-- Greeting/closing write-once after exact; paraphrase needs overlap.
-- `showNow` due-now/nudge outranks answers. Fresh refill/coverage lookup; no evidence `??` literals.
-- Greeting/closing/pricing stitch adjacent same-speaker finals of one reading (§12.4).
-- Driver paint waits `lastAppliedEventId` (member finals wait interpret apply, not HTTP ack).
-- Luna interpret: priority tier, prompt cache key, padded static prefix, early-stop on valid JSON.
+- DEMO-PRICING-v1 is Pending later once the comparison is offered; Due now only on comparison `absolute_yes` or a spoken prospective estimate.
+- `e-yes-compare` (code or luna) clears Clarify and puts the registry sentence on Now. Quotes stay in Context as ready/demoted with amounts.
+- Unit tests `tests/pricing_now.test.ts` a/b/c (b waits 1.5s). Interactive proof: `runs/b3863f9e-…` pause “Six quotes loaded” `nowTitle=Pricing statement due now`.
+- C06 due-now item ticked from that walk.
 
 ## Broken / incomplete
-- Interactive T01 + C06 re-tick not done. Live T01/replays not re-run in this session.
+- Automated T01×2 and six replays not re-run on `:3005` after this patch (last live pack was `:3004`).
 
 ## Next three tasks
-1. Interactive T01 walk; keep jsonl; re-tick `tests/c06_checklist.md`.
-2. `RUN_T01=1` and the six replays against localhost.
-3. Confirm T01 wrap contents, `deferred_valid`, and `recheck:true`.
+1. Re-run T01 twice + six replays on a fresh port if you want the pack on this patch.
+2. Present against a fresh `next dev` port; stale :3000 can hang vitest.
+3. Keep jsonl under `runs/` for the presenter walk.
 
 ## Open questions for Harish
-- None on product behavior. C06 still needs your T01 presenter walk.
+- None. Due-now vs clarify is implemented as you specified.

@@ -101,6 +101,7 @@ export function createSession(init: {
       enrollmentScopeKey: null,
       comparisonUtteranceId: null,
       enrollmentUtteranceId: null,
+      clarificationShown: false,
     },
     nudge: null,
     pricingNote: null,
@@ -150,6 +151,7 @@ export function createSession(init: {
       triggers: [],
       rechecks: [],
       needPaths: [],
+      pauseSnapshots: [],
     },
   };
   sessions.set(sessionId, state);
@@ -300,11 +302,19 @@ export function beginPause(session: SessionState, label: string) {
   session.paused = true;
   session.pauseStartedAt = now();
   session.lastPauseLabel = label;
+  const hist = session.needs.find((n) => n.kind === "historical_price");
+  session.diagnostics.pauseSnapshots.push({
+    label,
+    nowTitle: session.nowCard.title,
+    historicalGuidance: hist?.guidance ?? null,
+    historicalStatus: hist?.status ?? null,
+  });
   appendJsonl(session.sessionId, {
     kind: "pause_started",
     label,
     tEvent: session.pauseStartedAt,
     excludedFromMachineTime: true,
+    nowTitle: session.nowCard.title,
   });
 }
 
@@ -416,6 +426,34 @@ function focusMatches(currentNeed: string, kind: NeedKind) {
   return currentNeed.replace(/_/g, " ") === kind.replace(/_/g, " ");
 }
 
+/** Required DEMO-PRICING-v1 wording occupies Now (due now, late, or paraphrased until exact). */
+export function requiredPricingOnNow(session: SessionState): boolean {
+  return (
+    !session.pricingExactDelivered &&
+    (session.pricing === "due_now" ||
+      session.pricing === "late_finding" ||
+      session.pricing === "paraphrased")
+  );
+}
+
+function isPricingWordingCard(
+  card: SessionState["nowCard"],
+  opts?: { priority?: NowPriorityKind },
+) {
+  return (
+    opts?.priority === "due_now" || card.title === "Pricing statement due now"
+  );
+}
+
+/** Blocking rank from live conditions. Due-now required wording always outranks clarify, answers, and recommendations (§14 / D11). */
+export function blockingNowPriority(session: SessionState): number {
+  const closingOpen =
+    session.closing === "paraphrased" || session.closing === "unable_to_verify";
+  if (requiredPricingOnNow(session)) return NOW_PRIORITY.due_now;
+  if (session.nudge || closingOpen) return NOW_PRIORITY.nudge;
+  return 0;
+}
+
 export function showNow(
   session: SessionState,
   card: SessionState["nowCard"],
@@ -423,17 +461,11 @@ export function showNow(
 ) {
   const priority = NOW_PRIORITY[opts?.priority ?? "answer"];
   const kind = opts?.needKind;
-  if (kind && !focusMatches(session.currentNeed, kind) && priority <= NOW_PRIORITY.answer) {
-    upsertNeed(session, kind, {
-      answer: {
-        title: card.title,
-        body: card.body,
-        sourceLabel: card.sourceLabel,
-      },
-    });
-    return;
-  }
-  if (priority < session.nowPriority && session.nowPriority >= NOW_PRIORITY.due_now) {
+  if (
+    requiredPricingOnNow(session) &&
+    !isPricingWordingCard(card, opts) &&
+    priority < NOW_PRIORITY.due_now
+  ) {
     if (kind) {
       upsertNeed(session, kind, {
         answer: {
@@ -445,8 +477,37 @@ export function showNow(
     }
     return;
   }
-  session.nowPriority = priority;
+  if (requiredPricingOnNow(session) && isPricingWordingCard(card, opts)) {
+    session.nowCard = card;
+    session.nowPriority = NOW_PRIORITY.due_now;
+    return;
+  }
+  const block = blockingNowPriority(session);
+  session.nowPriority = block;
+  if (kind && !focusMatches(session.currentNeed, kind) && priority <= NOW_PRIORITY.answer) {
+    upsertNeed(session, kind, {
+      answer: {
+        title: card.title,
+        body: card.body,
+        sourceLabel: card.sourceLabel,
+      },
+    });
+    return;
+  }
+  if (priority < block && block >= NOW_PRIORITY.due_now) {
+    if (kind) {
+      upsertNeed(session, kind, {
+        answer: {
+          title: card.title,
+          body: card.body,
+          sourceLabel: card.sourceLabel,
+        },
+      });
+    }
+    return;
+  }
   session.nowCard = card;
+  session.nowPriority = Math.max(priority, block);
 }
 
 export { sessions };

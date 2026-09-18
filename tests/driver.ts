@@ -234,8 +234,17 @@ export async function runScenario(opts: {
     );
   }
   if (opts.overlay === "T04B" || opts.overlay === "T06A" || opts.scenarioId === "t06a") {
-    await new Promise((r) => setTimeout(r, 3500));
-    await refresh(session);
+    if (opts.overlay === "T06A" || opts.scenarioId === "t06a") {
+      await waitUntil(
+        session,
+        (s) => Boolean(s.needs.find((n) => n.kind === "historical_price")?.answer),
+        20_000,
+        "T06A historical answer",
+      );
+    } else {
+      await new Promise((r) => setTimeout(r, 3500));
+      await refresh(session);
+    }
   }
   dumpEvidence(session);
   return session;

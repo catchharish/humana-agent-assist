@@ -443,8 +443,10 @@ export default function Page() {
         {session &&
           session.quotes.length > 0 &&
           quoteAmountsMayRender(session.consent.comparison) &&
+          session.pricingExactDelivered &&
           session.pricing !== "due_now" &&
-          session.pricingExactDelivered && (
+          session.pricing !== "late_finding" &&
+          session.pricing !== "paraphrased" && (
           <table className="quote-table">
             <thead>
               <tr>
@@ -472,6 +474,7 @@ export default function Page() {
               Draft scope: {session.enrollment.medications.join(", ") || "none"}.
               Comparison interest is not enrollment authorization.
             </p>
+            <p>{session.enrollment.readback}</p>
             <div className="actions">
               <button
                 type="button"
@@ -674,7 +677,17 @@ export default function Page() {
             : "System record · telephony · simulated"}
         </p>
         <h3 className="subhead">Open needs</h3>
-        {(session?.needs ?? []).length === 0 && <p>None yet.</p>}
+        {(session?.needs ?? []).length === 0 &&
+          !session?.consent.clarification && <p>None yet.</p>}
+        {session?.consent.clarification && (
+          <div className="need">
+            <div className="need-head">
+              <strong>Clarify comparison interest</strong>
+              <span className="mark">open</span>
+            </div>
+            <p className="source">{session.consent.clarification}</p>
+          </div>
+        )}
         {(session?.needs ?? []).map((need) => (
           <div key={need.kind} className="need">
             <div className="need-head">
@@ -683,8 +696,14 @@ export default function Page() {
               {need.guidance === "deferred_valid" && (
                 <span className="mark">Answer ready</span>
               )}
+              {need.guidance === "ready" && (
+                <span className="mark">ready</span>
+              )}
             </div>
             <p className="source">{need.flowStep}</p>
+            {need.answer && (
+              <p>{need.answer.body}</p>
+            )}
             <button
               className="secondary"
               type="button"
@@ -694,6 +713,47 @@ export default function Page() {
             </button>
           </div>
         ))}
+        {session && session.quotes.length > 0 && (
+          <div className="need">
+            <div className="need-head">
+              <strong>Prospective comparison</strong>
+              <span className="mark">
+                {session.pricing === "due_now" ||
+                session.pricing === "late_finding" ||
+                session.pricing === "paraphrased"
+                  ? "ready, demoted"
+                  : "ready"}
+              </span>
+            </div>
+            {quoteAmountsMayRender(session.consent.comparison) ? (
+              <table className="quote-table">
+                <thead>
+                  <tr>
+                    <th>Drug</th>
+                    <th>Pharmacy</th>
+                    <th>90-day estimate</th>
+                    <th>Validity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {session.quotes.map((q) => (
+                    <tr key={q.quoteId}>
+                      <td>{q.drugName}</td>
+                      <td>{q.pharmacyName}</td>
+                      <td>${q.estimatedMemberCost.value}</td>
+                      <td>{q.validityStatus}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="source">
+                Quotes are on file. Amounts stay hidden until comparison
+                interest is an absolute yes.
+              </p>
+            )}
+          </div>
+        )}
         <details className="diagnostics">
           <summary>Diagnostics (not advocate default)</summary>
           <pre>

@@ -19,6 +19,7 @@ import {
   getNeed,
   pushRouterTrace,
   pushTriggerTrace,
+  requiredPricingOnNow,
   setFocus,
   showNow,
   upsertNeed,
@@ -90,7 +91,7 @@ function consentAnchorOf(session: SessionState) {
 function logFieldDiscard(
   session: SessionState,
   eventId: string,
-  field: "consent" | "focus" | "callType",
+  field: "consent" | "focus" | "callType" | "election",
 ) {
   appendJsonl(session.sessionId, {
     kind: "luna_stale_discard",
@@ -174,6 +175,133 @@ export function setEnrollmentMedications(
   }
   session.enrollment.medications = medications;
   session.enrollment.readback = sessionEnrollmentReadback(session);
+}
+
+function lastAdvocateFinal(session: SessionState) {
+  return [...session.transcript]
+    .reverse()
+    .find(
+      (t) =>
+        t.speaker === "advocate" &&
+        (t.stability === "final" || t.stability === "corrected"),
+    );
+}
+
+function lastAdvocateIsCurrentReadback(session: SessionState): boolean {
+  const last = lastAdvocateFinal(session);
+  if (!last || !session.enrollment.readback.trim()) return false;
+  return (
+    isExactReading(last.text, session.enrollment.readback) ||
+    isWordingAttempt(last.text, session.enrollment.readback, 0.7)
+  );
+}
+
+function sessionQuoteEntities(session: SessionState) {
+  const drugs = [
+    ...new Set(
+      [
+        ...(session.prefetch?.prescriptions ?? []).map((p) => p.drugName),
+        ...session.quotes.map((q) => q.drugName),
+        ...session.enrollment.medications,
+      ].filter(Boolean),
+    ),
+  ];
+  const refillName = String(
+    (session.prefetch?.refill as { pharmacyName?: string } | null)?.pharmacyName ??
+      "",
+  );
+  const pharmacies = [
+    ...new Set(
+      [...session.quotes.map((q) => q.pharmacyName), refillName].filter(Boolean),
+    ),
+  ];
+  return { drugs, pharmacies };
+}
+
+function pharmacyIdFromUtterance(session: SessionState, text: string) {
+  const lower = text.toLowerCase();
+  const denied = /(?:not|no longer|instead of)\s+([a-z][a-z\s]{2,20})/i.exec(
+    text,
+  );
+  const deniedBlob = (denied?.[1] ?? "").toLowerCase();
+  const hits = session.quotes.filter((q) => {
+    if (!q.pharmacyId) return false;
+    const name = q.pharmacyName.toLowerCase();
+    const words = name.split(/\s+/).filter((w) => w.length > 3);
+    const mentioned =
+      lower.includes(name) || words.some((w) => lower.includes(w));
+    if (!mentioned) return false;
+    if (deniedBlob && (deniedBlob.includes(words[0] ?? "") || name.includes(deniedBlob.trim()))) {
+      return false;
+    }
+    return true;
+  });
+  if (hits[0]?.pharmacyId) return hits[0].pharmacyId;
+  const refillName = String(
+    (session.prefetch?.refill as { pharmacyName?: string } | null)?.pharmacyName ??
+      "",
+  ).toLowerCase();
+  if (
+    refillName &&
+    wordsMatch(lower, refillName) &&
+    !deniedBlob.includes(refillName.split(/\s+/)[0] ?? "")
+  ) {
+    if (/lakeview/.test(refillName) || /lakeview/.test(lower)) return "lakeview";
+  }
+  if (session.quotes.length > 0) {
+    if (/oak street/.test(lower) && !/not oak/.test(lower)) return "oak-street";
+    if (/centerwell/.test(lower) && !/not centerwell/.test(lower))
+      return "centerwell";
+  }
+  return undefined;
+}
+
+function wordsMatch(text: string, name: string) {
+  if (text.includes(name)) return true;
+  return name.split(/\s+/).some((w) => w.length > 3 && text.includes(w));
+}
+
+function showClarifyOnce(
+  session: SessionState,
+  title: string,
+  body: string,
+) {
+  session.consent.clarification = body;
+  if (!session.consent.clarificationShown) {
+    session.consent.clarificationShown = true;
+  }
+  if (requiredPricingOnNow(session)) {
+    paintPricingNow(session);
+    return;
+  }
+  showNow(
+    session,
+    {
+      title,
+      body,
+      sourceLabel: "Governed guidance · scripting · simulated",
+    },
+    { priority: "nudge" },
+  );
+}
+
+function wrapEvidenceLine(session: SessionState) {
+  const refill =
+    getNeed(session, "refill_status")?.answer?.body ??
+    JSON.stringify(session.prefetch?.refillFresh ?? session.prefetch?.refill ?? "");
+  const fillStatus = /ready/i.test(refill)
+    ? "ready"
+    : /pending|submitted|processing/i.test(refill)
+      ? "pending"
+      : refill.slice(0, 80);
+  return [
+    session.enrollment.resultId,
+    session.enrollment.medications.join(", "),
+    fillStatus,
+    session.coverage?.caseId,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function readbackPending(session: SessionState): boolean {
@@ -417,6 +545,7 @@ function maybeOfferComparison(session: SessionState) {
   if (!refill) return;
   if (refill.status !== "resolved" && refill.guidance !== "ready") return;
   if (hist?.status !== "resolved") return;
+  markPricingUpcoming(session);
   if (session.recommendation) return;
   session.recommendation = {
     kind: "optional_comparison",
@@ -479,22 +608,21 @@ function assessPricingSpeech(
     if (alreadyLate) {
       session.pricing = "late_finding";
       session.pricingNote = "Delivered correctly, but late.";
-      if (session.quotes.length > 0) {
-        showNow(session, {
-          title: "Prospective comparison",
-          body: `${quoteNowBody(session)} No universal cheapest or guaranteed savings.`,
-          sourceLabel: "System record · pharmacy · simulated",
-        }, { priority: "answer", needKind: "prospective_comparison" });
-      }
     } else {
       session.pricing = "exact_timely";
       session.pricingNote = null;
+    }
+    if (session.quotes.length > 0) {
+      paintQuotesAttention(session);
     }
     return;
   }
   if (session.pricingExactDelivered) return;
   if (session.pricing === "due_now" || session.pricing === "late_finding") {
-    if (!isWordingAttempt(heard, req.verbatimText)) return;
+    const cueAttempt =
+      Boolean(session.nudge) &&
+      /\b(price|prices|estimate|change)\b/i.test(heard);
+    if (!isWordingAttempt(heard, req.verbatimText) && !cueAttempt) return;
     const diff = wordDiff(heard, req.verbatimText);
     if (diff.missingFromHeard.length > 0 || diff.extraInHeard.length > 0) {
       session.pricing = session.estimateSpokenWithoutReading
@@ -591,6 +719,97 @@ function quoteNowBody(session: SessionState) {
   );
 }
 
+function markPricingUpcoming(session: SessionState) {
+  if (session.pricing === "not_applicable") {
+    session.pricing = "pending_later";
+  }
+}
+
+function paintPricingNow(session: SessionState) {
+  const req = pricingRequirement(session);
+  showNow(
+    session,
+    {
+      title: "Pricing statement due now",
+      body: req?.verbatimText ?? "",
+      sourceLabel: "Governed guidance · scripting · simulated",
+    },
+    { priority: "due_now" },
+  );
+}
+
+function demoteQuotesNeed(session: SessionState) {
+  const amountsOk = session.consent.comparison === "absolute_yes";
+  const due = requiredPricingOnNow(session);
+  const body = amountsOk
+    ? `${quoteNowBody(session)} No universal cheapest or guaranteed savings.`
+    : "Comparison quotes are ready. Estimates stay off the Now card until comparison interest is an absolute yes.";
+  upsertNeed(session, "prospective_comparison", {
+    status: "active",
+    guidance: "ready",
+    flowStep: due
+      ? "compare estimates · ready, demoted"
+      : "educate → confirm interest → compare estimates",
+    answer: {
+      title: "Prospective comparison",
+      body,
+      sourceLabel: "System record · pharmacy · simulated",
+    },
+  });
+}
+
+function paintQuotesAttention(session: SessionState) {
+  if (session.quotes.length > 0 || getNeed(session, "prospective_comparison")) {
+    demoteQuotesNeed(session);
+  }
+  if (requiredPricingOnNow(session)) {
+    paintPricingNow(session);
+    return;
+  }
+  const amountsOk = session.consent.comparison === "absolute_yes";
+  if (amountsOk && session.pricingExactDelivered && session.quotes.length > 0) {
+    showNow(
+      session,
+      {
+        title: "Prospective comparison",
+        body: `${quoteNowBody(session)} No universal cheapest or guaranteed savings.`,
+        sourceLabel: "System record · pharmacy · simulated",
+      },
+      { priority: "answer", needKind: "prospective_comparison" },
+    );
+  }
+}
+
+function markPricingDueFromConsent(session: SessionState) {
+  if (session.pricingExactDelivered) return;
+  if (
+    session.pricing === "not_applicable" ||
+    session.pricing === "pending_later"
+  ) {
+    session.pricing = "due_now";
+  }
+}
+
+async function settleComparisonYes(
+  session: SessionState,
+  origin: string,
+  lineId?: string,
+  path?: "code_rule" | "luna",
+) {
+  session.consent.comparison = "absolute_yes";
+  session.consent.clarification = null;
+  session.consent.clarificationShown = false;
+  markPricingDueFromConsent(session);
+  if (session.quotes.length === 0) {
+    await loadQuotes(session, origin);
+    if (lineId && path) {
+      recordNeedPath(session, lineId, "prospective_comparison", path);
+    }
+  } else {
+    paintQuotesAttention(session);
+  }
+}
+
 export async function loadQuotes(
   session: SessionState,
   origin: string,
@@ -636,11 +855,11 @@ export async function loadQuotes(
   }
   mergeQuotes(session, mapped);
   applyFocusInvalidation(session);
-  upsertNeed(session, "prospective_comparison", {
-    status: "active",
-    guidance: "ready",
-    flowStep: "educate → confirm interest → compare estimates",
-  });
+  if (session.consent.comparison === "absolute_yes") {
+    markPricingDueFromConsent(session);
+  } else {
+    markPricingUpcoming(session);
+  }
   if (opts?.updateFocus !== false) {
     setFocus(
       session,
@@ -648,26 +867,7 @@ export async function loadQuotes(
       "confirm interest → compare estimates",
     );
   }
-  if (session.pricing === "not_applicable") {
-    session.pricing = "due_now";
-  }
-  const req = pricingRequirement(session);
-  const due = session.pricing === "due_now" || session.pricing === "late_finding";
-  const amountsOk = session.consent.comparison === "absolute_yes";
-  const showAmounts = amountsOk && !due && session.pricingExactDelivered;
-  showNow(session, {
-    title: due ? "Pricing statement due now" : "Prospective comparison",
-    body: due
-      ? (req?.verbatimText ?? "")
-      : showAmounts
-        ? quoteNowBody(session)
-        : amountsOk
-          ? "Comparison interest recorded. Read the pricing statement before speaking estimates."
-          : "Comparison interest is not yet an absolute yes. Estimates are withheld.",
-    sourceLabel: due
-      ? "Governed guidance · scripting · simulated"
-      : "System record · pharmacy · simulated",
-  }, { priority: due ? "due_now" : "answer", needKind: "prospective_comparison" });
+  paintQuotesAttention(session);
 }
 
 function requestQuotes(
@@ -753,6 +953,7 @@ function markServiceDiscussed(session: SessionState) {
 export function applyHumanOffer(session: SessionState) {
   if (!session.recommendation) return;
   session.recommendation.status = "offered";
+  markPricingUpcoming(session);
 }
 
 export function applyHumanDismiss(session: SessionState) {
@@ -880,7 +1081,9 @@ function fillWrapOutcome(session: SessionState) {
   const outcome = session.transfer.connectionStatus
     ? `Connection result: ${session.transfer.transferId ?? "unassigned"} — ${session.transfer.connectionStatus}. ${caseId ? `${caseId} remains ${status ?? "unreturned"}` : "No coverage case is on the session"}. Connection is not a coverage determination.`
     : "No connection result has returned; do not state a transfer outcome.";
-  session.wrapDraft = [session.wrapStable, outcome].filter(Boolean).join("\n\n");
+  session.wrapDraft = [session.wrapStable, outcome, wrapEvidenceLine(session)]
+    .filter(Boolean)
+    .join("\n\n");
   session.outcomeReady = true;
 }
 
@@ -1278,13 +1481,13 @@ function applyPricingTriggerResult(
     suppressed: suppressRepeat,
   });
   if (trigger.fired && !suppressRepeat) {
-    session.pricing = "due_now";
+    session.estimateSpokenWithoutReading = true;
     if (
       session.needs.some(
         (n) => n.kind === "prospective_comparison" && n.status !== "resolved",
-      )
+      ) ||
+      session.consent.comparison === "absolute_yes"
     ) {
-      session.estimateSpokenWithoutReading = true;
       session.pricing = "late_finding";
       session.nudge = { template: NUDGE_PRICING };
       if (!session.pricingNote) {
@@ -1295,7 +1498,13 @@ function applyPricingTriggerResult(
         marks.nudgeOffsetMs = line.offsetMs;
         scriptMarks.set(session.sessionId, marks);
       }
+    } else if (
+      session.pricing === "not_applicable" ||
+      session.pricing === "pending_later"
+    ) {
+      session.pricing = "due_now";
     }
+    paintQuotesAttention(session);
   }
   if (line.stability === "final" || line.stability === "corrected") {
     if (!trigger.fired || suppressRepeat) assessPricingSpeech(session, line);
@@ -1412,11 +1621,13 @@ async function applyInterpretation(
   const servicingFlags =
     interp.refillCheck !== "none" ||
     interp.historicalAsked ||
+    interp.returnToHistorical ||
     interp.ninetyDayAsked ||
     interp.coverageAsked ||
     Boolean(interp.quotePharmacy) ||
     interp.firmRefusal ||
     interp.withdrawEnrollment ||
+    interp.memberAgreesTransfer ||
     interp.electionMetforminOnly ||
     interp.enrollmentConsent !== "none" ||
     interp.comparisonConsent !== "none" ||
@@ -1440,7 +1651,7 @@ async function applyInterpretation(
   const memberId = session.member?.memberId ?? "";
   const planId = session.member?.planId ?? "";
 
-  if (interp.refillCheck === "existing_request") {
+  if (interp.refillCheck === "existing_request" && line.speaker === "member") {
     upsertNeed(session, "refill_status", {
       status: "active",
       guidance: "preparing",
@@ -1473,7 +1684,7 @@ async function applyInterpretation(
     showNow(session, card, { priority: "answer", needKind: "refill_status" });
   }
 
-  if (interp.historicalAsked) {
+  if (interp.historicalAsked && line.speaker === "member") {
     const histPatch: Parameters<typeof upsertNeed>[2] = {
       status: "requested",
       guidance: "preparing",
@@ -1499,7 +1710,7 @@ async function applyInterpretation(
     }
   }
 
-  if (interp.refillCheck === "current_readiness") {
+  if (interp.refillCheck === "current_readiness" && line.speaker === "member") {
     const hist = getNeed(session, "historical_price");
     if (hist && hist.status !== "resolved") {
       upsertNeed(session, "historical_price", {
@@ -1579,7 +1790,12 @@ async function applyInterpretation(
     };
   }
 
-  if (commitConsent && interp.firmRefusal && memberConsentLine(line)) {
+  if (
+    commitConsent &&
+    interp.firmRefusal &&
+    memberConsentLine(line) &&
+    matchesAny(session.utteranceRules?.firmRefusal, line.text)
+  ) {
     session.optionalWorkSuppressed = true;
     session.recommendation = null;
     session.consent.comparison = "none";
@@ -1615,12 +1831,11 @@ async function applyInterpretation(
     if (codeWait === "wait" && session.consent.comparison === "none") {
       const medicines =
         joinMedicineNames(session) || "your existing medicines";
-      session.consent.clarification = clarifyInterest({ medicines });
-      showNow(session, {
-        title: "Clarify comparison interest",
-        body: session.consent.clarification,
-        sourceLabel: "Governed guidance · scripting · simulated",
-      }, { priority: "nudge" });
+      showClarifyOnce(
+        session,
+        "Clarify comparison interest",
+        clarifyInterest({ medicines }),
+      );
     }
   }
   const mayConsent = commitConsent && allowConsent && memberConsentLine(line);
@@ -1631,12 +1846,7 @@ async function applyInterpretation(
     !session.optionalWorkSuppressed
   ) {
     session.consent.comparison = "hedge";
-    session.consent.clarification = CLARIFY_INTEREST;
-    showNow(session, {
-      title: "Clarify comparison interest",
-      body: CLARIFY_INTEREST,
-      sourceLabel: "Governed guidance · scripting · simulated",
-    });
+    showClarifyOnce(session, "Clarify comparison interest", CLARIFY_INTEREST);
   }
 
   if (
@@ -1660,30 +1870,22 @@ async function applyInterpretation(
     });
     if (code === "hedge") {
       session.consent.comparison = "hedge";
-      session.consent.clarification = CLARIFY_INTEREST;
-      showNow(session, {
-        title: "Clarify comparison interest",
-        body: CLARIFY_INTEREST,
-        sourceLabel: "Governed guidance · scripting · simulated",
-      });
+      showClarifyOnce(session, "Clarify comparison interest", CLARIFY_INTEREST);
     } else if (code === "absolute_yes") {
-      session.consent.comparison = "absolute_yes";
-      session.consent.clarification = null;
-    } else if (code === "wait" && session.consent.comparison !== "absolute_yes") {
-      session.consent.comparison = "hedge";
-      session.consent.clarification = clarifyInterest({
-        medicines: joinMedicineNames(session) || "your existing medicines",
-      });
-      showNow(session, {
-        title: "Clarify comparison interest",
-        body: session.consent.clarification,
-        sourceLabel: "Governed guidance · scripting · simulated",
-      }, { priority: "nudge" });
+      await settleComparisonYes(session, origin, line.id, "luna");
+    } else if (code === "wait") {
+      const scopedPending =
+        Boolean(session.consent.clarification) ||
+        matchesAny(session.utteranceRules?.scopedComparisonAsk, lastAdv);
+      if (scopedPending) {
+        await settleComparisonYes(session, origin, line.id, "luna");
+      }
     }
   }
 
   if (
     (interp.quotePharmacy || interp.quotePharmacyCorrection) &&
+    line.speaker === "member" &&
     !session.optionalWorkSuppressed
   ) {
     if (!interp.quotePharmacy) {
@@ -1708,46 +1910,60 @@ async function applyInterpretation(
     }
   }
 
-  if (commitConsent && interp.electionMetforminOnly && memberConsentLine(line) && isNewest) {
-    const meds = interp.electedMedications;
-    if (meds.length === 0) {
+  if (commitConsent && interp.electionMetforminOnly && memberConsentLine(line)) {
+    if (!isNewest) {
+      logFieldDiscard(session, line.id, "election");
       showNow(session, {
         title: "Need clarification",
-        body: "A split retail/delivery election was heard but no medication names were identified. Withholding an enrollment draft.",
+        body: "A later utterance replaced this election result before it was applied. Re-confirm the scoped election.",
         sourceLabel: "Governed guidance · scripting · simulated",
       });
     } else {
-      upsertNeed(session, "service_election", {
-        status: "active",
-        guidance: "ready",
-        flowStep: "enroll/decline — scoped election",
-        sourceUtteranceId: line.id,
-      });
-      focus("service_election", "enroll/decline — scoped election");
-      setEnrollmentMedications(session, meds);
-      showNow(session, {
-        title: "Enrollment draft — scoped",
-        body: session.enrollment.readback,
-        sourceLabel: "Governed guidance · scripting · simulated",
-      });
+      const meds = interp.electedMedications;
+      if (meds.length === 0) {
+        showNow(session, {
+          title: "Need clarification",
+          body: "A split retail/delivery election was heard but no medication names were identified. Withholding an enrollment draft.",
+          sourceLabel: "Governed guidance · scripting · simulated",
+        });
+      } else {
+        upsertNeed(session, "service_election", {
+          status: "active",
+          guidance: "ready",
+          flowStep: "enroll/decline — scoped election",
+          sourceUtteranceId: line.id,
+        });
+        focus("service_election", "enroll/decline — scoped election");
+        setEnrollmentMedications(session, meds);
+        showNow(session, {
+          title: "Enrollment draft — scoped",
+          body: session.enrollment.readback,
+          sourceLabel: "Governed guidance · scripting · simulated",
+        });
+      }
     }
   }
 
-  if (mayConsent && interp.enrollmentConsent === "hedge") {
+  if (
+    mayConsent &&
+    interp.enrollmentConsent === "hedge" &&
+    lastAdvocateIsCurrentReadback(session) &&
+    !session.enrollment.resultId
+  ) {
     session.consent.enrollment = "hedge";
-    session.consent.clarification =
-      "To confirm: do you want to submit the enrollment we just read back?";
-    showNow(session, {
-      title: "Clarify enrollment",
-      body: session.consent.clarification,
-      sourceLabel: "Governed guidance · scripting · simulated",
-    }, { priority: "nudge" });
+    showClarifyOnce(
+      session,
+      "Clarify enrollment",
+      "To confirm: do you want to submit the enrollment we just read back?",
+    );
   }
 
   if (
     mayConsent &&
     interp.enrollmentConsent === "absolute_yes" &&
-    !session.enrollment.withdrawn
+    !session.enrollment.withdrawn &&
+    !session.enrollment.resultId &&
+    lastAdvocateIsCurrentReadback(session)
   ) {
     const decision = classifyEnrollmentConsent({
       rules: session.utteranceRules,
@@ -1765,24 +1981,31 @@ async function applyInterpretation(
       );
       session.consent.enrollmentUtteranceId = line.id;
       session.consent.clarification = null;
+      session.consent.clarificationShown = false;
     } else if (decision === "hedge" || decision === "clarify") {
       session.consent.enrollment = "hedge";
-      session.consent.clarification =
-        "To confirm: do you want to submit the enrollment we just read back?";
-      showNow(session, {
-        title: "Clarify enrollment",
-        body: session.consent.clarification,
-        sourceLabel: "Governed guidance · scripting · simulated",
-      }, { priority: "nudge" });
+      showClarifyOnce(
+        session,
+        "Clarify enrollment",
+        "To confirm: do you want to submit the enrollment we just read back?",
+      );
     }
   }
 
-  if (commitConsent && interp.withdrawEnrollment && memberConsentLine(line)) {
+  if (
+    commitConsent &&
+    interp.withdrawEnrollment &&
+    memberConsentLine(line) &&
+    matchesAny(session.utteranceRules?.withdraw, line.text)
+  ) {
     applyHumanWithdrawEnrollment(session);
   }
 
   if (interp.coverageAsked) {
-    const drug = namedMedicationsInText(line.text)[0];
+    const drug = namedMedicationsInText(line.text, [
+      ...sessionQuoteEntities(session).drugs,
+      session.coverage?.requestedMedication ?? "",
+    ])[0];
     await loadCoverage(session, origin, isNewest, line.id, drug);
   }
 
@@ -1821,6 +2044,11 @@ async function applyInterpretation(
     const servicing =
       interp.refillCheck !== "none" ||
       interp.historicalAsked ||
+      interp.returnToHistorical ||
+      interp.retailHesitation ||
+      interp.firmRefusal ||
+      interp.withdrawEnrollment ||
+      interp.memberAgreesTransfer ||
       interp.ninetyDayAsked ||
       interp.coverageAsked ||
       Boolean(interp.quotePharmacy) ||
@@ -1898,7 +2126,20 @@ export async function prefetchMemberRecords(
     fast90: edu.evidence.fast90,
     serviceGuide: null,
     objection: null,
+    prescriptions: [],
   };
+  const rxResp = await fetch(
+    `${origin}/api/simulated/pharmacy/prescriptions?memberId=${encodeURIComponent(memberId)}`,
+    { cache: "no-store" },
+  );
+  if (rxResp.ok) {
+    const rxJson = (await rxResp.json()) as {
+      data?: { prescriptions?: Array<{ drugName?: string }> };
+    };
+    session.prefetch.prescriptions = (rxJson.data?.prescriptions ?? [])
+      .map((p) => ({ drugName: String(p.drugName ?? "") }))
+      .filter((p) => p.drugName);
+  }
   const objResp = await fetch(
     `${origin}/api/simulated/scripting/articles/DEMO-OBJECTION-RETAIL-v1`,
     { cache: "no-store" },
@@ -1972,10 +2213,41 @@ export async function applyGovernedUtteranceRules(
     recordNeedPath(session, line.id, "service_education", "code_rule");
   }
   if (
+    line.speaker === "member" &&
+    (line.stability === "final" || line.stability === "corrected") &&
+    !isNinetyDayQuestion(rules, text)
+  ) {
+    const hist = getNeed(session, "historical_price");
+    const deferred =
+      hist &&
+      (hist.status === "deferred" || hist.guidance === "deferred_valid");
+    const q = (hist?.queryText ?? "").toLowerCase();
+    const t = text.toLowerCase();
+    const named = namedMedicationsInText(text, [
+      ...sessionQuoteEntities(session).drugs,
+      ...q.split(/[^a-z]+/).filter((w) => w.length > 4),
+    ]);
+    const returnCue =
+      /\b(so,? the|what about (that|those)|those amounts|that price|the metformin|the atorvastatin)\b/.test(
+        t,
+      ) || named.some((d) => q.includes(d.toLowerCase()));
+    if (deferred && returnCue && q) {
+      await promoteHistorical(session, origin);
+      recordNeedPath(session, line.id, "historical_price", "code_rule");
+    }
+  }
+  if (
     line.speaker === "advocate" &&
     matchesAny(rules?.advocateServiceIntro, text)
   ) {
     markServiceDiscussed(session);
+  }
+
+  if (
+    line.speaker === "advocate" &&
+    matchesAny(rules?.scopedComparisonAsk, text)
+  ) {
+    markPricingUpcoming(session);
   }
 
   const comparison = classifyComparisonConsent({
@@ -1991,20 +2263,10 @@ export async function applyGovernedUtteranceRules(
   });
   if (comparison === "hedge") {
     session.consent.comparison = "hedge";
-    session.consent.clarification = CLARIFY_INTEREST;
-    showNow(session, {
-      title: "Clarify comparison interest",
-      body: CLARIFY_INTEREST,
-      sourceLabel: "Governed guidance · scripting · simulated",
-    });
+    showClarifyOnce(session, "Clarify comparison interest", CLARIFY_INTEREST);
   }
   if (comparison === "absolute_yes") {
-    session.consent.comparison = "absolute_yes";
-    session.consent.clarification = null;
-    if (session.quotes.length === 0) {
-      await loadQuotes(session, origin);
-      recordNeedPath(session, line.id, "prospective_comparison", "code_rule");
-    }
+    await settleComparisonYes(session, origin, line.id, "code_rule");
   }
 
   if (
@@ -2021,21 +2283,34 @@ export async function applyGovernedUtteranceRules(
   if (
     line.speaker === "member" &&
     (line.stability === "final" || line.stability === "corrected") &&
-    isDirectNamedQuoteAsk(text)
+    isDirectNamedQuoteAsk(text, sessionQuoteEntities(session))
   ) {
     session.consent.comparison = "absolute_yes";
     session.consent.comparisonScopeKey = "named_quote";
     session.consent.comparisonUtteranceId = line.id ?? null;
-    if (session.pricing === "not_applicable") session.pricing = "due_now";
-    const ph = /\blakeview\b/i.test(text)
-      ? "lakeview"
-      : /\boak street\b/i.test(text)
-        ? "oak-street"
-        : /\bcenterwell\b/i.test(text)
-          ? "centerwell"
-          : undefined;
-    const drug = namedMedicationsInText(text)[0];
+    session.consent.clarification = null;
+    session.consent.clarificationShown = false;
+    markPricingDueFromConsent(session);
+    const ph = pharmacyIdFromUtterance(session, text);
+    const drug = namedMedicationsInText(
+      text,
+      sessionQuoteEntities(session).drugs,
+    )[0];
     await requestQuotes(session, origin, ph, drug);
+  }
+  if (
+    line.speaker === "member" &&
+    (line.stability === "final" || line.stability === "corrected") &&
+    session.quotes.length > 0 &&
+    /(?:\bnot\b|\binstead\b|i meant|actually)\b/i.test(text)
+  ) {
+    const ph = pharmacyIdFromUtterance(session, text);
+    if (ph && ph !== session.quoteFocus?.pharmacyId) {
+      const drug =
+        namedMedicationsInText(text, sessionQuoteEntities(session).drugs)[0] ??
+        session.quoteFocus?.drug;
+      await requestQuotes(session, origin, ph, drug);
+    }
   }
 
   if (
@@ -2046,7 +2321,10 @@ export async function applyGovernedUtteranceRules(
     const deliveryMatch = text.match(
       /delivery for (?:the )?([^.]+?)(?:\.|$)/i,
     );
-    const fromClause = namedMedicationsInText(deliveryMatch?.[1] ?? "");
+    const fromClause = namedMedicationsInText(
+      deliveryMatch?.[1] ?? "",
+      sessionQuoteEntities(session).drugs,
+    );
     if (fromClause.length) {
       setEnrollmentMedications(session, fromClause);
       upsertNeed(session, "service_election", {
@@ -2064,7 +2342,9 @@ export async function applyGovernedUtteranceRules(
   if (
     line.speaker === "member" &&
     session.enrollment.medications.length > 0 &&
-    !session.enrollment.withdrawn
+    !session.enrollment.withdrawn &&
+    !session.enrollment.resultId &&
+    lastAdvocateIsCurrentReadback(session)
   ) {
     const decision = classifyEnrollmentConsent({
       rules,
@@ -2082,15 +2362,14 @@ export async function applyGovernedUtteranceRules(
       );
       session.consent.enrollmentUtteranceId = line.id ?? null;
       session.consent.clarification = null;
+      session.consent.clarificationShown = false;
     } else if (decision === "hedge" || decision === "clarify") {
       session.consent.enrollment = "hedge";
-      session.consent.clarification =
-        "To confirm: do you want to submit the enrollment we just read back?";
-      showNow(session, {
-        title: "Clarify enrollment",
-        body: session.consent.clarification,
-        sourceLabel: "Governed guidance · scripting · simulated",
-      }, { priority: "nudge" });
+      showClarifyOnce(
+        session,
+        "Clarify enrollment",
+        "To confirm: do you want to submit the enrollment we just read back?",
+      );
     }
   }
   if (line.speaker === "member" && matchesAny(rules?.withdraw, text)) {

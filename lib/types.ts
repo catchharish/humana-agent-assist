@@ -140,6 +140,7 @@ export type SessionState = {
       articleId: string;
       body: string;
     } | null;
+    prescriptions: Array<{ drugName: string }>;
   } | null;
   callType: string;
   currentNeed: string;
@@ -200,6 +201,7 @@ export type SessionState = {
     enrollmentScopeKey: string | null;
     comparisonUtteranceId: string | null;
     enrollmentUtteranceId: string | null;
+    clarificationShown: boolean;
   };
   nudge: {
     template: string;
@@ -267,6 +269,12 @@ export type SessionState = {
       eventId: string;
       need: string;
       path: "code_rule" | "luna";
+    }>;
+    pauseSnapshots: Array<{
+      label: string;
+      nowTitle: string;
+      historicalGuidance: string | null;
+      historicalStatus: string | null;
     }>;
   };
 };

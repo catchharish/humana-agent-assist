@@ -1,0 +1,174 @@
+{
+  "sessionId": "8be9dd81-1c22-46f0-bedd-dc1ecd14b9f3",
+  "scenarioId": "t02a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-said-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "structured_lookup"
+      ],
+      "latencyMs": 59.31066600000486,
+      "retrieved": [
+        {
+          "id": "DEMO-RF001",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "lakeview",
+          "sourceSystem": "provider"
+        },
+        {
+          "id": "DEMO-RF001:status",
+          "sourceSystem": "pharmacy"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    }
+  ],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Refill status (fresh read)",
+    "body": "The pharmacy's current status is ready_for_pickup. Source: Lakeview Pharmacy request DEMO-RF001. Do not treat this as an order, collection, or pickup confirmation.",
+    "sourceLabel": "System record · pharmacy · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": "COMPLETED_SERVICING",
+    "confirmed": "COMPLETED_SERVICING"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789766433093,
+      "tPaint": 1789766433546,
+      "paintMs": 453,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789766433846,
+      "tPaint": 1789766433872,
+      "paintMs": 26,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789766433929,
+      "tPaint": 1789766433936,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789766434077,
+      "tPaint": 1789766435665,
+      "paintMs": 1588,
+      "measured": true,
+      "excludedPauseMs": 99
+    },
+    {
+      "eventId": "e-smalltalk",
+      "kind": "transcript",
+      "tEvent": 1789766435728,
+      "tPaint": 1789766437716,
+      "paintMs": 1988,
+      "measured": true,
+      "excludedPauseMs": 99
+    },
+    {
+      "eventId": "e-ready",
+      "kind": "transcript",
+      "tEvent": 1789766437783,
+      "tPaint": 1789766439563,
+      "paintMs": 1780,
+      "measured": true,
+      "excludedPauseMs": 99
+    },
+    {
+      "eventId": "e-pause-ready",
+      "kind": "pause_gate",
+      "tEvent": 1789766439617,
+      "tPaint": 1789766439624,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 99
+    },
+    {
+      "eventId": "e-said-ready",
+      "kind": "transcript",
+      "tEvent": 1789766439687,
+      "tPaint": 1789766439706,
+      "paintMs": 19,
+      "measured": true,
+      "excludedPauseMs": 120
+    },
+    {
+      "eventId": "e-pause-disp",
+      "kind": "pause_gate",
+      "tEvent": 1789766439758,
+      "tPaint": 1789766439764,
+      "paintMs": 6,
+      "measured": true,
+      "excludedPauseMs": 120
+    }
+  ],
+  "needPaths": []
+}

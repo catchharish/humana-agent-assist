@@ -141,7 +141,7 @@ describe("review fixes F1–F15, F18, F26–F28", () => {
         text: "Yes, for metformin only.",
         readbackPending: false,
       }),
-    ).toBe("clarify");
+    ).toBe("wait");
     expect(
       classifyEnrollmentConsent({
         ...base,
@@ -275,6 +275,7 @@ describe("review fixes F1–F15, F18, F26–F28", () => {
 
   it("F12 due-now outranks a later answer card", () => {
     const session = createSession({ disclosures, disclosureFetch: "test" });
+    session.pricing = "due_now";
     showNow(
       session,
       {
