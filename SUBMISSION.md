@@ -186,4 +186,6 @@ Observe real advocate desktops and a real call family before defending Harry as 
 
 With more take-home time: usability on the core, highest-risk deferred cases (unknown write, attestation policy), then optional evidence-based QA. Not a large corpus or a dashboard first.
 
+**Concurrency.** Model calls are fire-and-forget and parallel (interpret, a hedged priority trigger call, terra). Look for races — results applied out of order, a disclosure trigger or member need dropped as stale, double-apply from the two hedge legs, and any state written from a late async result after a human action changed scope or consent.
+
 On another attempt: lock the business outcome and first call family before expanding the contract; build the slice early enough to hit timing/interaction problems; grow tests from actual failures rather than making the whole catalog mandatory up front.

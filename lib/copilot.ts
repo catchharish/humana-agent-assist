@@ -40,18 +40,60 @@ export let testInterpretFactory: ((
 ) => Promise<Interpretation>) | null = null;
 
 export let testDelayApply: { eventId: string; ms: number } | null = null;
+export let testDelayTrigger: { eventId: string; ms: number } | null = null;
+export let testTriggerResult: {
+  fired: boolean;
+  classification: string;
+  stage: 1 | 2 | 0;
+  modelCall: boolean;
+  reason: string;
+  latencyMs: number;
+  ttftMs: number | null;
+} | null = null;
+
+const appliedLunaTriggers = new Set<string>();
 
 export function setLunaTestHooks(opts: {
   interpret?: typeof testInterpretFactory;
   delayApply?: typeof testDelayApply;
+  delayTrigger?: typeof testDelayTrigger;
+  triggerResult?: typeof testTriggerResult;
 }) {
   if ("interpret" in opts) testInterpretFactory = opts.interpret ?? null;
   if ("delayApply" in opts) testDelayApply = opts.delayApply ?? null;
+  if ("delayTrigger" in opts) testDelayTrigger = opts.delayTrigger ?? null;
+  if ("triggerResult" in opts) testTriggerResult = opts.triggerResult ?? null;
 }
 
 export function resetLunaTestHooks() {
   testInterpretFactory = null;
   testDelayApply = null;
+  testDelayTrigger = null;
+  testTriggerResult = null;
+}
+
+function consentAnchorOf(session: SessionState) {
+  const lastAdv =
+    [...session.transcript]
+      .reverse()
+      .find(
+        (t) =>
+          t.speaker === "advocate" &&
+          (t.stability === "final" || t.stability === "corrected"),
+      )?.text ?? "";
+  return `${session.consent.clarification ?? ""}||${lastAdv}`;
+}
+
+function logFieldDiscard(
+  session: SessionState,
+  eventId: string,
+  field: "consent" | "focus" | "callType",
+) {
+  appendJsonl(session.sessionId, {
+    kind: "luna_stale_discard",
+    field,
+    eventId,
+  });
 }
 
 const partialJobs = new Map<
@@ -479,7 +521,12 @@ function quoteNowBody(session: SessionState) {
 export async function loadQuotes(
   session: SessionState,
   origin: string,
-  opts?: { pharmacyId?: string; delayMs?: number; generation?: number },
+  opts?: {
+    pharmacyId?: string;
+    delayMs?: number;
+    generation?: number;
+    updateFocus?: boolean;
+  },
 ) {
   const memberId = session.member?.memberId ?? "";
   const planId = session.member?.planId ?? "";
@@ -521,11 +568,13 @@ export async function loadQuotes(
     guidance: "ready",
     flowStep: "educate → confirm interest → compare estimates",
   });
-  setFocus(
-    session,
-    "prospective_comparison",
-    "confirm interest → compare estimates",
-  );
+  if (opts?.updateFocus !== false) {
+    setFocus(
+      session,
+      "prospective_comparison",
+      "confirm interest → compare estimates",
+    );
+  }
   if (session.pricing === "not_applicable") {
     session.pricing = "due_now";
   }
@@ -550,6 +599,7 @@ function requestQuotes(
   origin: string,
   pharmacyId: string | undefined,
   drug: string | undefined,
+  updateFocus = true,
 ) {
   session.quoteGeneration += 1;
   const generation = session.quoteGeneration;
@@ -559,10 +609,14 @@ function requestQuotes(
       pharmacyId,
     };
   }
-  return loadQuotes(session, origin, { pharmacyId, generation });
+  return loadQuotes(session, origin, { pharmacyId, generation, updateFocus });
 }
 
-export async function loadFast90(session: SessionState, origin: string) {
+export async function loadFast90(
+  session: SessionState,
+  origin: string,
+  updateFocus = true,
+) {
   const pre = session.prefetch?.fast90;
   let art = pre ?? null;
   if (!art) {
@@ -602,7 +656,9 @@ export async function loadFast90(session: SessionState, origin: string) {
       sourceLabel: `Derived from source/version · scripting · simulated (${art?.articleId} ← ${art?.lineageSourceId})`,
     },
   });
-  setFocus(session, "service_education", "educate → confirm interest");
+  if (updateFocus) {
+    setFocus(session, "service_education", "educate → confirm interest");
+  }
   showNow(session, {
     title: "90-day option",
     body: `${art?.body ?? ""}\n\nEnrollment is not an order, not automatic refills, and does not change today's pickup. No delivery deadline is established.`,
@@ -786,7 +842,12 @@ function assessClosing(
   }
 }
 
-export async function loadCoverage(session: SessionState, origin: string) {
+export async function loadCoverage(
+  session: SessionState,
+  origin: string,
+  updateFocus = true,
+  sourceUtteranceId?: string,
+) {
   const routed = await routeQuery({
     origin,
     need: "coverage_status",
@@ -809,8 +870,11 @@ export async function loadCoverage(session: SessionState, origin: string) {
     status: "active",
     guidance: "ready",
     flowStep: "check case → recommend destination",
+    sourceUtteranceId,
   });
-  setFocus(session, "coverage_status", "check case → recommend destination");
+  if (updateFocus) {
+    setFocus(session, "coverage_status", "check case → recommend destination");
+  }
   const pending = c.status.toLowerCase() === "pending_review";
   showNow(session, {
     title: "Coverage case status (read only)",
@@ -947,7 +1011,7 @@ function freshReadyCard(routed: Awaited<ReturnType<typeof routeQuery>>) {
   };
 }
 
-export async function applyAdvocateObligations(
+function applyPricingTriggerResult(
   session: SessionState,
   line: {
     id: string;
@@ -956,36 +1020,18 @@ export async function applyAdvocateObligations(
     text: string;
     offsetMs?: number;
   },
-): Promise<void> {
-  if (line.speaker !== "advocate") return;
-  const triggerCode = await classifyPricingTrigger(session, line);
-  let trigger = triggerCode;
-  if (triggerCode.reason === "ambiguous_deferred_to_utterance_interpret") {
-    const seq = session.lunaSeq;
-    const luna = await classifyLunaTrigger(session, line);
-    if (seq !== session.lunaSeq) {
-      appendJsonl(session.sessionId, {
-        kind: "luna_stale_discard",
-        eventId: line.id,
-        seq,
-        currentSeq: session.lunaSeq,
-        applyMode: "trigger",
-      });
-      assessClosing(session, line);
-      return;
-    }
-    trigger = luna;
-    appendJsonl(session.sessionId, {
-      kind: "luna_trigger",
-      eventId: line.id,
-      ms: luna.latencyMs,
-      ttftMs: luna.ttftMs,
-      classification: luna.classification,
-      fired: luna.fired,
-      hedgeMs: luna.hedgeMs,
-      seq,
-    });
-  }
+  trigger: {
+    stage: 1 | 2 | 0;
+    fired: boolean;
+    classification: string;
+    latencyMs: number;
+    modelCall: boolean;
+    reason: string;
+  },
+) {
+  const key = `${session.sessionId}:${line.id}`;
+  if (appliedLunaTriggers.has(key) && trigger.modelCall) return;
+  if (trigger.modelCall) appliedLunaTriggers.add(key);
   const suppressRepeat = Boolean(trigger.fired && session.pricingExactDelivered);
   pushTriggerTrace(session, {
     at: line.id,
@@ -1025,6 +1071,55 @@ export async function applyAdvocateObligations(
   assessClosing(session, line);
 }
 
+export async function applyAdvocateObligations(
+  session: SessionState,
+  line: {
+    id: string;
+    speaker: string;
+    stability: string;
+    text: string;
+    offsetMs?: number;
+  },
+): Promise<void> {
+  if (line.speaker !== "advocate") return;
+  const saidAt =
+    session.transcript.find((t) => t.id === line.id)?.receivedAt ?? Date.now();
+  const stamped = {
+    ...line,
+    offsetMs: line.offsetMs ?? saidAt,
+  };
+  const triggerCode = await classifyPricingTrigger(session, line);
+  if (triggerCode.reason === "ambiguous_deferred_to_utterance_interpret") {
+    void (async () => {
+      if (
+        testDelayTrigger &&
+        testDelayTrigger.eventId === line.id &&
+        testDelayTrigger.ms > 0
+      ) {
+        await new Promise((r) => setTimeout(r, testDelayTrigger.ms));
+      }
+      const luna = testTriggerResult
+        ? { ...testTriggerResult }
+        : await classifyLunaTrigger(session, line);
+      appendJsonl(session.sessionId, {
+        kind: "luna_trigger",
+        eventId: line.id,
+        ms: luna.latencyMs,
+        ttftMs: luna.ttftMs,
+        classification: luna.classification,
+        fired: luna.fired,
+        hedgeMs: "hedgeMs" in luna ? luna.hedgeMs : undefined,
+        saidAt,
+        offsetMs: stamped.offsetMs,
+      });
+      applyPricingTriggerResult(session, stamped, luna);
+      publishSession(session);
+    })();
+    return;
+  }
+  applyPricingTriggerResult(session, stamped, triggerCode);
+}
+
 function syntheticRefillRoute(
   session: SessionState,
   mode: "existing" | "fresh_status",
@@ -1059,7 +1154,17 @@ async function applyInterpretation(
   line: { id: string; speaker: string; stability: string; text: string },
   interp: Interpretation,
   commitConsent: boolean,
+  policy: { seq: number; consentAnchor: string },
 ) {
+  const isNewest = policy.seq === session.lunaSeq;
+  const allowConsent = policy.consentAnchor === consentAnchorOf(session);
+  const focus = (kind: Parameters<typeof setFocus>[1], step: string) => {
+    if (!isNewest) {
+      logFieldDiscard(session, line.id, "focus");
+      return;
+    }
+    setFocus(session, kind, step);
+  };
   const servicingFlags =
     interp.refillCheck !== "none" ||
     interp.historicalAsked ||
@@ -1083,7 +1188,11 @@ async function applyInterpretation(
     interp.callTypeChange !== "Refill"
   ) {
     if (interp.callTypeChange !== "Pricing") {
-      session.callType = interp.callTypeChange;
+      if (!isNewest) {
+        logFieldDiscard(session, line.id, "callType");
+      } else {
+        session.callType = interp.callTypeChange;
+      }
     }
   }
 
@@ -1095,8 +1204,9 @@ async function applyInterpretation(
       status: "active",
       guidance: "preparing",
       flowStep: "verify → check existing request",
+      sourceUtteranceId: line.id,
     });
-    setFocus(session, "refill_status", "verify → check existing request");
+    focus("refill_status", "verify → check existing request");
     const routed =
       syntheticRefillRoute(session, "existing") ??
       (await routeQuery({
@@ -1133,8 +1243,7 @@ async function applyInterpretation(
       sourceUtteranceId: line.id,
     });
     if (interp.refillCheck === "none" && !interp.returnToHistorical) {
-      setFocus(
-        session,
+      focus(
         "historical_price",
         "identify matching purchases → retrieve applied policy/evidence",
       );
@@ -1162,8 +1271,7 @@ async function applyInterpretation(
           "identify matching purchases → retrieve applied policy/evidence → deferred (valid)",
       });
     }
-    setFocus(
-      session,
+    focus(
       "refill_status",
       "check existing request → explain status (fresh)",
     );
@@ -1214,7 +1322,7 @@ async function applyInterpretation(
   if (interp.ninetyDayAsked) {
     markServiceDiscussed(session);
     if (getNeed(session, "service_education")?.guidance !== "ready") {
-      await loadFast90(session, origin);
+      await loadFast90(session, origin, isNewest);
       recordNeedPath(session, line.id, "service_education", "luna");
     }
   }
@@ -1241,8 +1349,15 @@ async function applyInterpretation(
     });
   }
 
+  const wantsConsent =
+    interp.comparisonConsent !== "none" || interp.enrollmentConsent !== "none";
+  if (commitConsent && wantsConsent && !allowConsent) {
+    logFieldDiscard(session, line.id, "consent");
+  }
+  const mayConsent = commitConsent && allowConsent;
+
   if (
-    commitConsent &&
+    mayConsent &&
     interp.comparisonConsent === "hedge" &&
     !session.optionalWorkSuppressed
   ) {
@@ -1256,7 +1371,7 @@ async function applyInterpretation(
   }
 
   if (
-    commitConsent &&
+    mayConsent &&
     interp.comparisonConsent === "absolute_yes" &&
     !session.optionalWorkSuppressed
   ) {
@@ -1320,6 +1435,7 @@ async function applyInterpretation(
         origin,
         interp.quotePharmacy,
         interp.quoteDrug ?? undefined,
+        isNewest,
       );
     }
   }
@@ -1337,8 +1453,9 @@ async function applyInterpretation(
         status: "active",
         guidance: "ready",
         flowStep: "enroll/decline — scoped election",
+        sourceUtteranceId: line.id,
       });
-      setFocus(session, "service_election", "enroll/decline — scoped election");
+      focus("service_election", "enroll/decline — scoped election");
       session.enrollment.medications = meds;
       session.enrollment.readback = sessionEnrollmentReadback(session);
       session.enrollment.confirmed = false;
@@ -1351,14 +1468,14 @@ async function applyInterpretation(
     }
   }
 
-  if (commitConsent && interp.enrollmentConsent === "hedge") {
+  if (mayConsent && interp.enrollmentConsent === "hedge") {
     session.consent.enrollment = "hedge";
     session.consent.clarification =
       "To confirm: do you want to submit the enrollment we just read back?";
   }
 
   if (
-    commitConsent &&
+    mayConsent &&
     interp.enrollmentConsent === "absolute_yes" &&
     !session.enrollment.withdrawn
   ) {
@@ -1371,7 +1488,7 @@ async function applyInterpretation(
   }
 
   if (interp.coverageAsked) {
-    await loadCoverage(session, origin);
+    await loadCoverage(session, origin, isNewest, line.id);
   }
 
   if (interp.advocateOfferedTransfer && session.coverage) {
@@ -1617,6 +1734,7 @@ export async function processTranscriptEvent(
     session.lunaSeq += 1;
     seq = session.lunaSeq;
   }
+  const consentAnchor = consentAnchorOf(session);
   const pending = partialJobs.get(jobKey);
   const runInterpret = () =>
     testInterpretFactory
@@ -1656,19 +1774,6 @@ export async function processTranscriptEvent(
     ) {
       await new Promise((r) => setTimeout(r, testDelayApply.ms));
     }
-    if (
-      (line.stability === "final" || line.stability === "corrected") &&
-      seq !== session.lunaSeq
-    ) {
-      appendJsonl(session.sessionId, {
-        kind: "luna_stale_discard",
-        eventId: line.id,
-        seq,
-        currentSeq: session.lunaSeq,
-        applyMode,
-      });
-      return;
-    }
     appendJsonl(session.sessionId, {
       kind: "luna_interpret",
       eventId: line.id,
@@ -1705,6 +1810,7 @@ export async function processTranscriptEvent(
       line,
       interp,
       line.stability === "final" || line.stability === "corrected",
+      { seq, consentAnchor },
     );
     publishSession(session);
   })();
