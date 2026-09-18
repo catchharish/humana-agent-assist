@@ -8,6 +8,7 @@
 - Scenario facts pulled out of copilot fallbacks/prompts/regex/default query/T06A copilot branch. T04B delay is the quotes mock; T01 2800 ms is start `injectedDelayMs`; T06A no-offer is the driver.
 - SSE for the live page. Stage-1 nudge paint ~8–11 ms on T01-C/D (was ~1.9 s). Prefetch after VALID auth. FAST90 from governed text, no terra.
 - Fresh T01-C `6863e0f3-…` and T01-D `9dcdfb2c-…` on `:3002`. Six replays passed. C05 live grader 4/4.
+- Public GitHub repo: https://github.com/catchharish/humana-agent-assist (`.env` not included).
 
 ## Broken / incomplete
 - Remaining paint misses logged honestly (FAST90/quotes still wait on luna need-id; historical with 2800 ms injected still misses 5s on both runs; wrap miss on T01-D). Targets not changed.
