@@ -1,0 +1,10 @@
+{
+  "caseId": "DEMO-CVR001",
+  "caseType": "coverage_review",
+  "memberId": "DEMO-M001",
+  "planId": "DEMO-MAPD-001",
+  "requestedMedication": "Jardiance 10 mg tablets",
+  "status": "pending_review",
+  "determination": null,
+  "receivingQueue": "Coverage Review"
+}

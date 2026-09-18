@@ -1,0 +1,9 @@
+node_modules
+.next
+.env
+.env.local
+.env*.local
+runs/*.jsonl
+!runs/.gitkeep
+.DS_Store
+tsconfig.tsbuildinfo

@@ -1,0 +1,57 @@
+{
+  "scenarioId": "t01_m1",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-partial",
+      "offsetMs": 600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "partial",
+      "text": "Thank you for calling Humana."
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 1600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recoded."
+    },
+    {
+      "id": "e-greet-corrected",
+      "offsetMs": 2400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "corrected",
+      "correctsEventId": "e-greet-final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-noise-uncertain",
+      "offsetMs": 2800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "uncertain",
+      "text": "can you hear —"
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 3600,
+      "type": "pause_gate",
+      "pauseLabel": "Presenter: stream paused. Resume does not authorize. Next stream event is DEMO-AUTH001."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 3700,
+      "type": "system",
+      "name": "authorization"
+    }
+  ]
+}

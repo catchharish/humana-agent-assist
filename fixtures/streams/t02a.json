@@ -1,0 +1,68 @@
+{
+  "scenarioId": "t02a",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 800,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 1400,
+      "type": "pause_gate",
+      "pauseLabel": "T02A: Resume does not authorize."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 1500,
+      "type": "system",
+      "name": "authorization"
+    },
+    {
+      "id": "e-smalltalk",
+      "offsetMs": 2200,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Pretty nice weather this morning, isn't it?"
+    },
+    {
+      "id": "e-ready",
+      "offsetMs": 3200,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Can you check if my atorvastatin is ready today?"
+    },
+    {
+      "id": "e-pause-ready",
+      "offsetMs": 4200,
+      "type": "pause_gate",
+      "pauseLabel": "T02A: sourced READY_FOR_PICKUP. No small-talk card."
+    },
+    {
+      "id": "e-said-ready",
+      "offsetMs": 5000,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "The pharmacy status says your atorvastatin is ready for pickup at Lakeview. I am not confirming that you have picked it up."
+    },
+    {
+      "id": "e-pause-disp",
+      "offsetMs": 6200,
+      "type": "pause_gate",
+      "pauseLabel": "T02A: confirm COMPLETED_SERVICING after status communication."
+    }
+  ]
+}

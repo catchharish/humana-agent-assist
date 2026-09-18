@@ -1,0 +1,28 @@
+{
+  "name": "humana-agent-assist",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:t01": "RUN_T01=1 vitest run tests/t01_main.test.ts"
+  },
+  "dependencies": {
+    "next": "^15.5.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^22.18.1",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "eslint": "^9.35.0",
+    "eslint-config-next": "^15.5.3",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,288 @@
+:root {
+  --bg: #f4f1ea;
+  --ink: #1c1917;
+  --muted: #57534e;
+  --line: #d6d3d1;
+  --card: #fffcf7;
+  --accent: #1e3a5f;
+  --ok: #14532d;
+  --warn: #9a3412;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.workspace {
+  display: grid;
+  height: 100vh;
+  overflow: hidden;
+  grid-template-rows: auto auto minmax(0, 1fr) minmax(120px, 22vh);
+  grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1.5fr) minmax(220px, 1.1fr);
+  grid-template-areas:
+    "banner banner banner"
+    "strip strip strip"
+    "rail now drawer"
+    "transcript transcript transcript";
+  gap: 8px;
+  padding: 8px;
+}
+
+.banner {
+  grid-area: banner;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.strip,
+.rail,
+.now,
+.drawer,
+.transcript {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 0;
+}
+
+.strip {
+  grid-area: strip;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.strip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.strip dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.strip dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.strip dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rail,
+.now,
+.drawer {
+  overflow: auto;
+}
+
+.rail {
+  grid-area: rail;
+}
+
+.now {
+  grid-area: now;
+}
+
+.drawer {
+  grid-area: drawer;
+  font-size: 0.9rem;
+}
+
+.transcript {
+  grid-area: transcript;
+  overflow: auto;
+}
+
+.now-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.subhead {
+  margin: 12px 0 6px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.need {
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+}
+
+.need-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.need button {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.source {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.ob-status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ob-status strong {
+  font-size: 0.8rem;
+}
+
+.mark {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mark-uncertain {
+  border-style: dashed;
+  font-style: italic;
+}
+
+.mark-uncertain::after {
+  content: " ?";
+}
+
+.line {
+  margin: 6px 0;
+  line-height: 1.35;
+}
+
+.paused {
+  outline: 2px solid var(--warn);
+}
+
+.pause-banner {
+  margin: 0 0 8px;
+}
+
+.exact {
+  color: var(--ok);
+}
+
+.nudge {
+  border: 1px solid var(--warn);
+  background: #fff7ed;
+  padding: 8px;
+  margin: 0 0 10px;
+}
+
+.quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+.quote-table th,
+.quote-table td {
+  border: 1px solid var(--line);
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.diff {
+  font-size: 0.8rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.wrap {
+  width: 100%;
+  min-height: 90px;
+  font: inherit;
+  margin-top: 6px;
+}
+
+.outcome {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+
+.diagnostics pre {
+  white-space: pre-wrap;
+  background: #f5f5f4;
+  padding: 8px;
+  font-size: 0.75rem;
+  overflow: auto;
+  max-height: 240px;
+}

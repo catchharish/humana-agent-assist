@@ -1,0 +1,731 @@
+{
+  "sessionId": "e31b4478-115d-46b6-ba38-39b77a7b00b7",
+  "scenarioId": "t01_m2a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "late_finding",
+  "pricingNote": "Deadline crossed without a qualifying reading.",
+  "closing": "exact_timely",
+  "closingNote": "Uncertain first attempt preserved. Later reread verified.",
+  "closingHistory": [
+    {
+      "text": "Your decision today has no — membership",
+      "stability": "uncertain",
+      "assessment": "unable_to_verify"
+    },
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [
+    {
+      "at": "e-price-miss",
+      "stage": 1,
+      "fired": true,
+      "classification": "prospective_estimate",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_all_three_hold"
+    },
+    {
+      "at": "e-readback",
+      "stage": 2,
+      "fired": true,
+      "classification": "prospective_estimate",
+      "latencyMs": 1111.294750000001,
+      "modelCall": true,
+      "reason": "stage2_ambiguous_partial_or_amount"
+    }
+  ],
+  "triggerLog": [
+    {
+      "at": "e-greet-partial",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-greet-corrected",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-advocate-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-adv-offer-intro",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-adv-obj",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-adv-interest",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-adv-clarify",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-price-miss",
+      "stage": 1,
+      "fired": true,
+      "classification": "prospective_estimate",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_all_three_hold"
+    },
+    {
+      "at": "e-paraphrase",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-pricing-exact",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-readback",
+      "stage": 2,
+      "fired": true,
+      "classification": "prospective_estimate",
+      "latencyMs": 1111.294750000001,
+      "modelCall": true,
+      "reason": "stage2_ambiguous_partial_or_amount"
+    },
+    {
+      "at": "e-adv-offer-xfer",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-close-uncertain",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    },
+    {
+      "at": "e-close-exact",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent"
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "structured_lookup"
+      ],
+      "latencyMs": 811.5890829999989,
+      "retrieved": [
+        {
+          "id": "DEMO-RF001",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "lakeview",
+          "sourceSystem": "provider"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "structured_lookup",
+        "knowledge_search"
+      ],
+      "latencyMs": 4112.7175419999985,
+      "retrieved": [
+        {
+          "id": "DEMO-C0818",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-C0916",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-NET0818",
+          "sourceSystem": "benefits"
+        },
+        {
+          "id": "DEMO-NET0916",
+          "sourceSystem": "benefits"
+        },
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "ranked": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "score": 0.5520664088559674
+        },
+        {
+          "id": "DEMO-OBJECTION-RETAIL-v1",
+          "score": 0.3009568198358847
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "score": 0.2507904209945021
+        },
+        {
+          "id": "DEMO-FAST90-v1",
+          "score": 0.2356371820456206
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "structured_lookup"
+      ],
+      "latencyMs": 491.14670900000056,
+      "retrieved": [
+        {
+          "id": "DEMO-RF001",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "lakeview",
+          "sourceSystem": "provider"
+        },
+        {
+          "id": "DEMO-RF001:status",
+          "sourceSystem": "pharmacy"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "structured_lookup",
+        "knowledge_search"
+      ],
+      "latencyMs": 712.4116250000006,
+      "retrieved": [
+        {
+          "id": "DEMO-C0818",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-C0916",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-NET0818",
+          "sourceSystem": "benefits"
+        },
+        {
+          "id": "DEMO-NET0916",
+          "sourceSystem": "benefits"
+        },
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "ranked": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "score": 0.46943367535149233
+        },
+        {
+          "id": "DEMO-OBJECTION-RETAIL-v1",
+          "score": 0.20185131857279687
+        },
+        {
+          "id": "DEMO-FAST90-v1",
+          "score": 0.17571500004490498
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "score": 0.16644443469585857
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": true
+    },
+    {
+      "routesUsed": [
+        "governed_derived"
+      ],
+      "latencyMs": 457.74612499999785,
+      "retrieved": [
+        {
+          "id": "DEMO-FAST90-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "structured_lookup"
+      ],
+      "latencyMs": 176.60087500000373,
+      "retrieved": [
+        {
+          "id": "DEMO-Q-ATO-L",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "DEMO-Q-ATO-O",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "DEMO-Q-ATO-C",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "DEMO-Q-MET-L",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "DEMO-Q-MET-O",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "DEMO-Q-MET-C",
+          "sourceSystem": "pharmacy"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "structured_lookup"
+      ],
+      "latencyMs": 7.734208000001672,
+      "retrieved": [
+        {
+          "id": "DEMO-Q-ATO-L",
+          "sourceSystem": "pharmacy"
+        },
+        {
+          "id": "DEMO-Q-MET-L",
+          "sourceSystem": "pharmacy"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "structured_lookup"
+      ],
+      "latencyMs": 396.28458300000057,
+      "retrieved": [
+        {
+          "id": "DEMO-CVR001",
+          "sourceSystem": "coverage-review"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    }
+  ],
+  "historical": {
+    "title": "Why the metformin charges were different",
+    "body": "Both completed claims were for the same 30-day supply of metformin 500 mg tablets (60 tablets). On August 18, 2026, Oak Street Pharmacy was applied as preferred retail, and the member paid $8. On September 16, 2026, Lakeview Pharmacy was applied as standard retail, and the member paid $27. Under the plan’s recorded cost-sharing, the different applicable pharmacy categories explain the difference.",
+    "sourceLabel": "System record · claims · simulated; Governed guidance · scripting · simulated",
+    "causeSupported": true,
+    "chargesEstablished": true
+  },
+  "fast90": {
+    "title": "90-day option",
+    "body": "The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order, not automatic refills, and does not change today's pickup.",
+    "sourceLabel": "Derived from source/version · scripting · simulated (DEMO-FAST90-v1 ← DEMO-SERVICE-v1)"
+  },
+  "nowCard": {
+    "title": "Connection result",
+    "body": "DEMO-TRANSFER001: receiving_specialist_connected. DEMO-CVR001 remains pending. Connection is not a coverage determination.",
+    "sourceLabel": "System record · telephony · simulated"
+  },
+  "quotes": [
+    {
+      "quoteId": "DEMO-Q-ATO-L",
+      "drugName": "atorvastatin",
+      "pharmacyId": "lakeview",
+      "pharmacyName": "Lakeview Pharmacy",
+      "estimatedMemberCost": {
+        "value": "15.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-ATO-O",
+      "drugName": "atorvastatin",
+      "pharmacyId": "oak-street",
+      "pharmacyName": "Oak Street Pharmacy",
+      "estimatedMemberCost": {
+        "value": "6.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-ATO-C",
+      "drugName": "atorvastatin",
+      "pharmacyId": "centerwell",
+      "pharmacyName": "CenterWell",
+      "estimatedMemberCost": {
+        "value": "6.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-L",
+      "drugName": "metformin",
+      "pharmacyId": "lakeview",
+      "pharmacyName": "Lakeview Pharmacy",
+      "estimatedMemberCost": {
+        "value": "60.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-O",
+      "drugName": "metformin",
+      "pharmacyId": "oak-street",
+      "pharmacyName": "Oak Street Pharmacy",
+      "estimatedMemberCost": {
+        "value": "24.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "invalidated"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-C",
+      "drugName": "metformin",
+      "pharmacyId": "centerwell",
+      "pharmacyName": "CenterWell",
+      "estimatedMemberCost": {
+        "value": "18.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "invalidated"
+    }
+  ],
+  "wrap": "Confirmed atorvastatin is ready at Lakeview; no order or pickup was requested. Reviewed that prior metformin cost differences reflected pharmacy category. Member chose CenterWell enrollment for future metformin 500 mg fills only; enrollment was submitted successfully (DEMO-ENR001). Jardiance 10 mg coverage request remains pending review (DEMO-CVR001). Member was connected with a receiving specialist (DEMO-TRANSFER001); coverage was not resolved.",
+  "handoff": "Member Harry Whitfield (ID DEMO-M001), coverage case DEMO-CVR001: Jardiance 10 mg tablets is pending review. Harry wants to know the coverage status. Eligibility is active under plan DEMO-MAPD-001; enrollment check is scope-valid for metformin only and does not confirm Jardiance coverage. Atorvastatin is ready at Lakeview today; do not claim pickup or confirm that it has been picked up. Connection has not occurred.",
+  "enrollment": {
+    "medications": [
+      "metformin"
+    ],
+    "readback": "You want to enroll in the CenterWell pharmacy service for future metformin 500 milligram fills only. Atorvastatin stays at retail, and today's ready refill stays at Lakeview. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?",
+    "confirmed": true,
+    "submitted": true,
+    "resultId": "DEMO-ENR001",
+    "returnedScope": [
+      "metformin"
+    ],
+    "scopeOk": true,
+    "withdrawn": false
+  },
+  "coverage": {
+    "caseId": "DEMO-CVR001",
+    "status": "pending_review",
+    "requestedMedication": "Jardiance 10 mg tablets",
+    "determination": null
+  },
+  "transfer": {
+    "destinationConfirmed": true,
+    "connectionStatus": "receiving_specialist_connected",
+    "transferId": "DEMO-TRANSFER001"
+  },
+  "disposition": {
+    "recommended": "TRANSFERRED_COVERAGE_REVIEW",
+    "confirmed": "TRANSFERRED_COVERAGE_REVIEW"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-pause-nudge",
+      "kind": "pause_gate",
+      "tEvent": 1789743234147,
+      "tPaint": 1789743234154,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-paraphrase",
+      "kind": "transcript",
+      "tEvent": 1789743234204,
+      "tPaint": 1789743236000,
+      "paintMs": 1796,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-para",
+      "kind": "pause_gate",
+      "tEvent": 1789743236043,
+      "tPaint": 1789743236053,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pricing-exact",
+      "kind": "transcript",
+      "tEvent": 1789743236099,
+      "tPaint": 1789743237953,
+      "paintMs": 1854,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-compare",
+      "kind": "pause_gate",
+      "tEvent": 1789743237999,
+      "tPaint": 1789743238006,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-elect",
+      "kind": "transcript",
+      "tEvent": 1789743238054,
+      "tPaint": 1789743240050,
+      "paintMs": 1996,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-enroll",
+      "kind": "pause_gate",
+      "tEvent": 1789743240092,
+      "tPaint": 1789743240099,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-readback",
+      "kind": "transcript",
+      "tEvent": 1789743240150,
+      "tPaint": 1789743243108,
+      "paintMs": 2958,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-yes-enroll",
+      "kind": "transcript",
+      "tEvent": 1789743243153,
+      "tPaint": 1789743245171,
+      "paintMs": 2018,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-submit",
+      "kind": "pause_gate",
+      "tEvent": 1789743245214,
+      "tPaint": 1789743245220,
+      "paintMs": 6,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-jardiance",
+      "kind": "transcript",
+      "tEvent": 1789743246415,
+      "tPaint": 1789743248896,
+      "paintMs": 2481,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-cvr",
+      "kind": "pause_gate",
+      "tEvent": 1789743248938,
+      "tPaint": 1789743248948,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-adv-offer-xfer",
+      "kind": "transcript",
+      "tEvent": 1789743252145,
+      "tPaint": 1789743255047,
+      "paintMs": 2902,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-member-agree-xfer",
+      "kind": "transcript",
+      "tEvent": 1789743255092,
+      "tPaint": 1789743257043,
+      "paintMs": 1951,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-handoff",
+      "kind": "pause_gate",
+      "tEvent": 1789743257088,
+      "tPaint": 1789743257095,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-close-uncertain",
+      "kind": "transcript",
+      "tEvent": 1789743257140,
+      "tPaint": 1789743257150,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-close",
+      "kind": "pause_gate",
+      "tEvent": 1789743257193,
+      "tPaint": 1789743257200,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-close-exact",
+      "kind": "transcript",
+      "tEvent": 1789743257250,
+      "tPaint": 1789743259262,
+      "paintMs": 2012,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-connect",
+      "kind": "pause_gate",
+      "tEvent": 1789743259305,
+      "tPaint": 1789743259313,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "wrap-generated",
+      "kind": "wrap",
+      "tEvent": 1789743259326,
+      "tPaint": 1789743262668,
+      "paintMs": 3342,
+      "measured": true,
+      "excludedPauseMs": 0
+    }
+  ]
+}

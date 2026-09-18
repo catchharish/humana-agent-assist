@@ -1,0 +1,20 @@
+[
+  {
+    "articleId": "DEMO-SERVICE-v1",
+    "version": "v1",
+    "body": "The recorded option supports a 90-day supply for eligible existing prescriptions. Pharmacy-service enrollment does not itself place a fill, start automatic refills, or alter today's pickup. Individual medications can be selected. Retail remains an option. Mixed retail and delivery choices are allowed.",
+    "lineageSourceId": null
+  },
+  {
+    "articleId": "DEMO-FAST90-v1",
+    "version": "v1",
+    "body": "The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order, not automatic refills, and does not change today's pickup.",
+    "lineageSourceId": "DEMO-SERVICE-v1"
+  },
+  {
+    "articleId": "DEMO-OBJECTION-RETAIL-v1",
+    "version": "v1",
+    "body": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is.",
+    "lineageSourceId": "DEMO-SERVICE-v1"
+  }
+]

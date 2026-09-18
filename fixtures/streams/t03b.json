@@ -1,0 +1,68 @@
+{
+  "scenarioId": "t03b",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 800,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 1400,
+      "type": "pause_gate",
+      "pauseLabel": "T03B: Resume does not authorize."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 1500,
+      "type": "system",
+      "name": "authorization"
+    },
+    {
+      "id": "e-intro",
+      "offsetMs": 2400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "If you like, there is an optional CenterWell pharmacy service with 90-day delivery. You can keep retail. It is not required."
+    },
+    {
+      "id": "e-refuse",
+      "offsetMs": 3600,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "No. Keep my retail pharmacy. I do not want delivery."
+    },
+    {
+      "id": "e-pause-stop",
+      "offsetMs": 4400,
+      "type": "pause_gate",
+      "pauseLabel": "T03B: optional comparison/enrollment stopped. No rebuttal."
+    },
+    {
+      "id": "e-close",
+      "offsetMs": 5200,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Your decision today has no impact on your plan membership."
+    },
+    {
+      "id": "e-pause-done",
+      "offsetMs": 6000,
+      "type": "pause_gate",
+      "pauseLabel": "T03B: closing applicable; no enrollment; no negative plan effect."
+    }
+  ]
+}

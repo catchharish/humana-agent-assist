@@ -1,0 +1,30 @@
+[
+  {
+    "claimId": "DEMO-C0818",
+    "claimType": "pharmacy",
+    "adjudicationStatus": "paid",
+    "dateOfService": "2026-08-18",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 60,
+    "daysSupply": 30,
+    "pharmacy": { "pharmacyId": "oak-street", "name": "Oak Street Pharmacy" },
+    "memberPaidAmount": { "value": "8.00", "currency": "USD" },
+    "appliedCostShareCategory": "preferred_retail"
+  },
+  {
+    "claimId": "DEMO-C0916",
+    "claimType": "pharmacy",
+    "adjudicationStatus": "paid",
+    "dateOfService": "2026-09-16",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 60,
+    "daysSupply": 30,
+    "pharmacy": { "pharmacyId": "lakeview", "name": "Lakeview Pharmacy" },
+    "memberPaidAmount": { "value": "27.00", "currency": "USD" },
+    "appliedCostShareCategory": "standard_retail"
+  }
+]

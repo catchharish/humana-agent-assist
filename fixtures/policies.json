@@ -1,0 +1,16 @@
+[
+  {
+    "policyId": "DEMO-POLICY-COST-v1",
+    "planId": "DEMO-MAPD-001",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "body": "For this plan and period, the matched 30-day metformin 500 mg supply is $8 preferred retail and $27 standard retail under the recorded conditions."
+  },
+  {
+    "policyId": "DEMO-POLICY-OTHER-v1",
+    "planId": "DEMO-OTHER-PLAN",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "body": "Illustrative cost sharing for a different plan. Not applicable to DEMO-MAPD-001."
+  }
+]

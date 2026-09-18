@@ -1,0 +1,20 @@
+[
+  {
+    "prescriptionId": "DEMO-RX001",
+    "memberId": "DEMO-M001",
+    "drugName": "atorvastatin",
+    "strength": "20 mg",
+    "dosageForm": "tablets",
+    "quantityAuthorized": 90,
+    "daysSupply": 90
+  },
+  {
+    "prescriptionId": "DEMO-RX002",
+    "memberId": "DEMO-M001",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantityAuthorized": 180,
+    "daysSupply": 90
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "memberId": "DEMO-M001",
+  "name": { "given": "Harry", "family": "Whitfield" },
+  "planId": "DEMO-MAPD-001",
+  "lineOfBusiness": "MAPD",
+  "eligibilityStatus": "active"
+}

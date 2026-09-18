@@ -1,0 +1,118 @@
+{
+  "scenarioId": "t08b",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 800,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 1400,
+      "type": "pause_gate",
+      "pauseLabel": "T08B: Resume does not authorize."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 1500,
+      "type": "system",
+      "name": "authorization"
+    },
+    {
+      "id": "e-90",
+      "offsetMs": 2400,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "How does the 90-day option work?"
+    },
+    {
+      "id": "e-intro",
+      "offsetMs": 3600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "CenterWell can deliver a 90-day supply. You can keep retail for some medicines. Enrollment is optional and does not change today's pickup."
+    },
+    {
+      "id": "e-elect",
+      "offsetMs": 4800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Keep the atorvastatin at retail. I would like to try delivery for the metformin."
+    },
+    {
+      "id": "e-pause-readback",
+      "offsetMs": 5600,
+      "type": "pause_gate",
+      "pauseLabel": "T08B: metformin-only readback on screen."
+    },
+    {
+      "id": "e-yes",
+      "offsetMs": 6400,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Yes, for metformin only."
+    },
+    {
+      "id": "e-pause-mint",
+      "offsetMs": 7200,
+      "type": "pause_gate",
+      "pauseLabel": "T08B: Confirm (mint) metformin-only. Do not submit."
+    },
+    {
+      "id": "e-add-scope",
+      "offsetMs": 8000,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "I can add atorvastatin to the draft selection as well."
+    },
+    {
+      "id": "e-pause-edit",
+      "offsetMs": 8600,
+      "type": "pause_gate",
+      "pauseLabel": "T08B: Add atorvastatin to draft — prior confirmation is invalid."
+    },
+    {
+      "id": "e-withdraw",
+      "offsetMs": 9400,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "I don't want to enroll. Please withdraw that. Stop the enrollment."
+    },
+    {
+      "id": "e-pause-withdraw",
+      "offsetMs": 10200,
+      "type": "pause_gate",
+      "pauseLabel": "T08B: withdrawal blocks submit. No business action."
+    },
+    {
+      "id": "e-close",
+      "offsetMs": 11000,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Your decision today has no impact on your plan membership."
+    },
+    {
+      "id": "e-pause-done",
+      "offsetMs": 11800,
+      "type": "pause_gate",
+      "pauseLabel": "T08B: closing remains; enrollment not submitted."
+    }
+  ]
+}

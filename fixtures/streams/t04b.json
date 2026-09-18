@@ -1,0 +1,54 @@
+{
+  "scenarioId": "t04b",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 800,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 1400,
+      "type": "pause_gate",
+      "pauseLabel": "T04B: Resume does not authorize."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 1500,
+      "type": "system",
+      "name": "authorization"
+    },
+    {
+      "id": "e-lakeview-quote",
+      "offsetMs": 2400,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "What is the 90-day metformin estimate at Lakeview?"
+    },
+    {
+      "id": "e-correct-oak",
+      "offsetMs": 2800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Not Lakeview — Oak Street Pharmacy."
+    },
+    {
+      "id": "e-pause-quotes",
+      "offsetMs": 5600,
+      "type": "pause_gate",
+      "pauseLabel": "T04B: Lakeview $60 must be invalidated; Oak Street metformin is $24. Do not relabel."
+    }
+  ]
+}

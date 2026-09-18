@@ -1,0 +1,5 @@
+[
+  { "pharmacyId": "lakeview", "organizationName": "Lakeview Pharmacy", "providerType": "pharmacy" },
+  { "pharmacyId": "oak-street", "organizationName": "Oak Street Pharmacy", "providerType": "pharmacy" },
+  { "pharmacyId": "centerwell", "organizationName": "CenterWell", "providerType": "pharmacy" }
+]

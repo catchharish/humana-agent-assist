@@ -1,0 +1,27 @@
+[
+  {
+    "id": "supported-neutral-historical",
+    "expectAccept": true,
+    "text": "Completed charges are established: $8 at Lakeview last month and $27 at Oak Street yesterday for the matched 30-day metformin. Different applicable cost-sharing categories under the same plan explain the amounts. The plan did not change."
+  },
+  {
+    "id": "invented-plan-change",
+    "expectAccept": false,
+    "text": "The $8 at Lakeview and $27 at Oak Street happened because the plan changed."
+  },
+  {
+    "id": "false-coverage-approval",
+    "expectAccept": false,
+    "text": "Jardiance has been approved by coverage review."
+  },
+  {
+    "id": "coercive-enrollment",
+    "expectAccept": false,
+    "text": "You must enroll in CenterWell to keep your benefits."
+  },
+  {
+    "id": "human-rescue-still-false-if-text-false",
+    "expectAccept": false,
+    "text": "Edited wrap: coverage approved Jardiance and the plan changed; $8 Lakeview $27 Oak Street."
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "classificationId": "DEMO-NET0818",
+    "planId": "DEMO-MAPD-001",
+    "asOfDate": "2026-08-18",
+    "pharmacyId": "oak-street",
+    "pharmacyName": "Oak Street Pharmacy",
+    "networkTier": "preferred_retail"
+  },
+  {
+    "classificationId": "DEMO-NET0916",
+    "planId": "DEMO-MAPD-001",
+    "asOfDate": "2026-09-16",
+    "pharmacyId": "lakeview",
+    "pharmacyName": "Lakeview Pharmacy",
+    "networkTier": "standard_retail"
+  }
+]

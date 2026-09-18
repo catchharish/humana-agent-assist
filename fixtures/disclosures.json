@@ -1,0 +1,66 @@
+{
+  "simulated": true,
+  "sourceSystem": "scripting",
+  "policyLabel": "Synthetic demo policy — not actual Humana-approved wording.",
+  "requirements": [
+    {
+      "requirementId": "DEMO-GREETING-v1",
+      "version": "v1",
+      "verbatimText": "Thank you for calling Humana. This call is being recorded.",
+      "applicability": "At the opening of each supported connected demonstration call, before identity questions or substantive servicing.",
+      "deadlineRule": "Before identity questions or substantive servicing.",
+      "repetitionRule": "Once for this advocate interaction.",
+      "recoveryRule": "Correct delivery is quiet. A known missed deadline remains a finding after correction.",
+      "triggerPatterns": {
+        "kind": "call_open"
+      }
+    },
+    {
+      "requirementId": "DEMO-PRICING-v1",
+      "version": "v1",
+      "verbatimText": "Any price estimate we discuss is based on the information available today and may change when your prescription is filled.",
+      "applicability": "Before this advocate first speaks a prospective prescription-price estimate.",
+      "deadlineRule": "Before this advocate first speaks a prospective prescription-price estimate.",
+      "repetitionRule": "One adequate reading covers subsequent estimates for this same advocate/member interaction.",
+      "recoveryRule": "After a miss: pause estimates, read exactly, then continue; preserve late delivery.",
+      "triggerPatterns": {
+        "kind": "prospective_estimate",
+        "excludes": ["completed_charges", "member_mentioning_prices", "internal_display_without_spoken_estimate"],
+        "amountOrComparative": true,
+        "futureEstimateCues": [
+          "estimate",
+          "estimated",
+          "90-day",
+          "ninety-day",
+          "future fill",
+          "would be",
+          "will be"
+        ],
+        "namedOptionComparativeExamples": [
+          "about six dollars cheaper at CenterWell",
+          "roughly half"
+        ],
+        "notAnEstimateExamples": ["prices can vary by pharmacy"]
+      }
+    },
+    {
+      "requirementId": "DEMO-CLOSING-v2",
+      "version": "v2",
+      "verbatimText": "Your decision today has no impact on your plan membership.",
+      "applicability": "Once the advocate actually introduces or discusses the optional pharmacy-service choice.",
+      "deadlineRule": "Closing portion after the discussion and before this advocate exits or completes handoff.",
+      "repetitionRule": "Once at that closing.",
+      "recoveryRule": "Clear reread. Attestation is Tier 3 and not offered in this take-home.",
+      "triggerPatterns": {
+        "kind": "service_choice_discussed",
+        "discussionCues": [
+          "CenterWell",
+          "delivery",
+          "90-day option",
+          "pharmacy service",
+          "mail"
+        ]
+      }
+    }
+  ]
+}

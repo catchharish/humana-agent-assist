@@ -1,0 +1,80 @@
+[
+  {
+    "quoteId": "DEMO-Q-ATO-L",
+    "drugName": "atorvastatin",
+    "strength": "20 mg",
+    "dosageForm": "tablets",
+    "quantity": 90,
+    "daysSupply": 90,
+    "pharmacyId": "lakeview",
+    "pharmacyName": "Lakeview Pharmacy",
+    "estimatedMemberCost": { "value": "15.00", "currency": "USD" },
+    "asOf": "2026-09-17",
+    "validityStatus": "valid"
+  },
+  {
+    "quoteId": "DEMO-Q-ATO-O",
+    "drugName": "atorvastatin",
+    "strength": "20 mg",
+    "dosageForm": "tablets",
+    "quantity": 90,
+    "daysSupply": 90,
+    "pharmacyId": "oak-street",
+    "pharmacyName": "Oak Street Pharmacy",
+    "estimatedMemberCost": { "value": "6.00", "currency": "USD" },
+    "asOf": "2026-09-17",
+    "validityStatus": "valid"
+  },
+  {
+    "quoteId": "DEMO-Q-ATO-C",
+    "drugName": "atorvastatin",
+    "strength": "20 mg",
+    "dosageForm": "tablets",
+    "quantity": 90,
+    "daysSupply": 90,
+    "pharmacyId": "centerwell",
+    "pharmacyName": "CenterWell",
+    "estimatedMemberCost": { "value": "6.00", "currency": "USD" },
+    "asOf": "2026-09-17",
+    "validityStatus": "valid"
+  },
+  {
+    "quoteId": "DEMO-Q-MET-L",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 180,
+    "daysSupply": 90,
+    "pharmacyId": "lakeview",
+    "pharmacyName": "Lakeview Pharmacy",
+    "estimatedMemberCost": { "value": "60.00", "currency": "USD" },
+    "asOf": "2026-09-17",
+    "validityStatus": "valid"
+  },
+  {
+    "quoteId": "DEMO-Q-MET-O",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 180,
+    "daysSupply": 90,
+    "pharmacyId": "oak-street",
+    "pharmacyName": "Oak Street Pharmacy",
+    "estimatedMemberCost": { "value": "24.00", "currency": "USD" },
+    "asOf": "2026-09-17",
+    "validityStatus": "valid"
+  },
+  {
+    "quoteId": "DEMO-Q-MET-C",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 180,
+    "daysSupply": 90,
+    "pharmacyId": "centerwell",
+    "pharmacyName": "CenterWell",
+    "estimatedMemberCost": { "value": "18.00", "currency": "USD" },
+    "asOf": "2026-09-17",
+    "validityStatus": "valid"
+  }
+]

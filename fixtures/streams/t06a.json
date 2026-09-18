@@ -1,0 +1,46 @@
+{
+  "scenarioId": "t06a",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 800,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 1600,
+      "type": "pause_gate",
+      "pauseLabel": "T06A: Resume does not authorize."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 1700,
+      "type": "system",
+      "name": "authorization"
+    },
+    {
+      "id": "e-hist-final",
+      "offsetMs": 2800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Why was my metformin eight dollars last month and twenty-seven dollars yesterday?"
+    },
+    {
+      "id": "e-pause-t06a",
+      "offsetMs": 5000,
+      "type": "pause_gate",
+      "pauseLabel": "T06A: charges established, cause not established (DEMO-NET0818 removed)."
+    }
+  ]
+}

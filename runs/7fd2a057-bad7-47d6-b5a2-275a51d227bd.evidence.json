@@ -1,0 +1,170 @@
+{
+  "sessionId": "7fd2a057-bad7-47d6-b5a2-275a51d227bd",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "structured_lookup",
+        "knowledge_search",
+        "partial_withhold"
+      ],
+      "latencyMs": 901.0328330000048,
+      "retrieved": [
+        {
+          "id": "DEMO-C0818",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-C0916",
+          "sourceSystem": "claims"
+        },
+        {
+          "id": "DEMO-NET0916",
+          "sourceSystem": "benefits"
+        },
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "ranked": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "score": 0.5520970806077592
+        },
+        {
+          "id": "DEMO-OBJECTION-RETAIL-v1",
+          "score": 0.3009865361574758
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "score": 0.25078770246530735
+        },
+        {
+          "id": "DEMO-FAST90-v1",
+          "score": 0.2356324788565504
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Completed metformin charges confirmed; cause not established",
+    "body": "Completed charges are established: $8.00 was paid for metformin 500 mg tablets (60 tablets/30 days) at Oak Street Pharmacy on 2026-08-18, and $27.00 was paid for the same supply at Lakeview Pharmacy on 2026-09-16. The cause of the difference is not established because support is missing for Oak Street Pharmacy’s network classification: DEMO-NET0818.",
+    "sourceLabel": "System record · claims · simulated",
+    "causeSupported": false,
+    "chargesEstablished": true
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Completed metformin charges confirmed; cause not established",
+    "body": "Completed charges are established: $8.00 was paid for metformin 500 mg tablets (60 tablets/30 days) at Oak Street Pharmacy on 2026-08-18, and $27.00 was paid for the same supply at Lakeview Pharmacy on 2026-09-16. The cause of the difference is not established because support is missing for Oak Street Pharmacy’s network classification: DEMO-NET0818.",
+    "sourceLabel": "System record · claims · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789744534510,
+      "tPaint": 1789744534525,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789744534577,
+      "tPaint": 1789744534585,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789744534641,
+      "tPaint": 1789744534648,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789744534710,
+      "tPaint": 1789744534850,
+      "paintMs": 140,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789744534986,
+      "tPaint": 1789744540812,
+      "paintMs": 5826,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789744540864,
+      "tPaint": 1789744540871,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    }
+  ]
+}

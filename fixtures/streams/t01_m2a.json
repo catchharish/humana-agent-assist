@@ -1,0 +1,369 @@
+{
+  "scenarioId": "t01_m2a",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-ivr",
+      "offsetMs": 0,
+      "type": "system",
+      "name": "ivr_hint"
+    },
+    {
+      "id": "e-greet-partial",
+      "offsetMs": 600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "partial",
+      "text": "Thank you for calling Humana."
+    },
+    {
+      "id": "e-greet-final",
+      "offsetMs": 1600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recoded."
+    },
+    {
+      "id": "e-greet-corrected",
+      "offsetMs": 2400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "corrected",
+      "correctsEventId": "e-greet-final",
+      "text": "Thank you for calling Humana. This call is being recorded."
+    },
+    {
+      "id": "e-noise-uncertain",
+      "offsetMs": 2800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "uncertain",
+      "text": "can you hear —"
+    },
+    {
+      "id": "e-pause-identity",
+      "offsetMs": 3600,
+      "type": "pause_gate",
+      "pauseLabel": "Presenter: Resume does not authorize. Next stream event is DEMO-AUTH001."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 3700,
+      "type": "system",
+      "name": "authorization"
+    },
+    {
+      "id": "e-rx-partial",
+      "offsetMs": 4800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "partial",
+      "text": "I put in my atorvastatin"
+    },
+    {
+      "id": "e-rx-final",
+      "offsetMs": 6200,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "I put in my atorvastatin refill request. Can you help me check it?"
+    },
+    {
+      "id": "e-pause-existing",
+      "offsetMs": 7000,
+      "type": "pause_gate",
+      "pauseLabel": "Checkpoint: existing request DEMO-RF001, not current readiness."
+    },
+    {
+      "id": "e-hist-partial",
+      "offsetMs": 8000,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "partial",
+      "text": "Why was my metformin eight dollars"
+    },
+    {
+      "id": "e-hist-final",
+      "offsetMs": 9400,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Why was my metformin eight dollars last month and twenty-seven dollars yesterday?"
+    },
+    {
+      "id": "e-interrupt-partial",
+      "offsetMs": 10200,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "partial",
+      "text": "Actually first"
+    },
+    {
+      "id": "e-interrupt-final",
+      "offsetMs": 11000,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Actually first—can you check my refill is ready today?"
+    },
+    {
+      "id": "e-pause-ready",
+      "offsetMs": 12500,
+      "type": "pause_gate",
+      "pauseLabel": "Checkpoint: refill is primary; historical should be deferred (Answer ready), not completed."
+    },
+    {
+      "id": "e-advocate-ready",
+      "offsetMs": 13600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "The pharmacy's current status says it is ready for pickup."
+    },
+    {
+      "id": "e-return-met",
+      "offsetMs": 15000,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "So, the metformin?"
+    },
+    {
+      "id": "e-pause-historical",
+      "offsetMs": 17000,
+      "type": "pause_gate",
+      "pauseLabel": "Checkpoint: composed $8/$27 answer. Optional comparison Offer is on the Now card. Pricing must not have fired."
+    },
+    {
+      "id": "e-adv-offer-intro",
+      "offsetMs": 18400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "We can look at a 90-day option that includes retail and CenterWell delivery for your existing medicines. Hearing about it does not enroll you in anything."
+    },
+    {
+      "id": "e-90day",
+      "offsetMs": 19800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "How does the 90-day option work?"
+    },
+    {
+      "id": "e-pause-90",
+      "offsetMs": 21400,
+      "type": "pause_gate",
+      "pauseLabel": "M2b: 90-day derived answer with DEMO-FAST90-v1 lineage. Closing v2 pending later from actual service discussion."
+    },
+    {
+      "id": "e-hesitate",
+      "offsetMs": 22600,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "I'm not sure about delivery. I like speaking with my pharmacist."
+    },
+    {
+      "id": "e-pause-obj",
+      "offsetMs": 23600,
+      "type": "pause_gate",
+      "pauseLabel": "Use the governed hesitation response, then Resume."
+    },
+    {
+      "id": "e-adv-obj",
+      "offsetMs": 24800,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+    },
+    {
+      "id": "e-adv-interest",
+      "offsetMs": 26200,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Would you like to hear the retail and delivery estimates for both atorvastatin and metformin? Hearing them enrolls you in nothing."
+    },
+    {
+      "id": "e-hedge",
+      "offsetMs": 27600,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Yeah, I guess, sure"
+    },
+    {
+      "id": "e-pause-hedge",
+      "offsetMs": 28800,
+      "type": "pause_gate",
+      "pauseLabel": "Hedge is not absolute yes. Clarification template should be on screen."
+    },
+    {
+      "id": "e-adv-clarify",
+      "offsetMs": 30000,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "To confirm: would you like to hear the retail and delivery estimates for both of your existing medicines? Hearing those estimates does not enroll you in anything."
+    },
+    {
+      "id": "e-yes-compare",
+      "offsetMs": 31400,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Yes, please compare both."
+    },
+    {
+      "id": "e-pause-quotes",
+      "offsetMs": 33200,
+      "type": "pause_gate",
+      "pauseLabel": "Six quotes loaded. DEMO-PRICING-v1 is due now before any spoken estimate."
+    },
+    {
+      "id": "e-price-miss",
+      "offsetMs": 34400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "For a 90-day atorvastatin supply, the Lakeview estimate is fifteen dollars."
+    },
+    {
+      "id": "e-pause-nudge",
+      "offsetMs": 35400,
+      "type": "pause_gate",
+      "pauseLabel": "Nudge after miss. Next line is a paraphrase."
+    },
+    {
+      "id": "e-paraphrase",
+      "offsetMs": 36600,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "These prices might change."
+    },
+    {
+      "id": "e-pause-para",
+      "offsetMs": 37600,
+      "type": "pause_gate",
+      "pauseLabel": "Paraphrase flagged with word difference. Next line is exact DEMO-PRICING-v1."
+    },
+    {
+      "id": "e-pricing-exact",
+      "offsetMs": 39200,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Any price estimate we discuss is based on the information available today and may change when your prescription is filled."
+    },
+    {
+      "id": "e-pause-compare",
+      "offsetMs": 40600,
+      "type": "pause_gate",
+      "pauseLabel": "Delivered correctly, but late. $6/$6 atorvastatin; $24/$18 metformin."
+    },
+    {
+      "id": "e-elect",
+      "offsetMs": 41800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Keep the atorvastatin at retail. I would like to try delivery for the metformin."
+    },
+    {
+      "id": "e-pause-enroll",
+      "offsetMs": 43200,
+      "type": "pause_gate",
+      "pauseLabel": "Metformin-only draft. Resume for readback, then wait for Yes."
+    },
+    {
+      "id": "e-readback",
+      "offsetMs": 44400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "You want to enroll in the CenterWell pharmacy service for future metformin 500 milligram fills only. Atorvastatin stays at retail, and today's ready refill stays at Lakeview. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?"
+    },
+    {
+      "id": "e-yes-enroll",
+      "offsetMs": 45800,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Yes, for metformin only."
+    },
+    {
+      "id": "e-pause-submit",
+      "offsetMs": 46800,
+      "type": "pause_gate",
+      "pauseLabel": "Absolute yes on current scope. Confirm (mint token) then Submit. Verify DEMO-ENR001 metformin-only."
+    },
+    {
+      "id": "e-jardiance",
+      "offsetMs": 48200,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "My doctor also sent a request for Jardiance. Has that been approved?"
+    },
+    {
+      "id": "e-pause-cvr",
+      "offsetMs": 49800,
+      "type": "pause_gate",
+      "pauseLabel": "Coverage is PENDING_REVIEW, not a determination. Confirm Coverage Review destination after Harry agrees."
+    },
+    {
+      "id": "e-adv-offer-xfer",
+      "offsetMs": 51200,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "I can connect you to Coverage Review for this existing Jardiance request. They can review the case; I cannot approve it."
+    },
+    {
+      "id": "e-member-agree-xfer",
+      "offsetMs": 52600,
+      "type": "transcript",
+      "speaker": "member",
+      "stability": "final",
+      "text": "Yes, please connect me."
+    },
+    {
+      "id": "e-pause-handoff",
+      "offsetMs": 53800,
+      "type": "pause_gate",
+      "pauseLabel": "Confirm destination. Handoff draft is not a connection. Closing is due before exit."
+    },
+    {
+      "id": "e-close-uncertain",
+      "offsetMs": 55000,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "uncertain",
+      "text": "Your decision today has no — membership"
+    },
+    {
+      "id": "e-pause-close",
+      "offsetMs": 56000,
+      "type": "pause_gate",
+      "pauseLabel": "Closing speech could not be verified. Next line is a clear reread of DEMO-CLOSING-v2."
+    },
+    {
+      "id": "e-close-exact",
+      "offsetMs": 57400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Your decision today has no impact on your plan membership."
+    },
+    {
+      "id": "e-pause-connect",
+      "offsetMs": 58800,
+      "type": "pause_gate",
+      "pauseLabel": "Execute transfer (DEMO-TRANSFER001). Then review wrap and confirm TRANSFERRED_COVERAGE_REVIEW."
+    }
+  ]
+}
