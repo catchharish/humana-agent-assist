@@ -8,3 +8,4 @@ runs/*.jsonl
 !runs/.gitkeep
 .DS_Store
 tsconfig.tsbuildinfo
+.vercel

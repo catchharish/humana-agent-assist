@@ -2,7 +2,7 @@
 
 Standalone web page standing in for an **embedded** advocate call desktop ([contract §14](docs/FINAL_PRODUCT_DECISIONS.md)). Not a chat panel.
 
-**Milestone:** M3 complete. Five Humana artifacts are in [`SUBMISSION.md`](SUBMISSION.md).
+**Milestone:** M4 complete (reasoning loop; chain 10/10; no graph). Five Humana artifacts remain in [`SUBMISSION.md`](SUBMISSION.md) from M3.
 
 ## How to run
 

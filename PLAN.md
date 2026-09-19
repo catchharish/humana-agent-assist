@@ -32,6 +32,20 @@ These are not real Humana hosts. Paths are `/api/simulated/{benefits|eligibility
 
 Main call, six replays, and existing tests must still pass after every step.
 
+## As-built (19 Sep 2026)
+
+These are outcomes of the approved M4 order. They do not reopen the contract. Do not restore `routeQuery` or build a graph without Harish.
+
+- **Graph decision:** 10-question chain eval **10/10**, **0 over 8s** (`runs/chain_eval_1789835175024.json`). **Do not build a graph now.**
+- **Quotes (middle):** on comparison `absolute_yes`, code fetches through the same `getQuotes` GET the model uses. After consent, the model calls `getQuotes` for follow-up prices. Amounts never before consent; Now card still waits for exact pricing wording.
+- **`lib/queryRouter.ts` removed.** Live answers are Terra + session-bound tools. Diagnostic log kind is `lookup_trace`.
+- **Pre-load in the live loop:** search-only on the member’s words (`preloadSearchOnly`). Full Luna-named extra-tool pre-load stayed off (slower on Harry $8/$27).
+- **Plan filter:** SEARCH rejects a document only when its `planId` is set and differs from the **session** plan. `DEMO-POLICY-OTHER-v1` is wrong for Harry and right for M004.
+- **NBA:** action ids and advocate controls come from playbook text (`Action id:`, `Advocate control:`). Code draws one card and Offer/Dismiss or Confirm transfer. Six hard stops stay in code. M005 “none” is model-reasoned.
+- **Members:** `DEMO-M001`–`DEMO-M005`. Presenter member selector loads `GET /api/simulated/eligibility/members`.
+- **Coverage list:** `GET /coverage-review/cases?memberId=` returns **200** `{ cases: [...] }` (empty array if none), then `GET .../cases/{caseId}` for the record.
+- T01 and six replays still pass after the cutover.
+
 ## Stack
 
 **Next.js (App Router) + TypeScript + React**, one process. OpenAI via `OPENAI_API_KEY`. In-memory session + JSONL run log. Vitest for disclosure/router unit checks and replay driver later. **No Playwright now** (C06 is a manual UI checklist unless time remains after M3). **No mock REST contract-test suite.**
@@ -76,14 +90,14 @@ Humana names: **benefits, eligibility, claims, pharmacy, provider, scripting**.
 
 | System | Endpoints (all `/api/simulated/...`) | Why (main + T02A/T03A/T03B/T04B/T06A/T08B) |
 |---|---|---|
-| eligibility | `POST /eligibility/authorizations`; `GET /eligibility/members/{memberId}` | `DEMO-AUTH001`; member 403 until VALID |
-| benefits | `GET /benefits/plans/{planId}`; `GET /benefits/plans/{planId}/pharmacy-network?asOfDate=`; `GET /benefits/plans/{planId}/cost-share` | Plan; `DEMO-NET0818/0916`; `DEMO-POLICY-COST-v1`; T06A overlay omits NET0818 |
+| eligibility | `POST /eligibility/authorizations`; `GET /eligibility/members`; `GET /eligibility/members/{memberId}`; `GET /eligibility/members/{memberId}/contact-preferences` | List for presenter selector; `DEMO-AUTH001`; member 403 until VALID; NBA prefs |
+| benefits | `GET /benefits/plans/{planId}`; `GET /benefits/plans/{planId}/pharmacy-network?asOfDate=`; `GET /benefits/plans/{planId}/cost-share` | Plan; `DEMO-NET0818/0916`; `DEMO-POLICY-COST-v1` / other-plan cost-share; T06A overlay omits NET0818 |
 | claims | `GET /claims/pharmacy?memberId=&dateOfServiceFrom=&dateOfServiceTo=` | `DEMO-C0818/C0916` only — no coverage case here |
 | pharmacy | `GET /pharmacy/prescriptions?memberId=`; `GET /pharmacy/refill-requests/{id}`; `GET /pharmacy/refill-requests/{id}/status`; `GET /pharmacy/quotes`; `POST /pharmacy/enrollments`; `GET /pharmacy/enrollments/{id}` | Rx, RF001 exist vs fresh ready; six quotes (`validityStatus: "valid"` in the main run); T04B overlay; human enroll `DEMO-ENR001`; T08B no submit |
 | provider | `GET /provider/pharmacies/{pharmacyId}` | Lakeview, Oak Street, CenterWell **names/ids from §15 only** — no NPI |
 | scripting | `GET /scripting/disclosures`; `GET /scripting/disclosures/{requirementId}`; `GET /scripting/articles/{articleId}`; `POST /scripting/knowledge/search` | Verbatim; `DEMO-SERVICE-v1` / `DEMO-FAST90-v1` / objection; SEARCH returns **raw** candidates including `DEMO-POLICY-OTHER-v1` (copilot filters; mock does not) |
 | telephony (beside) | `GET /telephony/ivr/current-hint`; `POST /telephony/transfers` | IVR refill hint; `DEMO-TRANSFER001` |
-| coverage-review (beside) | `GET /coverage-review/cases/{caseId}` | `DEMO-CVR001` pending; not a claims resource |
+| coverage-review (beside) | `GET /coverage-review/cases?memberId=`; `GET /coverage-review/cases/{caseId}` | List `{ cases }`; `DEMO-CVR001` pending; not a claims resource |
 
 `POST /pharmacy/enrollments`: one-time **server-minted enrollment token** from presenter Confirm (`POST /api/session/human/mint-enrollment-token`), bound to read-back `medicationScope`. Mock **403** if token missing, already used, or scope differs. **AI tool registry has no mint/read/submit.** Not an `actorType` header.
 
@@ -136,7 +150,7 @@ flowchart LR
 
 ## Query router (item 6) — OVERRIDDEN 18 Sep 2026
 
-Do **not** implement the five-need `routeQuery` compose order below as the live answer path. Historical $8/$27 must still use purchases + dated classifications + SEARCH, still reject `DEMO-POLICY-OTHER-v1` with a logged reason, and must not be fetch-by-ID. The **model** chooses those tools; copilot code does not switch on need kind.
+Do **not** implement the five-need `routeQuery` compose order below as the live answer path. Historical $8/$27 must still use purchases + dated classifications + SEARCH, still reject a **wrong-plan** policy (for Harry that is `DEMO-POLICY-OTHER-v1`) with a logged reason, and must not be fetch-by-ID. The **model** chooses those tools; copilot code does not switch on need kind. Filter is session `planId`, not “OTHER is always wrong.”
 
 Speed: parallel tools in one round; session snapshot for stable facts; live GET for refill status, quotes, enrollment, case status.
 
@@ -206,7 +220,7 @@ Five regions §14: call strip (no member fields before `DEMO-AUTH001`), obligati
 - **Then** remaining simulated REST, router, SEARCH, trigger classifier — needed before/during M2, not a separate product.
 - **M2** — Full §10/§20 main call with Harish as advocate. **No M3 until M2 runs end to end.**
 - **M3** — Two fresh mains, six replays, C01–C03 and C05–C06 (C06 manual). Keep every run record.
-- **M4** — Reasoning loop. Order: standing files → **speed gate on current fixtures** (stop if five-step chain > 8s) → extra members/docs → Terra tool loop cutover → NBA hard stops → ≥10 chain eval → DECISIONS_LOG graph recommendation (no graph built). T01 and six replays must pass after every step.
+- **M4** — Reasoning loop. Order: standing files → **speed gate on current fixtures** (stop if five-step chain > 8s) → extra members/docs → Terra tool loop cutover → NBA hard stops → ≥10 chain eval → DECISIONS_LOG graph recommendation (no graph built). T01 and six replays must pass after every step. **Done 19 Sep 2026** (see As-built above).
 
 Time-cap cut order §10. Never cut beats 4–5, 9, 10, 12, 13–15.
 
