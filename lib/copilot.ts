@@ -394,7 +394,7 @@ function recordNeedPath(
 
 function presentHistorical(
   session: SessionState,
-  routed: { evidence: { causeSupported?: boolean } },
+  routed: { evidence: { causeSupported?: boolean; chargesEstablished?: boolean } },
   drafted: { title: string; body: string; sourceLabel: string },
   origin?: string,
 ) {
