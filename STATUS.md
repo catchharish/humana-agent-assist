@@ -10,15 +10,15 @@
 - NBA action ids from playbook text. M005 “none” is model-reasoned (not a code stop). M002 enrolled / M003 DNC still code stops. Playbook-only `other_plan_cost_explain` for M004.
 - Presenter member selector (M001–M005). Not-canned tests passed. Log kind `lookup_trace`.
 - Chain `runs/chain_eval_1789835175024.json`: **10/10**, 0 over 8s. Graph: do not build now.
-- GitHub `main` at `9859fab`: https://github.com/catchharish/humana-agent-assist
-- T01 passed. Six replays passed.
+- GitHub `main`: https://github.com/catchharish/humana-agent-assist (GitHub linked on Vercel).
+- **Production:** https://humana-agent-assist.vercel.app — T01 Start + Resume verified 19 Sep: greeting Said, Harry MAPD after auth, refill answer (Lakeview / ready for pickup). OPENAI_* set. Run log + ready-answer cache write to `/tmp` on Vercel.
 
 ## Broken / incomplete
-- Vercel production deploy was started (`humana-agent-assist-e7vrtxvqj-…vercel.app`); confirm the alias after the build finishes. GitHub→Vercel repo link failed in the CLI (deploy still uploaded files).
+- None for production Start (EROFS fixed; logs/cache under `/tmp` on Vercel).
 
 ## Next three tasks
-1. Confirm the production URL loads with `OPENAI_API_KEY` set on Vercel.
-2. Optional freeze / SUBMISSION.md pass if presenting.
+1. Optional freeze / SUBMISSION.md pass if presenting.
+2. Confirm the GitHub-connected Vercel deploy of this commit stays green.
 3. Stop unless asked.
 
 ## Open questions for Harish

@@ -4,6 +4,7 @@
 import { createHash } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
+import { writableRoot } from "@/lib/log";
 import { embedTexts, terraComplete } from "@/lib/openai";
 
 export type ReadyItem = {
@@ -14,7 +15,7 @@ export type ReadyItem = {
   vector: number[];
 };
 
-const CACHE = path.join(process.cwd(), ".cache", "ready-answers.json");
+const CACHE = path.join(writableRoot(), ".cache", "ready-answers.json");
 
 const g = globalThis as unknown as {
   __haaReady?: { hash: string; items: ReadyItem[] };

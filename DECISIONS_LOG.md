@@ -1,5 +1,6 @@
 # DECISIONS_LOG
 
+- **Vercel writable paths (19 Sep 2026):** Run JSONL and the ready-answer cache write under `/tmp` when `VERCEL` is set. Serverless `/var/task` is read-only; `POST /api/session/start` 500'd with EROFS otherwise. Local cwd `runs/` and `.cache/` unchanged.
 - **Advocate vs presenter chrome (19 Sep 2026):** Display-only split. Demo bar (scenario/member, Resume, Simulated data, Show demo details) is presenter chrome. Default advocate view hides IDs, simulated/source-system lines, obligation design notes, diagnostics, timings, event IDs, and pause copy on the Now card. No session/API behavior change.
 - **Plan-relative knowledge (19 Sep 2026):** SEARCH and support check compare document `planId` to the **session** plan. `DEMO-POLICY-OTHER-v1` is kept for M004 ($12 other_plan_retail) and rejected for Harry. Diagnostics show “rejected wrong-plan,” not “OTHER is always wrong.” Tests: `tests/plan_applicability.test.ts`.
 - **Coverage list shape (19 Sep 2026):** `GET /api/simulated/coverage-review/cases?memberId=` returns 200 `{ cases: [...] }` (empty if none). Prior 404/single-row payload made Terra treat Harry/Owen cases as missing. Tool output unwraps the REST envelope so case ids are usable.
