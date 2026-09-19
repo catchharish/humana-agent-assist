@@ -1,0 +1,772 @@
+{
+  "at": "2026-09-18T23:03:39.373Z",
+  "summary": [
+    {
+      "variant": "without_preload",
+      "questionId": "q1_historical",
+      "medianRounds": 1,
+      "medianTotalMs": 1909.0415830000002,
+      "slowestTotalMs": 2042.590916,
+      "medianShareUsed": null,
+      "anyOver8s": false
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q2_five_step",
+      "medianRounds": 3,
+      "medianTotalMs": 4473.714832999998,
+      "slowestTotalMs": 5718.840875000002,
+      "medianShareUsed": null,
+      "anyOver8s": false
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q1_historical",
+      "medianRounds": 1,
+      "medianTotalMs": 2701.2820409999986,
+      "slowestTotalMs": 3039.1386249999996,
+      "medianShareUsed": 1,
+      "anyOver8s": false
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q2_five_step",
+      "medianRounds": 3,
+      "medianTotalMs": 5090.146124999999,
+      "slowestTotalMs": 7507.15787499999,
+      "medianShareUsed": 0.2,
+      "anyOver8s": false
+    }
+  ],
+  "rows": [
+    {
+      "variant": "without_preload",
+      "questionId": "q1_historical",
+      "run": 1,
+      "rounds": 1,
+      "totalMs": 2042.590916,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your metformin fills were both 30-day supplies, but the $8 fill on August 18 was at Oak Street Pharmacy, which was preferred retail; the $27 fill on September 16 was at Lakeview Pharmacy, which was standard retail. Your plan’s recorded cost-share rule lists $8 for preferred retail and $27 for standard retail for matched 30-day metformin 500 mg fills."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q1_historical",
+      "run": 2,
+      "rounds": 1,
+      "totalMs": 1931.2221660000005,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your August 18 metformin fill was at Oak Street Pharmacy, which was classified as preferred retail, so you paid $8; your September 16 fill was at Lakeview Pharmacy, classified as standard retail, so you paid $27. The plan’s recorded cost-share rule matches those amounts for a 30-day supply of metformin 500 mg."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q1_historical",
+      "run": 3,
+      "rounds": 1,
+      "totalMs": 1731.7662920000002,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your $8 metformin fill on August 18 was at Oak Street Pharmacy, which was classified as preferred retail; your $27 fill on September 16 was at Lakeview Pharmacy, classified as standard retail. Under your plan’s recorded 30-day metformin 500 mg cost-share rule, preferred retail is $8 and standard retail is $27."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q1_historical",
+      "run": 4,
+      "rounds": 1,
+      "totalMs": 1909.0415830000002,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your $8 fill on August 18 was at Oak Street Pharmacy, which was classified as preferred retail; your $27 fill on September 16 was at Lakeview Pharmacy, classified as standard retail. For the matched 30-day metformin 500 mg supply, your plan’s recorded cost share is $8 at preferred retail and $27 at standard retail."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q1_historical",
+      "run": 5,
+      "rounds": 1,
+      "totalMs": 1899.327459,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your August 18 metformin fill at Oak Street Pharmacy was processed as preferred retail, with an $8 member cost share; your September 16 fill at Lakeview Pharmacy was processed as standard retail, with a $27 cost share. The plan’s recorded rule for this matched 30-day metformin 500 mg supply is $8 at preferred retail versus $27 at standard retail."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q2_five_step",
+      "run": 1,
+      "rounds": 3,
+      "totalMs": 5718.840875000002,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup at Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q2_five_step",
+      "run": 2,
+      "rounds": 3,
+      "totalMs": 4113.115708000001,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup at Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q2_five_step",
+      "run": 3,
+      "rounds": 3,
+      "totalMs": 4704.369041999998,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup at Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets, and its current status is pending review."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q2_five_step",
+      "run": 4,
+      "rounds": 3,
+      "totalMs": 3998.853415999998,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup at Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "without_preload",
+      "questionId": "q2_five_step",
+      "run": 5,
+      "rounds": 3,
+      "totalMs": 4473.714832999998,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup at **Lakeview Pharmacy**. You have an open coverage-review case for **Jardiance 10 mg tablets**, and its current status is **pending review**."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q1_historical",
+      "run": 1,
+      "rounds": 1,
+      "totalMs": 2344.217665999997,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadUsed": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your August 18 metformin fill was at Oak Street Pharmacy, which was classified as preferred retail, and you paid $8; your September 16 fill was at Lakeview Pharmacy, classified as standard retail, and you paid $27. The plan’s recorded 30-day metformin cost share matches those amounts under the recorded conditions."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q1_historical",
+      "run": 2,
+      "rounds": 1,
+      "totalMs": 2720.4416249999995,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadUsed": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your metformin fills were both for 60 tablets/30 days, but the $8 fill on August 18 was at Oak Street Pharmacy, a preferred retail pharmacy; yesterday’s $27 fill was at Lakeview Pharmacy, classified as standard retail. Your plan’s recorded cost-share for this matched metformin supply is $8 at preferred retail and $27 at standard retail."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q1_historical",
+      "run": 3,
+      "rounds": 1,
+      "totalMs": 2614.8591249999954,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadUsed": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your metformin fills were both 30-day supplies, but the $8 fill on August 18 was at Oak Street Pharmacy, which was preferred retail; the $27 fill on September 16 was at Lakeview Pharmacy, which was standard retail. Your plan’s recorded cost-share for metformin 500 mg is $8 at preferred retail and $27 at standard retail under the recorded conditions."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q1_historical",
+      "run": 4,
+      "rounds": 1,
+      "totalMs": 3039.1386249999996,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadUsed": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your metformin was filled at Oak Street Pharmacy on August 18 as preferred retail, with an $8 member payment; yesterday’s September 16 fill was at Lakeview Pharmacy, classified as standard retail, with a $27 member payment. The plan’s recorded rule for the matched 30-day metformin 500 mg supply is $8 at preferred retail and $27 at standard retail."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q1_historical",
+      "run": 5,
+      "rounds": 1,
+      "totalMs": 2701.2820409999986,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadUsed": [
+        "searchKnowledge",
+        "getPrescriptions",
+        "getCostShare"
+      ],
+      "preloadFetchedAnyway": [],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your metformin fills were both 30-day supplies, but the $8 fill on August 18 was at Oak Street Pharmacy, which was preferred retail; the $27 fill on September 16 was at Lakeview Pharmacy, which was standard retail. Your plan’s recorded cost-share rule matches those amounts for metformin 500 mg."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q2_five_step",
+      "run": 1,
+      "rounds": 3,
+      "totalMs": 5109.462249999997,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getRefillStatus",
+        "getPharmacy",
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": 0.2,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup now at Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q2_five_step",
+      "run": 2,
+      "rounds": 3,
+      "totalMs": 7507.15787499999,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases",
+            "getPharmacy"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": [
+            "getRefillStatus"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getRefillStatus",
+        "getPharmacy",
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "preloadUsed": [
+        "searchKnowledge",
+        "getCoverageCase"
+      ],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getPharmacy",
+        "getRefillStatus"
+      ],
+      "preloadShareUsed": 0.4,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup now at Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q2_five_step",
+      "run": 3,
+      "rounds": 3,
+      "totalMs": 5090.146124999999,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getRefillStatus",
+        "getPharmacy",
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": 0.2,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup now at the directory-listed Lakeview Pharmacy. You also have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q2_five_step",
+      "run": 4,
+      "rounds": 3,
+      "totalMs": 4533.319208999994,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getRefillStatus",
+        "getPharmacy",
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": 0.2,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup now at Lakeview Pharmacy. You also have an open coverage-review case for Jardiance 10 mg tablets; its current status is pending review."
+    },
+    {
+      "variant": "with_preload",
+      "questionId": "q2_five_step",
+      "run": 5,
+      "rounds": 3,
+      "totalMs": 4915.265874999997,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getRefillRequests",
+            "getOpenCases"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": true,
+          "names": [
+            "getRefillStatus",
+            "getPharmacy",
+            "getCoverageCase"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge",
+        "getRefillStatus",
+        "getPharmacy",
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadFetchedAnyway": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "preloadShareUsed": 0.2,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup now at **Lakeview Pharmacy**. You also have an open coverage-review case for **Jardiance 10 mg tablets**; its current status is **pending review**."
+    }
+  ]
+}

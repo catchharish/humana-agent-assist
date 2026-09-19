@@ -7,8 +7,9 @@ export async function GET(
 ) {
   await applyDemoHeaders(request);
   const { planId } = await context.params;
-  const plan = readFixture<{ planId: string }>("plan.json");
-  if (plan.planId !== planId) {
+  const plans = readFixture<Array<{ planId: string }>>("plans.json");
+  const plan = plans.find((p) => p.planId === planId);
+  if (!plan) {
     return NextResponse.json(envelope("benefits", { error: "not_found" }), {
       status: 404,
     });

@@ -1,0 +1,770 @@
+{
+  "at": "2026-09-19T16:11:48.122Z",
+  "harry": {
+    "label": "Harry DEMO-M001",
+    "memberId": "DEMO-M001",
+    "action": "optional_comparison",
+    "title": "Offer a retail-versus-delivery comparison",
+    "body": "I can compare pharmacy options for your plan, including delivery and retail options, based on your recent fill experience. Would you like to review that comparison?",
+    "reasons": [
+      "The member asked what pharmacy options to consider after a higher-than-expected retail fill.",
+      "Recent plan records show matched metformin fills at both preferred and standard retail pharmacies.",
+      "The member is not enrolled in mail service and do-not-contact is not set.",
+      "No open coverage-review case is provided in the available records."
+    ],
+    "facts": [
+      "The 2026-08-18 metformin claim at Oak Street Pharmacy was processed as preferred retail.",
+      "The 2026-09-16 metformin claim at Lakeview Pharmacy was processed as standard retail.",
+      "Both recorded metformin claims were for 30-day supplies.",
+      "Contact preferences indicate the member is not enrolled in mail service and do-not-contact is false."
+    ],
+    "considered": [
+      {
+        "action": "none",
+        "whyNot": "The member requested pharmacy guidance, is not enrolled in mail service, and recent records show different retail network classifications; there is a relevant comparison to offer."
+      },
+      {
+        "action": "warm_transfer",
+        "whyNot": "No open coverage-review case is provided."
+      },
+      {
+        "action": "objection_retail",
+        "whyNot": "The member has not objected to delivery or stated a need to keep retail fills; a comparison invitation is the appropriate first step."
+      },
+      {
+        "action": "lead_review",
+        "whyNot": "The available records support a direct pharmacy-options comparison without needing lead review."
+      }
+    ],
+    "preferredVsMail": "Chose the retail-versus-delivery comparison because the member has a documented preferred-retail versus standard-retail difference and is not enrolled in mail service; the comparison can address both available pathways without presenting prospective amounts.",
+    "playbookIds": [
+      "DEMO-PLAYBOOK-OFFERS-v1",
+      "DEMO-PLAYBOOK-OBJECTION-v1"
+    ],
+    "playbookPassages": [
+      {
+        "id": "DEMO-PLAYBOOK-OFFERS-v1",
+        "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+      },
+      {
+        "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+        "text": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+      }
+    ],
+    "hardStops": [],
+    "proposalLog": {
+      "at": "2026-09-19T16:10:42.736Z",
+      "event": "proposal",
+      "action": "optional_comparison",
+      "source": "model",
+      "title": "Offer a retail-versus-delivery comparison",
+      "reasons": [
+        "The member asked what pharmacy options to consider after a higher-than-expected retail fill.",
+        "Recent plan records show matched metformin fills at both preferred and standard retail pharmacies.",
+        "The member is not enrolled in mail service and do-not-contact is not set.",
+        "No open coverage-review case is provided in the available records."
+      ],
+      "facts": [
+        "The 2026-08-18 metformin claim at Oak Street Pharmacy was processed as preferred retail.",
+        "The 2026-09-16 metformin claim at Lakeview Pharmacy was processed as standard retail.",
+        "Both recorded metformin claims were for 30-day supplies.",
+        "Contact preferences indicate the member is not enrolled in mail service and do-not-contact is false."
+      ],
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1",
+        "DEMO-PLAYBOOK-OBJECTION-v1"
+      ],
+      "considered": [
+        {
+          "action": "none",
+          "whyNot": "The member requested pharmacy guidance, is not enrolled in mail service, and recent records show different retail network classifications; there is a relevant comparison to offer."
+        },
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is provided."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not objected to delivery or stated a need to keep retail fills; a comparison invitation is the appropriate first step."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The available records support a direct pharmacy-options comparison without needing lead review."
+        }
+      ],
+      "preferredVsMail": "Chose the retail-versus-delivery comparison because the member has a documented preferred-retail versus standard-retail difference and is not enrolled in mail service; the comparison can address both available pathways without presenting prospective amounts."
+    }
+  },
+  "m004": {
+    "label": "M004 DEMO-M004",
+    "memberId": "DEMO-M004",
+    "action": "optional_comparison",
+    "title": "Offer a retail-versus-delivery comparison",
+    "body": "You may offer to compare the member’s retail option with eligible delivery options, including a 90-day option. Clarify that any comparison would not change the current retail pickup.",
+    "reasons": [
+      "Identity, due-now wording, refusal, and dismissal are not indicated in the available session information.",
+      "The member is not enrolled in mail service and does not have a do-not-contact restriction.",
+      "The member asked what to consider after an unexpectedly higher retail fill.",
+      "No open coverage-review case is listed.",
+      "The available record does not confirm why the prior retail fill was higher, so no coverage conclusion should be made."
+    ],
+    "facts": [
+      "Member DEMO-M004 is on plan DEMO-OTHER-PLAN.",
+      "Metformin 500 mg tablets were filled at Lakeview Pharmacy for 30 days on 2026-09-02.",
+      "The claim was paid and used the other_plan_retail cost-share category.",
+      "The member is not enrolled in mail service.",
+      "Do-not-contact is false.",
+      "No coverage-review case is present."
+    ],
+    "considered": [
+      {
+        "action": "warm_transfer",
+        "whyNot": "No open coverage-review case is present; the unavailable network and cost-share details do not establish a pending review."
+      },
+      {
+        "action": "objection_retail",
+        "whyNot": "The member has not raised an objection to moving medicines or preserving a current pickup; this can be addressed only if raised during a comparison."
+      },
+      {
+        "action": "lead_review",
+        "whyNot": "The record supports a direct optional comparison rather than a separate review action."
+      },
+      {
+        "action": "none",
+        "whyNot": "The member is not enrolled in mail service and is filling a 30-day retail supply, so the nothing-to-offer condition is not met."
+      }
+    ],
+    "preferredVsMail": "",
+    "playbookIds": [
+      "DEMO-PLAYBOOK-OFFERS-v1"
+    ],
+    "playbookPassages": [
+      {
+        "id": "DEMO-PLAYBOOK-OFFERS-v1",
+        "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+      }
+    ],
+    "hardStops": [],
+    "proposalLog": {
+      "at": "2026-09-19T16:10:53.546Z",
+      "event": "proposal",
+      "action": "optional_comparison",
+      "source": "model",
+      "title": "Offer a retail-versus-delivery comparison",
+      "reasons": [
+        "Identity, due-now wording, refusal, and dismissal are not indicated in the available session information.",
+        "The member is not enrolled in mail service and does not have a do-not-contact restriction.",
+        "The member asked what to consider after an unexpectedly higher retail fill.",
+        "No open coverage-review case is listed.",
+        "The available record does not confirm why the prior retail fill was higher, so no coverage conclusion should be made."
+      ],
+      "facts": [
+        "Member DEMO-M004 is on plan DEMO-OTHER-PLAN.",
+        "Metformin 500 mg tablets were filled at Lakeview Pharmacy for 30 days on 2026-09-02.",
+        "The claim was paid and used the other_plan_retail cost-share category.",
+        "The member is not enrolled in mail service.",
+        "Do-not-contact is false.",
+        "No coverage-review case is present."
+      ],
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1"
+      ],
+      "considered": [
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is present; the unavailable network and cost-share details do not establish a pending review."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not raised an objection to moving medicines or preserving a current pickup; this can be addressed only if raised during a comparison."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The record supports a direct optional comparison rather than a separate review action."
+        },
+        {
+          "action": "none",
+          "whyNot": "The member is not enrolled in mail service and is filling a 30-day retail supply, so the nothing-to-offer condition is not met."
+        }
+      ],
+      "preferredVsMail": ""
+    }
+  },
+  "m005": {
+    "label": "M005 DEMO-M005",
+    "memberId": "DEMO-M005",
+    "action": "none",
+    "title": null,
+    "body": null,
+    "reasons": [
+      "Member has a paid 90-day fill at the preferred mail pharmacy.",
+      "No enrollment gap is indicated by the available pharmacy fill record.",
+      "No open coverage-review case is pending.",
+      "No retail-fill claim is available for a supported retail-versus-mail comparison."
+    ],
+    "facts": [
+      "Member: DEMO-M005; plan: DEMO-MAPD-001.",
+      "Paid claim DEMO-C1004: atorvastatin 20 mg tablets, quantity 90, days supply 90, CenterWell, preferred_mail, date of service 2026-08-15.",
+      "Mail service enrollment flag is false, but the member is already filling a 90-day supply at preferred mail.",
+      "Do-not-contact is false.",
+      "No coverage-review case is present."
+    ],
+    "considered": [
+      {
+        "action": "optional_comparison",
+        "whyNot": "No retail-fill claim is available to support a comparison, and the member is already filling a 90-day supply through preferred mail with no enrollment gap to close."
+      },
+      {
+        "action": "warm_transfer",
+        "whyNot": "No open coverage-review case is present."
+      },
+      {
+        "action": "objection_retail",
+        "whyNot": "The member did not object to a mail comparison or request to keep retail options during an active comparison."
+      },
+      {
+        "action": "lead_review",
+        "whyNot": "No unresolved lead or review need is supported by the available record."
+      }
+    ],
+    "preferredVsMail": "",
+    "playbookIds": [
+      "DEMO-PLAYBOOK-NONE-v1"
+    ],
+    "playbookPassages": [
+      {
+        "id": "DEMO-PLAYBOOK-NONE-v1",
+        "text": "Propose none when there is no open coverage-review case and the member already fills at the plan preferred mail pharmacy on a 90-day supply with no enrollment gap to close. That is not a code hard stop; record reasons from these facts. Do not invent a retail-versus-mail offer or a transfer."
+      }
+    ],
+    "hardStops": [],
+    "proposalLog": {
+      "at": "2026-09-19T16:11:02.988Z",
+      "event": "proposal",
+      "action": "none",
+      "source": "model",
+      "reasons": [
+        "Member has a paid 90-day fill at the preferred mail pharmacy.",
+        "No enrollment gap is indicated by the available pharmacy fill record.",
+        "No open coverage-review case is pending.",
+        "No retail-fill claim is available for a supported retail-versus-mail comparison."
+      ],
+      "facts": [
+        "Member: DEMO-M005; plan: DEMO-MAPD-001.",
+        "Paid claim DEMO-C1004: atorvastatin 20 mg tablets, quantity 90, days supply 90, CenterWell, preferred_mail, date of service 2026-08-15.",
+        "Mail service enrollment flag is false, but the member is already filling a 90-day supply at preferred mail.",
+        "Do-not-contact is false.",
+        "No coverage-review case is present."
+      ],
+      "playbookIds": [
+        "DEMO-PLAYBOOK-NONE-v1"
+      ],
+      "considered": [
+        {
+          "action": "optional_comparison",
+          "whyNot": "No retail-fill claim is available to support a comparison, and the member is already filling a 90-day supply through preferred mail with no enrollment gap to close."
+        },
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is present."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member did not object to a mail comparison or request to keep retail options during an active comparison."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "No unresolved lead or review need is supported by the available record."
+        }
+      ],
+      "preferredVsMail": ""
+    }
+  },
+  "harryFive": [
+    {
+      "label": "harry_run_1",
+      "memberId": "DEMO-M001",
+      "action": "optional_comparison",
+      "title": "Offer a retail-versus-delivery comparison",
+      "body": "I can compare pharmacy options for your metformin, including retail and delivery, if you would like.",
+      "reasons": [
+        "The member asked what pharmacy options to consider after a higher retail fill.",
+        "The record shows matched metformin fills at both preferred and standard retail pharmacies, indicating a network-tier difference worth comparing.",
+        "The member is not enrolled in mail service and do-not-contact is not set."
+      ],
+      "facts": [
+        "Metformin 500 mg has recent paid 30-day claims at Oak Street Pharmacy (preferred retail) and Lakeview Pharmacy (standard retail).",
+        "The plan rule identifies different cost-share categories for matched 30-day metformin fills at preferred versus standard retail.",
+        "Contact preferences show mail service is not enrolled and do-not-contact is false."
+      ],
+      "considered": [
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is documented in the available record."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not raised an objection to delivery or stated a preference to keep retail only."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The available plan and claims information supports an immediate optional comparison rather than further review."
+        },
+        {
+          "action": "none",
+          "whyNot": "The member is not already filling 90-day preferred mail, is not enrolled in mail service, and asked for pharmacy options after a higher retail fill."
+        }
+      ],
+      "preferredVsMail": "Chose a retail-versus-delivery comparison because the record shows a preferred-retail versus standard-retail gap and the member is not enrolled in mail service; the comparison can include both preferred retail and delivery options without requiring a change to both medicines.",
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1",
+        "DEMO-PLAYBOOK-OBJECTION-v1"
+      ],
+      "playbookPassages": [
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "text": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+        }
+      ],
+      "hardStops": [],
+      "proposalLog": {
+        "at": "2026-09-19T16:11:09.050Z",
+        "event": "proposal",
+        "action": "optional_comparison",
+        "source": "model",
+        "title": "Offer a retail-versus-delivery comparison",
+        "reasons": [
+          "The member asked what pharmacy options to consider after a higher retail fill.",
+          "The record shows matched metformin fills at both preferred and standard retail pharmacies, indicating a network-tier difference worth comparing.",
+          "The member is not enrolled in mail service and do-not-contact is not set."
+        ],
+        "facts": [
+          "Metformin 500 mg has recent paid 30-day claims at Oak Street Pharmacy (preferred retail) and Lakeview Pharmacy (standard retail).",
+          "The plan rule identifies different cost-share categories for matched 30-day metformin fills at preferred versus standard retail.",
+          "Contact preferences show mail service is not enrolled and do-not-contact is false."
+        ],
+        "playbookIds": [
+          "DEMO-PLAYBOOK-OFFERS-v1",
+          "DEMO-PLAYBOOK-OBJECTION-v1"
+        ],
+        "considered": [
+          {
+            "action": "warm_transfer",
+            "whyNot": "No open coverage-review case is documented in the available record."
+          },
+          {
+            "action": "objection_retail",
+            "whyNot": "The member has not raised an objection to delivery or stated a preference to keep retail only."
+          },
+          {
+            "action": "lead_review",
+            "whyNot": "The available plan and claims information supports an immediate optional comparison rather than further review."
+          },
+          {
+            "action": "none",
+            "whyNot": "The member is not already filling 90-day preferred mail, is not enrolled in mail service, and asked for pharmacy options after a higher retail fill."
+          }
+        ],
+        "preferredVsMail": "Chose a retail-versus-delivery comparison because the record shows a preferred-retail versus standard-retail gap and the member is not enrolled in mail service; the comparison can include both preferred retail and delivery options without requiring a change to both medicines."
+      }
+    },
+    {
+      "label": "harry_run_2",
+      "memberId": "DEMO-M001",
+      "action": "optional_comparison",
+      "title": "Offer a retail pharmacy comparison",
+      "body": "We can compare retail pharmacy options for your recent medication fill on this plan. Would you like to review that comparison?",
+      "reasons": [
+        "The member asked what to consider after a retail fill cost more than expected.",
+        "Recent plan records show the same metformin fill at both preferred-retail and standard-retail pharmacies.",
+        "The member is not enrolled in mail service and does not have a do-not-contact preference recorded.",
+        "No open coverage-review case is provided."
+      ],
+      "facts": [
+        "The 2026-08-18 metformin claim at Oak Street Pharmacy was classified as preferred retail.",
+        "The 2026-09-16 metformin claim at Lakeview Pharmacy was classified as standard retail.",
+        "The plan policy records different cost-share treatment for matched 30-day metformin fills at preferred versus standard retail.",
+        "Contact preferences indicate mail service is not enrolled and do-not-contact is false."
+      ],
+      "considered": [
+        {
+          "action": "none",
+          "whyNot": "The member raised a cost concern, is not already filling 90-day preferred mail, and the record supports a meaningful preferred-retail versus standard-retail comparison."
+        },
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is provided."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not raised an objection to a comparison or to changing pharmacy options."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The available records support a direct pharmacy comparison rather than a lead review."
+        }
+      ],
+      "preferredVsMail": "Chose preferred-retail comparison because the member's recent records directly show a preferred-retail versus standard-retail difference for the same medication; a mail-order comparison is not needed to address the stated concern.",
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1"
+      ],
+      "playbookPassages": [
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+        }
+      ],
+      "hardStops": [],
+      "proposalLog": {
+        "at": "2026-09-19T16:11:14.760Z",
+        "event": "proposal",
+        "action": "optional_comparison",
+        "source": "model",
+        "title": "Offer a retail pharmacy comparison",
+        "reasons": [
+          "The member asked what to consider after a retail fill cost more than expected.",
+          "Recent plan records show the same metformin fill at both preferred-retail and standard-retail pharmacies.",
+          "The member is not enrolled in mail service and does not have a do-not-contact preference recorded.",
+          "No open coverage-review case is provided."
+        ],
+        "facts": [
+          "The 2026-08-18 metformin claim at Oak Street Pharmacy was classified as preferred retail.",
+          "The 2026-09-16 metformin claim at Lakeview Pharmacy was classified as standard retail.",
+          "The plan policy records different cost-share treatment for matched 30-day metformin fills at preferred versus standard retail.",
+          "Contact preferences indicate mail service is not enrolled and do-not-contact is false."
+        ],
+        "playbookIds": [
+          "DEMO-PLAYBOOK-OFFERS-v1"
+        ],
+        "considered": [
+          {
+            "action": "none",
+            "whyNot": "The member raised a cost concern, is not already filling 90-day preferred mail, and the record supports a meaningful preferred-retail versus standard-retail comparison."
+          },
+          {
+            "action": "warm_transfer",
+            "whyNot": "No open coverage-review case is provided."
+          },
+          {
+            "action": "objection_retail",
+            "whyNot": "The member has not raised an objection to a comparison or to changing pharmacy options."
+          },
+          {
+            "action": "lead_review",
+            "whyNot": "The available records support a direct pharmacy comparison rather than a lead review."
+          }
+        ],
+        "preferredVsMail": "Chose preferred-retail comparison because the member's recent records directly show a preferred-retail versus standard-retail difference for the same medication; a mail-order comparison is not needed to address the stated concern."
+      }
+    },
+    {
+      "label": "harry_run_3",
+      "memberId": "DEMO-M001",
+      "action": "optional_comparison",
+      "title": "Offer a retail-versus-delivery comparison",
+      "body": "We can compare retail and delivery options for your prescriptions. You would not have to move both medicines, and today’s pickup would stay as it is.",
+      "reasons": [
+        "The member asked what to consider next after a higher retail fill.",
+        "The member has recent paid 30-day metformin fills at both preferred and standard retail pharmacies.",
+        "The member is not enrolled in mail service and is not marked do-not-contact.",
+        "There is no open coverage-review case."
+      ],
+      "facts": [
+        "Member DEMO-M001 is on plan DEMO-MAPD-001.",
+        "Metformin 500 mg was filled for 30 days at Oak Street Pharmacy with preferred-retail cost sharing on 2026-08-18.",
+        "Metformin 500 mg was filled for 30 days at Lakeview Pharmacy with standard-retail cost sharing on 2026-09-16.",
+        "Mail service enrolled: false.",
+        "Do-not-contact: false.",
+        "No coverage-review case is recorded."
+      ],
+      "considered": [
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is recorded, so a transfer is not indicated."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not raised an objection to a comparison; the next step is to offer the comparison."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The available records support a direct optional comparison rather than lead review."
+        },
+        {
+          "action": "none",
+          "whyNot": "The member is not already filling a 90-day supply through preferred mail, is not enrolled in mail service, and asked for next-step options."
+        }
+      ],
+      "preferredVsMail": "A preferred-versus-standard retail difference is documented, and a mail-order comparison could apply. Chose a retail-versus-delivery comparison because the member asked about next pharmacy options and is not enrolled in mail service.",
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1",
+        "DEMO-PLAYBOOK-OBJECTION-v1"
+      ],
+      "playbookPassages": [
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "text": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+        }
+      ],
+      "hardStops": [],
+      "proposalLog": {
+        "at": "2026-09-19T16:11:26.039Z",
+        "event": "proposal",
+        "action": "optional_comparison",
+        "source": "model",
+        "title": "Offer a retail-versus-delivery comparison",
+        "reasons": [
+          "The member asked what to consider next after a higher retail fill.",
+          "The member has recent paid 30-day metformin fills at both preferred and standard retail pharmacies.",
+          "The member is not enrolled in mail service and is not marked do-not-contact.",
+          "There is no open coverage-review case."
+        ],
+        "facts": [
+          "Member DEMO-M001 is on plan DEMO-MAPD-001.",
+          "Metformin 500 mg was filled for 30 days at Oak Street Pharmacy with preferred-retail cost sharing on 2026-08-18.",
+          "Metformin 500 mg was filled for 30 days at Lakeview Pharmacy with standard-retail cost sharing on 2026-09-16.",
+          "Mail service enrolled: false.",
+          "Do-not-contact: false.",
+          "No coverage-review case is recorded."
+        ],
+        "playbookIds": [
+          "DEMO-PLAYBOOK-OFFERS-v1",
+          "DEMO-PLAYBOOK-OBJECTION-v1"
+        ],
+        "considered": [
+          {
+            "action": "warm_transfer",
+            "whyNot": "No open coverage-review case is recorded, so a transfer is not indicated."
+          },
+          {
+            "action": "objection_retail",
+            "whyNot": "The member has not raised an objection to a comparison; the next step is to offer the comparison."
+          },
+          {
+            "action": "lead_review",
+            "whyNot": "The available records support a direct optional comparison rather than lead review."
+          },
+          {
+            "action": "none",
+            "whyNot": "The member is not already filling a 90-day supply through preferred mail, is not enrolled in mail service, and asked for next-step options."
+          }
+        ],
+        "preferredVsMail": "A preferred-versus-standard retail difference is documented, and a mail-order comparison could apply. Chose a retail-versus-delivery comparison because the member asked about next pharmacy options and is not enrolled in mail service."
+      }
+    },
+    {
+      "label": "harry_run_4",
+      "memberId": "DEMO-M001",
+      "action": "optional_comparison",
+      "title": "Offer a retail-versus-delivery comparison",
+      "body": "You can offer to compare future metformin fills at preferred retail and through delivery. The member can keep other medicines where they are, and today’s pickup would not change.",
+      "reasons": [
+        "The member asked what to consider after a higher recent retail fill.",
+        "Recent same-drug, same-supply claims show use of both preferred and standard retail pharmacies.",
+        "The member is not enrolled in mail service, has not refused the offer, and do-not-contact is not set.",
+        "No open coverage-review case is present."
+      ],
+      "facts": [
+        "Member DEMO-M001 is on plan DEMO-MAPD-001.",
+        "Metformin 500 mg was filled for 30 days at Oak Street Pharmacy under preferred retail on 2026-08-18.",
+        "Metformin 500 mg was filled for 30 days at Lakeview Pharmacy under standard retail on 2026-09-16.",
+        "mailServiceEnrolled is false.",
+        "doNotContact is false.",
+        "No coverage-review case is listed."
+      ],
+      "considered": [
+        {
+          "action": "none",
+          "whyNot": "There is no indication the member is already filling a 90-day supply through preferred mail, and the member specifically raised concern about a higher retail fill."
+        },
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is present."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not expressed an objection to a delivery comparison; retail options can be included within the comparison."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The available claims and plan information support an optional comparison without a separate lead review."
+        }
+      ],
+      "preferredVsMail": "Both a preferred-retail versus standard-retail gap and a mail-order comparison are relevant. Choose the retail-versus-delivery comparison because it can address the preferred-retail option while also allowing the member to compare delivery, without requiring movement of both medicines.",
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1",
+        "DEMO-PLAYBOOK-OBJECTION-v1"
+      ],
+      "playbookPassages": [
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "text": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+        }
+      ],
+      "hardStops": [],
+      "proposalLog": {
+        "at": "2026-09-19T16:11:37.477Z",
+        "event": "proposal",
+        "action": "optional_comparison",
+        "source": "model",
+        "title": "Offer a retail-versus-delivery comparison",
+        "reasons": [
+          "The member asked what to consider after a higher recent retail fill.",
+          "Recent same-drug, same-supply claims show use of both preferred and standard retail pharmacies.",
+          "The member is not enrolled in mail service, has not refused the offer, and do-not-contact is not set.",
+          "No open coverage-review case is present."
+        ],
+        "facts": [
+          "Member DEMO-M001 is on plan DEMO-MAPD-001.",
+          "Metformin 500 mg was filled for 30 days at Oak Street Pharmacy under preferred retail on 2026-08-18.",
+          "Metformin 500 mg was filled for 30 days at Lakeview Pharmacy under standard retail on 2026-09-16.",
+          "mailServiceEnrolled is false.",
+          "doNotContact is false.",
+          "No coverage-review case is listed."
+        ],
+        "playbookIds": [
+          "DEMO-PLAYBOOK-OFFERS-v1",
+          "DEMO-PLAYBOOK-OBJECTION-v1"
+        ],
+        "considered": [
+          {
+            "action": "none",
+            "whyNot": "There is no indication the member is already filling a 90-day supply through preferred mail, and the member specifically raised concern about a higher retail fill."
+          },
+          {
+            "action": "warm_transfer",
+            "whyNot": "No open coverage-review case is present."
+          },
+          {
+            "action": "objection_retail",
+            "whyNot": "The member has not expressed an objection to a delivery comparison; retail options can be included within the comparison."
+          },
+          {
+            "action": "lead_review",
+            "whyNot": "The available claims and plan information support an optional comparison without a separate lead review."
+          }
+        ],
+        "preferredVsMail": "Both a preferred-retail versus standard-retail gap and a mail-order comparison are relevant. Choose the retail-versus-delivery comparison because it can address the preferred-retail option while also allowing the member to compare delivery, without requiring movement of both medicines."
+      }
+    },
+    {
+      "label": "harry_run_5",
+      "memberId": "DEMO-M001",
+      "action": "optional_comparison",
+      "title": "Offer a retail-versus-delivery comparison",
+      "body": "Would you like to compare eligible prescriptions between preferred retail options and delivery? This would not change any current pickup.",
+      "reasons": [
+        "The member asked what to consider after a higher retail cost.",
+        "Recent metformin fills show different plan pharmacy cost-share categories at preferred retail versus standard retail.",
+        "The member is not enrolled in mail service, has not refused the offer, and do-not-contact is not set.",
+        "There is no open coverage-review case requiring a warm transfer."
+      ],
+      "facts": [
+        "Member DEMO-M001 is on plan DEMO-MAPD-001.",
+        "Metformin was filled for 30 days at Oak Street Pharmacy with preferred-retail cost sharing.",
+        "Metformin was filled for 30 days at Lakeview Pharmacy with standard-retail cost sharing.",
+        "mailServiceEnrolled is false.",
+        "doNotContact is false.",
+        "No coverage-review case is listed."
+      ],
+      "considered": [
+        {
+          "action": "none",
+          "whyNot": "The member has an actionable preferred-retail versus standard-retail difference and is not already filling a 90-day preferred mail prescription."
+        },
+        {
+          "action": "warm_transfer",
+          "whyNot": "No open coverage-review case is listed."
+        },
+        {
+          "action": "objection_retail",
+          "whyNot": "The member has not objected to delivery or stated a preference to keep both medicines at retail."
+        },
+        {
+          "action": "lead_review",
+          "whyNot": "The available plan and claim records support an optional comparison without further review."
+        }
+      ],
+      "preferredVsMail": "Chose the retail-versus-delivery comparison because the member has a documented preferred-retail versus standard-retail difference, and the member also asked what to consider next; the comparison can include preferred retail options without changing a current pickup.",
+      "playbookIds": [
+        "DEMO-PLAYBOOK-OFFERS-v1",
+        "DEMO-PLAYBOOK-OBJECTION-v1"
+      ],
+      "playbookPassages": [
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "text": "Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "text": "We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+        }
+      ],
+      "hardStops": [],
+      "proposalLog": {
+        "at": "2026-09-19T16:11:47.857Z",
+        "event": "proposal",
+        "action": "optional_comparison",
+        "source": "model",
+        "title": "Offer a retail-versus-delivery comparison",
+        "reasons": [
+          "The member asked what to consider after a higher retail cost.",
+          "Recent metformin fills show different plan pharmacy cost-share categories at preferred retail versus standard retail.",
+          "The member is not enrolled in mail service, has not refused the offer, and do-not-contact is not set.",
+          "There is no open coverage-review case requiring a warm transfer."
+        ],
+        "facts": [
+          "Member DEMO-M001 is on plan DEMO-MAPD-001.",
+          "Metformin was filled for 30 days at Oak Street Pharmacy with preferred-retail cost sharing.",
+          "Metformin was filled for 30 days at Lakeview Pharmacy with standard-retail cost sharing.",
+          "mailServiceEnrolled is false.",
+          "doNotContact is false.",
+          "No coverage-review case is listed."
+        ],
+        "playbookIds": [
+          "DEMO-PLAYBOOK-OFFERS-v1",
+          "DEMO-PLAYBOOK-OBJECTION-v1"
+        ],
+        "considered": [
+          {
+            "action": "none",
+            "whyNot": "The member has an actionable preferred-retail versus standard-retail difference and is not already filling a 90-day preferred mail prescription."
+          },
+          {
+            "action": "warm_transfer",
+            "whyNot": "No open coverage-review case is listed."
+          },
+          {
+            "action": "objection_retail",
+            "whyNot": "The member has not objected to delivery or stated a preference to keep both medicines at retail."
+          },
+          {
+            "action": "lead_review",
+            "whyNot": "The available plan and claim records support an optional comparison without further review."
+          }
+        ],
+        "preferredVsMail": "Chose the retail-versus-delivery comparison because the member has a documented preferred-retail versus standard-retail difference, and the member also asked what to consider next; the comparison can include preferred retail options without changing a current pickup."
+      }
+    }
+  ],
+  "sameActionAllFive": true,
+  "actions": [
+    "optional_comparison",
+    "optional_comparison",
+    "optional_comparison",
+    "optional_comparison",
+    "optional_comparison"
+  ]
+}

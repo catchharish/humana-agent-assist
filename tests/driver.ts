@@ -55,7 +55,8 @@ async function act(session: SessionState, tokenRef: { token: string | null }) {
   const label = session.lastPauseLabel ?? "";
     if (
     session.recommendation?.status === "pending" &&
-    session.recommendation.kind === "optional_comparison"
+    session.recommendation.kind === "optional_comparison" &&
+    /Offer|comparison/i.test(label)
   ) {
     const r = await human(session.sessionId, "/api/session/human/offer", {
       decision: session.overlay === "T06A" ? "dismiss" : "offer",

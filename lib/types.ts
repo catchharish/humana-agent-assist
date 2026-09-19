@@ -116,6 +116,7 @@ export type SessionState = {
   pauseStartedAt: number | null;
   totalPauseMs: number;
   lastPauseLabel: string | null;
+  selectedMemberId: string;
   overlay: string | null;
   scenarioId: string;
   injectedDelayMs: number;
@@ -141,6 +142,10 @@ export type SessionState = {
       body: string;
     } | null;
     prescriptions: Array<{ drugName: string }>;
+    contactPreferences: {
+      doNotContact: boolean;
+      mailServiceEnrolled: boolean;
+    } | null;
   } | null;
   callType: string;
   currentNeed: string;
@@ -168,15 +173,20 @@ export type SessionState = {
     body: string;
     sourceLabel: string;
     waitingForFocus?: boolean;
+    liveSteps?: string[];
+    earlyFacts?: { text: string; source: string }[];
   };
   recommendation: {
-    kind:
-      | "optional_comparison"
-      | "objection_retail"
-      | "warm_transfer"
-      | "lead_review";
+    kind: string;
     title: string;
     body: string;
+    reasons?: string[];
+    facts?: string[];
+    playbookIds?: string[];
+    considered?: { action: string; whyNot: string }[];
+    preferredVsMail?: string;
+    advocateControl?: "offer_dismiss" | "confirm_transfer";
+    marksPricingUpcoming?: boolean;
     sourceLabel: string;
     status: "pending" | "offered" | "dismissed" | "used";
   } | null;
@@ -193,6 +203,7 @@ export type SessionState = {
   quoteFocus: { drug: string; pharmacyId: string } | null;
   quoteGeneration: number;
   optionalWorkSuppressed: boolean;
+  nbaDismissedThisCall: boolean;
   consent: {
     comparison: "none" | "hedge" | "absolute_yes";
     enrollment: "none" | "hedge" | "absolute_yes";
@@ -256,6 +267,14 @@ export type SessionState = {
   lunaSeq: number;
   lastInterpretation: Record<string, unknown> | null;
   lastAppliedEventId: string | null;
+  answerLoopGeneration: number;
+  answerLoopAnchor: {
+    generation: number;
+    question: string;
+    enrollmentConsent: string;
+    enrollmentScopeKey: string;
+  } | null;
+  pendingNba: string | null;
   diagnostics: {
     disclosureFetch: string;
     warmup: string;
@@ -270,11 +289,12 @@ export type SessionState = {
       need: string;
       path: "code_rule" | "luna";
     }>;
-    pauseSnapshots: Array<{
+      pauseSnapshots: Array<{
       label: string;
       nowTitle: string;
       historicalGuidance: string | null;
       historicalStatus: string | null;
     }>;
+    nba: Record<string, unknown>[];
   };
 };

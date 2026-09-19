@@ -1,6 +1,7 @@
 [
   {
     "claimId": "DEMO-C0818",
+    "memberId": "DEMO-M001",
     "claimType": "pharmacy",
     "adjudicationStatus": "paid",
     "dateOfService": "2026-08-18",
@@ -15,6 +16,7 @@
   },
   {
     "claimId": "DEMO-C0916",
+    "memberId": "DEMO-M001",
     "claimType": "pharmacy",
     "adjudicationStatus": "paid",
     "dateOfService": "2026-09-16",
@@ -26,5 +28,65 @@
     "pharmacy": { "pharmacyId": "lakeview", "name": "Lakeview Pharmacy" },
     "memberPaidAmount": { "value": "27.00", "currency": "USD" },
     "appliedCostShareCategory": "standard_retail"
+  },
+  {
+    "claimId": "DEMO-C1001",
+    "memberId": "DEMO-M002",
+    "claimType": "pharmacy",
+    "adjudicationStatus": "paid",
+    "dateOfService": "2026-09-01",
+    "drugName": "lisinopril",
+    "strength": "10 mg",
+    "dosageForm": "tablets",
+    "quantity": 30,
+    "daysSupply": 30,
+    "pharmacy": { "pharmacyId": "centerwell", "name": "CenterWell" },
+    "memberPaidAmount": { "value": "4.00", "currency": "USD" },
+    "appliedCostShareCategory": "preferred_mail"
+  },
+  {
+    "claimId": "DEMO-C1002",
+    "memberId": "DEMO-M003",
+    "claimType": "pharmacy",
+    "adjudicationStatus": "paid",
+    "dateOfService": "2026-08-20",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 60,
+    "daysSupply": 30,
+    "pharmacy": { "pharmacyId": "oak-street", "name": "Oak Street Pharmacy" },
+    "memberPaidAmount": { "value": "8.00", "currency": "USD" },
+    "appliedCostShareCategory": "preferred_retail"
+  },
+  {
+    "claimId": "DEMO-C1003",
+    "memberId": "DEMO-M004",
+    "claimType": "pharmacy",
+    "adjudicationStatus": "paid",
+    "dateOfService": "2026-09-02",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantity": 60,
+    "daysSupply": 30,
+    "pharmacy": { "pharmacyId": "lakeview", "name": "Lakeview Pharmacy" },
+    "memberPaidAmount": { "value": "12.00", "currency": "USD" },
+    "appliedCostShareCategory": "other_plan_retail"
+  },
+  {
+    "claimId": "DEMO-C1004",
+    "memberId": "DEMO-M005",
+    "claimType": "pharmacy",
+    "adjudicationStatus": "paid",
+    "dateOfService": "2026-08-15",
+    "drugName": "atorvastatin",
+    "strength": "20 mg",
+    "dosageForm": "tablets",
+    "quantity": 90,
+    "daysSupply": 90,
+    "pharmacy": { "pharmacyId": "centerwell", "name": "CenterWell" },
+    "memberPaidAmount": { "value": "6.00", "currency": "USD" },
+    "appliedCostShareCategory": "preferred_mail"
   }
 ]

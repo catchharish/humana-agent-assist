@@ -1,11 +1,24 @@
-{
-  "requestId": "DEMO-RF001",
-  "memberId": "DEMO-M001",
-  "drugName": "atorvastatin",
-  "pharmacyId": "lakeview",
-  "pharmacyName": "Lakeview Pharmacy",
-  "quantity": 30,
-  "daysSupply": 30,
-  "exists": true,
-  "fillStatus": "received"
-}
+[
+  {
+    "requestId": "DEMO-RF001",
+    "memberId": "DEMO-M001",
+    "drugName": "atorvastatin",
+    "pharmacyId": "lakeview",
+    "pharmacyName": "Lakeview Pharmacy",
+    "quantity": 30,
+    "daysSupply": 30,
+    "exists": true,
+    "fillStatus": "received"
+  },
+  {
+    "requestId": "DEMO-RF002",
+    "memberId": "DEMO-M002",
+    "drugName": "lisinopril",
+    "pharmacyId": "centerwell",
+    "pharmacyName": "CenterWell",
+    "quantity": 90,
+    "daysSupply": 90,
+    "exists": true,
+    "fillStatus": "shipped"
+  }
+]

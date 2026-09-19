@@ -1,10 +1,22 @@
-{
-  "caseId": "DEMO-CVR001",
-  "caseType": "coverage_review",
-  "memberId": "DEMO-M001",
-  "planId": "DEMO-MAPD-001",
-  "requestedMedication": "Jardiance 10 mg tablets",
-  "status": "pending_review",
-  "determination": null,
-  "receivingQueue": "Coverage Review"
-}
+[
+  {
+    "caseId": "DEMO-CVR001",
+    "caseType": "coverage_review",
+    "memberId": "DEMO-M001",
+    "planId": "DEMO-MAPD-001",
+    "requestedMedication": "Jardiance 10 mg tablets",
+    "status": "pending_review",
+    "determination": null,
+    "receivingQueue": "Coverage Review"
+  },
+  {
+    "caseId": "DEMO-CVR002",
+    "caseType": "coverage_review",
+    "memberId": "DEMO-M003",
+    "planId": "DEMO-MAPD-001",
+    "requestedMedication": "Ozempic 0.25 mg",
+    "status": "pending_review",
+    "determination": null,
+    "receivingQueue": "Coverage Review"
+  }
+]

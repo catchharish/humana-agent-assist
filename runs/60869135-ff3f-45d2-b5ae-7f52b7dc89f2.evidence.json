@@ -1,0 +1,215 @@
+{
+  "sessionId": "60869135-ff3f-45d2-b5ae-7f52b7dc89f2",
+  "scenarioId": "t02a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "pending_later",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-said-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 57,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Refill status (fresh read)",
+    "body": "Yes—your atorvastatin refill is ready for pickup today at Lakeview Pharmacy (30-day supply).",
+    "sourceLabel": "DEMO-RF001"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": "COMPLETED_SERVICING",
+    "confirmed": "COMPLETED_SERVICING"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789828932605,
+      "tPaint": 1789828932625,
+      "paintMs": 20,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789828932694,
+      "tPaint": 1789828932710,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789828932771,
+      "tPaint": 1789828932779,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789828932848,
+      "tPaint": 1789828933013,
+      "paintMs": 165,
+      "measured": true,
+      "excludedPauseMs": 27
+    },
+    {
+      "eventId": "e-smalltalk",
+      "kind": "transcript",
+      "tEvent": 1789828933087,
+      "tPaint": 1789828934237,
+      "paintMs": 1150,
+      "measured": true,
+      "excludedPauseMs": 27
+    },
+    {
+      "eventId": "e-ready",
+      "kind": "transcript",
+      "tEvent": 1789828934300,
+      "tPaint": 1789828939579,
+      "paintMs": 5279,
+      "measured": true,
+      "excludedPauseMs": 27
+    },
+    {
+      "eventId": "e-pause-ready",
+      "kind": "pause_gate",
+      "tEvent": 1789828939637,
+      "tPaint": 1789828939652,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 27
+    },
+    {
+      "eventId": "e-said-ready",
+      "kind": "transcript",
+      "tEvent": 1789828939732,
+      "tPaint": 1789828939749,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 66
+    },
+    {
+      "eventId": "e-pause-disp",
+      "kind": "pause_gate",
+      "tEvent": 1789828939806,
+      "tPaint": 1789828939814,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 66
+    }
+  ],
+  "needPaths": []
+}

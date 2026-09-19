@@ -11,8 +11,15 @@ export type IndexedDoc = {
 };
 
 const g = globalThis as unknown as {
-  __haaDocs?: { ready: boolean; items: IndexedDoc[]; model: string };
+  __haaDocs?: {
+    key: string;
+    ready: boolean;
+    items: IndexedDoc[];
+    model: string;
+  };
 };
+
+const INDEX_KEY = "knowledge-v13";
 
 function cosine(a: number[], b: number[]): number {
   let dot = 0;
@@ -32,7 +39,7 @@ export async function ensureDocumentEmbeddings(origin: string): Promise<{
   count: number;
   model: string;
 }> {
-  if (g.__haaDocs?.ready) {
+  if (g.__haaDocs?.ready && g.__haaDocs.key === INDEX_KEY) {
     return {
       ready: true,
       count: g.__haaDocs.items.length,
@@ -58,10 +65,11 @@ export async function ensureDocumentEmbeddings(origin: string): Promise<{
   const cands = json.data?.candidates ?? [];
   const embedded = await embedTexts(cands.map((c) => c.text));
   if (!embedded.ok) {
-    g.__haaDocs = { ready: false, items: [], model: EMBED_MODEL };
+    g.__haaDocs = { key: INDEX_KEY, ready: false, items: [], model: EMBED_MODEL };
     return { ready: false, count: 0, model: EMBED_MODEL };
   }
   g.__haaDocs = {
+    key: INDEX_KEY,
     ready: true,
     model: EMBED_MODEL,
     items: cands.map((c, i) => ({ ...c, vector: embedded.vectors[i] })),

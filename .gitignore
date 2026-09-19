@@ -3,6 +3,7 @@ node_modules
 .env
 .env.local
 .env*.local
+.cache/
 runs/*.jsonl
 !runs/.gitkeep
 .DS_Store

@@ -1,0 +1,611 @@
+{
+  "at": "2026-09-19T13:41:19.865Z",
+  "g1": "On this MAPD plan, why is a 30-day metformin fill cheaper at a preferred retail pharmacy than at a standard retail pharmacy?",
+  "g2": "After a member enrolls in the CenterWell pharmacy mail service, what happens to a prescription that is already waiting at retail for pickup today?",
+  "summary": [
+    {
+      "variant": "no_search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "medianRounds": 2,
+      "medianTotalMs": 3537.812167000001,
+      "slowestTotalMs": 3619.0969589999986,
+      "medianShareUsed": null
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "medianRounds": 3,
+      "medianTotalMs": 3992.0109999999986,
+      "slowestTotalMs": 4808.555124999999,
+      "medianShareUsed": null
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "medianRounds": 1,
+      "medianTotalMs": 1618.784249999997,
+      "slowestTotalMs": 2000.0497920000053,
+      "medianShareUsed": 1
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "medianRounds": 2,
+      "medianTotalMs": 2507.3751670000056,
+      "slowestTotalMs": 3553.3497919999936,
+      "medianShareUsed": 1
+    }
+  ],
+  "rows": [
+    {
+      "variant": "no_search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 1,
+      "rounds": 2,
+      "totalMs": 3537.812167000001,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getPlan",
+            "getCostShare",
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Preferred and standard retail pharmacies are separate cost-share categories under this MAPD benefit, so the pharmacy’s network classification on the fill date—not a change in the prescription—determines the amount. For the matched 30-day metformin 500 mg fill, the recorded member cost is $8 at preferred retail versus $27 at standard retail."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 2,
+      "rounds": 2,
+      "totalMs": 3538.1573750000007,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getPlan",
+            "getCostShare",
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Preferred and standard retail pharmacies use different cost-share categories under this MAPD benefit; the pharmacy’s network classification on the fill date determines which category applies, not a change in the prescription. For the matched 30-day metformin 500 mg supply, the recorded member cost share is $8 at preferred retail versus $27 at standard retail."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 3,
+      "rounds": 2,
+      "totalMs": 3619.0969589999986,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getPlan",
+            "getCostShare",
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Preferred and standard retail are separate cost-share categories on this MAPD plan, so the pharmacy’s network classification on the fill date determines which amount applies—not a change in the prescription. For the matched 30-day metformin 500 mg fill, the recorded amounts are $8 at preferred retail and $27 at standard retail."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 4,
+      "rounds": 2,
+      "totalMs": 3367.6582080000007,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getPlan",
+            "getCostShare",
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Preferred and standard retail pharmacies use different cost-share categories under this MAPD plan; the pharmacy’s network classification on the fill date determines which category applies. For the matched 30-day metformin 500 mg supply, the recorded member cost is $8 at preferred retail versus $27 at standard retail, without a change to the prescription."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 5,
+      "rounds": 2,
+      "totalMs": 3181.4954580000012,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": true,
+          "names": [
+            "getPlan",
+            "getCostShare",
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Preferred and standard retail are different pharmacy network cost-share categories; the pharmacy’s network classification on the fill date determines which amount applies, not a change in the prescription. For the matched 30-day metformin 500 mg fill, this plan records $8 at preferred retail versus $27 at standard retail."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 1,
+      "rounds": 3,
+      "totalMs": 4808.555124999999,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": [
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Enrollment does not change a prescription that is already ready for pickup today. It does not place a fill or start automatic refills, and the member can still pick it up at retail."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 2,
+      "rounds": 3,
+      "totalMs": 3607.538708,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": [
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Enrollment does not place a fill, start automatic refills, or change the prescription already waiting for pickup today. The member can still pick it up at retail; retail remains an option."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 3,
+      "rounds": 3,
+      "totalMs": 4269.513749999998,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": [
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Enrollment does not place a fill, start automatic refills, or change a prescription already waiting for pickup today. The member can still pick it up at retail; retail remains an option."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 4,
+      "rounds": 3,
+      "totalMs": 3940.245332999999,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": [
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Enrollment does not place a fill, start automatic refills, or change the prescription that is ready for pickup today. The member can still pick it up at retail; retail remains an option."
+    },
+    {
+      "variant": "no_search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 5,
+      "rounds": 3,
+      "totalMs": 3992.0109999999986,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": [
+            "searchKnowledge"
+          ]
+        },
+        {
+          "round": 3,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [],
+      "preloadUsed": [],
+      "preloadShareUsed": null,
+      "over8s": false,
+      "answer": "Enrollment in the CenterWell pharmacy mail service does not change a prescription already waiting for pickup today. It does not place a fill or start automatic refills, and retail remains an option."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 1,
+      "rounds": 1,
+      "totalMs": 1618.784249999997,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Charges confirmed; rule not confirmed."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 2,
+      "rounds": 1,
+      "totalMs": 2000.0497920000053,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Charges confirmed; rule not confirmed."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 3,
+      "rounds": 1,
+      "totalMs": 1585.4655000000057,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Charges confirmed; rule not confirmed."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 4,
+      "rounds": 1,
+      "totalMs": 1507.1752500000002,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "A preferred retail pharmacy and a standard retail pharmacy use different cost-share categories under this MAPD benefit for the same 30-day supply. Under the recorded conditions, metformin 500 mg is $8 at preferred retail and $27 at standard retail; the prescription itself has not changed."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g1_preferred_vs_standard",
+      "run": 5,
+      "rounds": 1,
+      "totalMs": 1933.3592080000017,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Charges confirmed; rule not confirmed."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 1,
+      "rounds": 2,
+      "totalMs": 2507.3751670000056,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Enrollment does not alter today’s retail pickup; the prescription already waiting at retail remains as it is. Mail-service enrollment does not place a fill or start automatic refills."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 2,
+      "rounds": 2,
+      "totalMs": 3553.3497919999936,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Enrollment does not alter today’s retail pickup; a prescription already waiting at retail remains as it is. Mail-service enrollment itself does not place a fill or start automatic refills."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 3,
+      "rounds": 2,
+      "totalMs": 2679.152249999999,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Enrollment does not alter today’s retail pickup; the prescription already waiting at retail stays as it is. Mail-service enrollment does not itself place a fill or start automatic refills."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 4,
+      "rounds": 2,
+      "totalMs": 2452.8337089999986,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Enrollment does not alter today’s retail pickup; the prescription already waiting at retail remains as it is. Mail-service enrollment itself does not place a fill or start automatic refills."
+    },
+    {
+      "variant": "search_preload",
+      "questionId": "g2_mail_vs_today_retail",
+      "run": 5,
+      "rounds": 2,
+      "totalMs": 2467.4540419999976,
+      "lookups": [
+        {
+          "round": 1,
+          "parallel": false,
+          "names": [
+            "lookupReadyAnswer"
+          ]
+        },
+        {
+          "round": 2,
+          "parallel": false,
+          "names": []
+        }
+      ],
+      "preloadNames": [
+        "searchKnowledge"
+      ],
+      "preloadUsed": [
+        "searchKnowledge"
+      ],
+      "preloadShareUsed": 1,
+      "over8s": false,
+      "answer": "Enrollment does not alter today’s retail pickup; the prescription already waiting at retail remains as it is. Mail-service enrollment itself does not place a fill or start automatic refills."
+    }
+  ]
+}

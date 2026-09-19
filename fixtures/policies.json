@@ -11,6 +11,6 @@
     "planId": "DEMO-OTHER-PLAN",
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
-    "body": "Illustrative cost sharing for a different plan. Not applicable to DEMO-MAPD-001."
+    "body": "For this other plan and period, a 30-day metformin 500 mg retail fill is $12.00 under other_plan_retail. Do not apply DEMO-MAPD-001 preferred/standard amounts."
   }
 ]

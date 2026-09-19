@@ -16,5 +16,41 @@
     "dosageForm": "tablets",
     "quantityAuthorized": 180,
     "daysSupply": 90
+  },
+  {
+    "prescriptionId": "DEMO-RX003",
+    "memberId": "DEMO-M002",
+    "drugName": "lisinopril",
+    "strength": "10 mg",
+    "dosageForm": "tablets",
+    "quantityAuthorized": 90,
+    "daysSupply": 90
+  },
+  {
+    "prescriptionId": "DEMO-RX004",
+    "memberId": "DEMO-M003",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantityAuthorized": 180,
+    "daysSupply": 90
+  },
+  {
+    "prescriptionId": "DEMO-RX005",
+    "memberId": "DEMO-M004",
+    "drugName": "metformin",
+    "strength": "500 mg",
+    "dosageForm": "tablets",
+    "quantityAuthorized": 60,
+    "daysSupply": 30
+  },
+  {
+    "prescriptionId": "DEMO-RX006",
+    "memberId": "DEMO-M005",
+    "drugName": "atorvastatin",
+    "strength": "20 mg",
+    "dosageForm": "tablets",
+    "quantityAuthorized": 90,
+    "daysSupply": 90
   }
 ]

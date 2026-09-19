@@ -26,6 +26,41 @@ export function getSession(id: string): SessionState | undefined {
   return sessions.get(id);
 }
 
+export function beginAnswerLoop(
+  session: SessionState,
+  question: string,
+): number {
+  const generation = session.answerLoopGeneration + 1;
+  session.answerLoopGeneration = generation;
+  session.answerLoopAnchor = {
+    generation,
+    question,
+    enrollmentConsent: session.consent.enrollment,
+    enrollmentScopeKey: session.enrollment.medications.join("|"),
+  };
+  session.pendingNba = null;
+  session.nowCard = {
+    ...session.nowCard,
+    liveSteps: [],
+    earlyFacts: [],
+  };
+  return generation;
+}
+
+export function shouldApplyAnswerLoop(
+  session: SessionState,
+  generation: number,
+): boolean {
+  const a = session.answerLoopAnchor;
+  if (!a || a.generation !== generation) return false;
+  if (session.answerLoopGeneration !== generation) return false;
+  if (session.consent.enrollment !== a.enrollmentConsent) return false;
+  if (session.enrollment.medications.join("|") !== a.enrollmentScopeKey) {
+    return false;
+  }
+  return true;
+}
+
 export function publicState(session: SessionState): SessionState {
   const elapsed = Math.max(
     0,
@@ -46,6 +81,7 @@ export function createSession(init: {
   scenarioId?: string;
   injectedDelayMs?: number;
   utteranceRules?: UtteranceRules | null;
+  selectedMemberId?: string;
 }): SessionState {
   const sessionId = randomUUID();
   const overlay = init.overlay ?? null;
@@ -58,6 +94,7 @@ export function createSession(init: {
     totalPauseMs: 0,
     lastPauseLabel: null,
     overlay,
+    selectedMemberId: init.selectedMemberId ?? "DEMO-M001",
     scenarioId: init.scenarioId ?? "t01_m2a",
     injectedDelayMs: init.injectedDelayMs ?? 0,
     pricingExactDelivered: false,
@@ -93,6 +130,7 @@ export function createSession(init: {
     quoteFocus: null,
     quoteGeneration: 0,
     optionalWorkSuppressed: false,
+    nbaDismissedThisCall: false,
     consent: {
       comparison: "none",
       enrollment: "none",
@@ -141,6 +179,9 @@ export function createSession(init: {
     lunaSeq: 0,
     lastInterpretation: null,
     lastAppliedEventId: null,
+    answerLoopGeneration: 0,
+    answerLoopAnchor: null,
+    pendingNba: null,
     diagnostics: {
       disclosureFetch: init.disclosureFetch,
       warmup: "luna warmup started fire-and-forget at connect (not awaited)",
@@ -152,6 +193,7 @@ export function createSession(init: {
       rechecks: [],
       needPaths: [],
       pauseSnapshots: [],
+      nba: [],
     },
   };
   sessions.set(sessionId, state);
@@ -402,7 +444,7 @@ export function setFocus(session: SessionState, kind: NeedKind, flowStep: string
 
 export function pushRouterTrace(session: SessionState, trace: RouterTrace) {
   session.diagnostics.router = [...session.diagnostics.router, trace].slice(-12);
-  appendJsonl(session.sessionId, { kind: "routeQuery", ...trace });
+  appendJsonl(session.sessionId, { kind: "lookup_trace", ...trace });
 }
 
 export function pushTriggerTrace(session: SessionState, trace: TriggerTrace) {

@@ -1,5 +1,6 @@
 [
   {
+    "memberId": "DEMO-M001",
     "quoteId": "DEMO-Q-ATO-L",
     "drugName": "atorvastatin",
     "strength": "20 mg",

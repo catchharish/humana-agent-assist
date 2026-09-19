@@ -12,9 +12,18 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000. The Next.js development indicator is disabled in `next.config.ts`.
 
-- **Start main call** — timed stream through beats 0–15. Resume at presenter pauses. Human controls: Offer, Use governed response, Confirm/Submit enrollment, Confirm Coverage Review destination, Execute transfer, Confirm disposition.
+For the presenter demo, use a production build (no dev overlay):
+
+```bash
+npm run build
+npm start
+```
+
+Then open http://localhost:3000.
+
+- **Start** — pick a scenario and member in the top demo bar, then Start. Timed stream through beats 0–15. Resume at presenter pauses. **Show demo details** (off by default) reveals IDs, simulated source lines, diagnostics, and full transcript events.
 - **Replay T02A–T08B** — six §19.3 streams (T06A omits DEMO-NET0818).
 
 ```bash
@@ -38,7 +47,7 @@ Mandatory disclosure **text** is copied byte-for-byte from the scripting registr
 flowchart LR
   ui[AdvocateUI]
   bff[CopilotBFF]
-  router[queryRouter]
+  router[toolLoopTerra]
   fast[gpt-5.6-luna]
   mid[gpt-5.6-terra]
   elig[eligibility]

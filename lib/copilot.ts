@@ -1,7 +1,9 @@
 import { invalidateSessionTokens, normalizeScopeKey } from "@/lib/enrollmentToken";
 import { interpretUtterance, finalCompatibleWithPartial, type Interpretation } from "@/lib/interpret";
 import { terraComplete, parseJsonObject } from "@/lib/openai";
-import { routeQuery, type RouterResult } from "@/lib/queryRouter";
+import { runAnswerLoop } from "@/lib/answerLoop";
+import { proposeNba, logNbaAdvocate } from "@/lib/nba";
+import { fetchMemberQuotes } from "@/lib/quotesFetch";
 import { publishSession } from "@/lib/sse";
 import { appendJsonl } from "@/lib/log";
 import {
@@ -11,8 +13,6 @@ import {
   NUDGE_PRICING,
   clarifyInterest,
   enrollmentReadback,
-  offerBody,
-  transferOffer,
 } from "@/lib/copy";
 import { isExactReading, isWordingAttempt, stitchedReading, wordDiff } from "@/lib/exactness";
 import {
@@ -37,6 +37,53 @@ import type { SessionState } from "@/lib/types";
 import { classifyLunaTrigger, classifyPricingTrigger, closingAttemptCues } from "@/lib/triggers";
 
 const historicalJobs = new Map<string, string>();
+
+function answerLoopBase(session: SessionState, origin: string, question: string) {
+  return {
+    origin,
+    memberId: session.member?.memberId ?? session.selectedMemberId,
+    planId: session.member?.planId ?? "DEMO-MAPD-001",
+    authId: session.auth?.authorizationId ?? "DEMO-AUTH001",
+    question,
+    loadedSnapshot: true,
+    shortAnswers: true,
+    serviceTier: "priority" as const,
+    nbaParallel: true,
+    clockStart: performance.now(),
+    generation: 0,
+    session,
+    identityVerified: session.identityStatus === "VALID",
+    dueNow:
+      session.pricing === "due_now" ||
+      session.pricing === "late_finding" ||
+      session.pricing === "paraphrased",
+    preload: false,
+    preloadSearchOnly: true,
+    searchDelayMs: session.injectedDelayMs || undefined,
+    overlay: session.overlay,
+    comparisonConsentYes: session.consent.comparison === "absolute_yes",
+  };
+}
+
+async function paintLoopNeed(
+  session: SessionState,
+  kind: Parameters<typeof upsertNeed>[1],
+  title: string,
+  result: Awaited<ReturnType<typeof runAnswerLoop>>,
+  flowStep: string,
+) {
+  upsertNeed(session, kind, {
+    status: result.supportPartial ? "unresolved_gap" : "resolved",
+    guidance: "ready",
+    flowStep,
+    answer: {
+      title,
+      body: result.answer,
+      sourceLabel: result.sources.join(" · ") || "System record · simulated",
+    },
+    fingerprint: result.answer.slice(0, 200),
+  });
+}
 
 export let testInterpretFactory: ((
   session: SessionState,
@@ -286,14 +333,14 @@ function showClarifyOnce(
 }
 
 function wrapEvidenceLine(session: SessionState) {
-  const refill =
-    getNeed(session, "refill_status")?.answer?.body ??
-    JSON.stringify(session.prefetch?.refillFresh ?? session.prefetch?.refill ?? "");
-  const fillStatus = /ready/i.test(refill)
+  const fresh = String(session.prefetch?.refillFresh?.fillStatus ?? "");
+  const needBody = getNeed(session, "refill_status")?.answer?.body ?? "";
+  const blob = `${fresh} ${needBody}`;
+  const fillStatus = /ready/i.test(blob)
     ? "ready"
-    : /pending|submitted|processing/i.test(refill)
-      ? "pending"
-      : refill.slice(0, 80);
+    : /pending|submitted|processing|received/i.test(blob)
+      ? fresh || "pending"
+      : fresh || needBody.slice(0, 80);
   return [
     session.enrollment.resultId,
     session.enrollment.medications.join(", "),
@@ -345,79 +392,11 @@ function recordNeedPath(
   appendJsonl(session.sessionId, { kind: "need_path", ...rec });
 }
 
-function fingerprint(parts: string[]) {
-  return parts.sort().join("|");
-}
-
-function historicalFingerprint(routed: RouterResult) {
-  return fingerprint([
-    ...routed.evidence.claims.map(
-      (c) => `${c.claimId}:${c.dateOfService ?? ""}:${c.memberPaidAmount?.value ?? ""}`,
-    ),
-    ...routed.evidence.classifications.map(
-      (c) => `${c.classificationId}:${c.asOfDate ?? ""}:${c.networkTier ?? ""}`,
-    ),
-    `${routed.evidence.selectedPolicy?.id ?? "no-policy"}:${routed.evidence.selectedPolicy?.effectiveDate ?? ""}`,
-    routed.evidence.causeSupported ? "cause" : "no-cause",
-  ]);
-}
-
-async function draftHistorical(session: SessionState, routed: RouterResult) {
-  const terra = await terraComplete(
-    `Write the advocate-facing Now-card body for a historical completed-charge question.
-Return JSON only: {"title":string,"body":string}
-
-Rules:
-- Use only the Evidence JSON. Do not add drugs, pharmacies, amounts, dates, or categories that are not in Evidence.
-- If causeSupported is true: explain using the retrieved claims, classifications, and selected policy. Do not claim the plan changed, invent why the member used a pharmacy, or claim that all retail is more expensive than mail.
-- If causeSupported is false: state that completed charges are or are not established per Evidence, and that cause is not established. Name missing support ids from Evidence.missing. Do not invent a pharmacy-category cause.
-- No optional enrollment offer. These are completed charges, not estimates.
-- Do not mention beat numbers or scenario ids.
-
-Evidence (authoritative):
-${JSON.stringify({
-  chargesEstablished: routed.evidence.chargesEstablished,
-  causeSupported: routed.evidence.causeSupported,
-  missing: routed.evidence.missing,
-  claims: routed.evidence.claims,
-  classifications: routed.evidence.classifications,
-  selectedPolicy: routed.evidence.selectedPolicy,
-  rejected: routed.rejected,
-})}`,
-    500,
-  );
-  const parsed = parseJsonObject<{ title?: string; body?: string }>(terra.text);
-  const title =
-    parsed?.title ??
-    (routed.evidence.causeSupported
-      ? "Historical charges"
-      : "Historical charges — cause not established");
-  const body =
-    parsed?.body ??
-    (terra.ok
-      ? terra.text
-      : "Interpretation/answer model unavailable. Charges were retrieved; no generated explanation.");
-  const sourceLabel = routed.evidence.causeSupported
-    ? "System record · claims · simulated; Governed guidance · scripting · simulated"
-    : "System record · claims · simulated";
-  const fp = historicalFingerprint(routed);
-  upsertNeed(session, "historical_price", {
-    fingerprint: fp,
-    answer: {
-      title,
-      body,
-      sourceLabel,
-      causeSupported: routed.evidence.causeSupported,
-      chargesEstablished: routed.evidence.chargesEstablished,
-    },
-  });
-  return { title, body, sourceLabel, fp, routed };
-}
-
 function presentHistorical(
   session: SessionState,
-  routed: RouterResult,
+  routed: { evidence: { causeSupported?: boolean } },
   drafted: { title: string; body: string; sourceLabel: string },
+  origin?: string,
 ) {
   const focusIsHistorical =
     session.currentNeed === "historical price" ||
@@ -435,7 +414,7 @@ function presentHistorical(
       body: drafted.body,
       sourceLabel: drafted.sourceLabel,
     }, { priority: "answer", needKind: "historical_price" });
-    maybeOfferComparison(session);
+    if (origin) void proposeNba(session, origin, drafted.title + " " + drafted.body);
   } else {
     upsertNeed(session, "historical_price", {
       status: "deferred",
@@ -463,25 +442,15 @@ async function runHistorical(
     });
     return;
   }
-  const routed = await routeQuery({
-    origin,
-    need: "historical_price",
-    memberId,
-    planId,
-    overlay: session.overlay,
-    queryText,
-    injectedDelayMs: opts.injectedDelayMs,
-  });
-  pushRouterTrace(session, {
-    routesUsed: routed.routesUsed,
-    latencyMs: routed.latencyMs,
-    retrieved: routed.retrieved,
-    rejected: routed.rejected,
-    ranked: routed.ranked,
-    injectedDelayMs: routed.injectedDelayMs,
-    recheck: opts.recheck,
-  });
-  const fp = historicalFingerprint(routed);
+  try {
+    const result = await runAnswerLoop({
+      ...answerLoopBase(session, origin, queryText),
+      searchDelayMs: opts.injectedDelayMs || session.injectedDelayMs || undefined,
+      paintNow: false,
+      routerRecheck: opts.recheck,
+    });
+  const cause = historicalCauseFromPrefetch(session);
+  const fp = result.answer;
   const prev = getNeed(session, "historical_price");
   if (opts.recheck && prev?.fingerprint === fp && prev.answer) {
     session.diagnostics.rechecks.push({
@@ -489,24 +458,56 @@ async function runHistorical(
       fingerprint: fp,
       changed: false,
     });
-    presentHistorical(session, routed, {
+    presentHistorical(session, {
+      evidence: cause,
+    }, {
       title: prev.answer.title,
       body: prev.answer.body,
       sourceLabel: prev.answer.sourceLabel,
-    });
+    }, origin);
     publishSession(session);
     return;
   }
-  const drafted = await draftHistorical(session, routed);
   if (opts.recheck) {
     session.diagnostics.rechecks.push({
       at: new Date().toISOString(),
-      fingerprint: drafted.fp,
-      changed: Boolean(prev?.fingerprint && prev.fingerprint !== drafted.fp),
+      fingerprint: fp,
+      changed: Boolean(prev?.fingerprint && prev.fingerprint !== fp),
     });
   }
-  presentHistorical(session, routed, drafted);
+  upsertNeed(session, "historical_price", {
+    fingerprint: fp,
+    answer: {
+      title: result.supportPartial ? "Partial answer" : "Completed charges",
+      body: result.answer,
+      sourceLabel: result.sources.join(" · ") || "System record · simulated",
+      causeSupported: cause.causeSupported && !result.supportPartial,
+      chargesEstablished: cause.chargesEstablished,
+    },
+  });
+  presentHistorical(
+    session,
+    {
+      evidence: {
+        causeSupported: cause.causeSupported && !result.supportPartial,
+        chargesEstablished: cause.chargesEstablished,
+      },
+    },
+    {
+      title: result.supportPartial ? "Partial answer" : "Completed charges",
+      body: result.answer,
+      sourceLabel: result.sources.join(" · ") || "System record · simulated",
+    },
+    origin,
+  );
   publishSession(session);
+  } catch (err) {
+    appendJsonl(session.sessionId, {
+      kind: "answer_loop_error",
+      need: "historical_price",
+      error: String(err),
+    });
+  }
 }
 
 export async function promoteHistorical(
@@ -538,21 +539,32 @@ export async function promoteHistorical(
   });
 }
 
-function maybeOfferComparison(session: SessionState) {
-  if (session.optionalWorkSuppressed) return;
-  const refill = getNeed(session, "refill_status");
-  const hist = getNeed(session, "historical_price");
-  if (!refill) return;
-  if (refill.status !== "resolved" && refill.guidance !== "ready") return;
-  if (hist?.status !== "resolved") return;
-  markPricingUpcoming(session);
-  if (session.recommendation) return;
-  session.recommendation = {
-    kind: "optional_comparison",
-    title: "Optional comparison",
-    body: offerBody({ mailPharmacy: mailPharmacyName(session) }),
-    sourceLabel: "Governed guidance · scripting · simulated",
-    status: "pending",
+function historicalCauseFromPrefetch(session: SessionState) {
+  const claims = (session.prefetch?.claims ?? []) as Array<{
+    claimId?: string;
+    dateOfService?: string;
+    drugName?: string;
+    memberPaidAmount?: { value?: string };
+    pharmacy?: { pharmacyId?: string };
+  }>;
+  const classes = (session.prefetch?.classifications ?? []) as Array<{
+    pharmacyId?: string;
+    asOfDate?: string;
+  }>;
+  const chargesEstablished = claims.some(
+    (c) => Boolean(c.memberPaidAmount?.value) && Boolean(c.drugName),
+  );
+  const unmatched = claims.filter(
+    (c) =>
+      !classes.find(
+        (r) =>
+          (!c.pharmacy?.pharmacyId || r.pharmacyId === c.pharmacy.pharmacyId) &&
+          (!c.dateOfService || r.asOfDate === c.dateOfService),
+      ),
+  );
+  return {
+    chargesEstablished,
+    causeSupported: chargesEstablished && unmatched.length === 0,
   };
 }
 
@@ -821,27 +833,22 @@ export async function loadQuotes(
   },
 ) {
   const memberId = session.member?.memberId ?? "";
-  const planId = session.member?.planId ?? "";
   const pharmacyId = opts?.pharmacyId ?? session.quoteFocus?.pharmacyId;
   const generation = opts?.generation ?? session.quoteGeneration;
-  const routed = await routeQuery({
+  const got = await fetchMemberQuotes({
     origin,
-    need: "prospective_comparison",
+    authId: session.auth?.authorizationId ?? "",
     memberId,
-    planId,
+    pharmacyId,
     overlay: session.overlay,
-    quotePharmacyId: pharmacyId,
-    injectedDelayMs: 0,
   });
-  pushRouterTrace(session, {
-    routesUsed: routed.routesUsed,
-    latencyMs: routed.latencyMs,
-    retrieved: routed.retrieved,
-    rejected: routed.rejected,
-    ranked: routed.ranked,
-    injectedDelayMs: 0,
+  appendJsonl(session.sessionId, {
+    kind: "getQuotes",
+    via: "code_on_consent",
+    latencyMs: got.ms,
+    quoteCount: got.quotes.length,
   });
-  const mapped = mapQuotes(session, routed.evidence.quotes);
+  const mapped = mapQuotes(session, got.quotes);
   if (generation !== session.quoteGeneration) {
     for (const q of mapped) {
       if (
@@ -896,25 +903,32 @@ export async function loadFast90(
   const pre = session.prefetch?.fast90;
   let art = pre ?? null;
   if (!art) {
-    const routed = await routeQuery({
-      origin,
-      need: "service_education",
-      memberId: session.member?.memberId ?? "",
-      planId: session.member?.planId ?? "",
-      overlay: session.overlay,
-    });
+    try {
+      const result = await runAnswerLoop({
+        ...answerLoopBase(
+          session,
+          origin,
+          "What is the 90-day CenterWell option, and does enrollment change today's retail pickup?",
+        ),
+        paintNow: false,
+      });
+      art = {
+        articleId: "DEMO-FAST90-v1",
+        body: result.answer,
+        lineageSourceId: "DEMO-SERVICE-v1",
+        version: "v1",
+      };
+    } catch (err) {
+      appendJsonl(session.sessionId, {
+        kind: "answer_loop_error",
+        need: "service_education",
+        error: String(err),
+      });
+    }
+  }
+  if (art) {
     pushRouterTrace(session, {
-      routesUsed: routed.routesUsed,
-      latencyMs: routed.latencyMs,
-      retrieved: routed.retrieved,
-      rejected: routed.rejected,
-      ranked: routed.ranked,
-      injectedDelayMs: 0,
-    });
-    art = routed.evidence.fast90;
-  } else {
-    pushRouterTrace(session, {
-      routesUsed: ["governed_derived"],
+      routesUsed: ["knowledge_search"],
       latencyMs: 0,
       retrieved: [{ id: art.articleId, sourceSystem: "scripting" }],
       rejected: [],
@@ -953,12 +967,17 @@ function markServiceDiscussed(session: SessionState) {
 export function applyHumanOffer(session: SessionState) {
   if (!session.recommendation) return;
   session.recommendation.status = "offered";
-  markPricingUpcoming(session);
+  logNbaAdvocate(session, "offer");
+  if (session.recommendation.marksPricingUpcoming) {
+    markPricingUpcoming(session);
+  }
 }
 
 export function applyHumanDismiss(session: SessionState) {
   if (!session.recommendation) return;
   session.recommendation.status = "dismissed";
+  session.nbaDismissedThisCall = true;
+  logNbaAdvocate(session, "dismiss");
 }
 
 export function applyHumanObjection(session: SessionState) {
@@ -1006,8 +1025,6 @@ export function applyHumanWithdrawEnrollment(session: SessionState) {
 
 async function maybeCompleteServicing(session: SessionState) {
   if (session.coverage) return;
-  if (session.recommendation?.kind === "warm_transfer") return;
-  if (session.recommendation?.kind === "optional_comparison") return;
   if (session.disposition.recommended) return;
   if (session.enrollment.submitted) return;
   if (getNeed(session, "historical_price")) return;
@@ -1048,6 +1065,7 @@ Rules: use only Evidence. Do not state a transfer connection, specialist connect
 Evidence:
 ${JSON.stringify({
   refill: getNeed(session, "refill_status")?.answer ?? session.prefetch?.refill,
+  refillFresh: session.prefetch?.refillFresh,
   historical: getNeed(session, "historical_price")?.answer ?? null,
   education: getNeed(session, "service_education")?.answer ?? null,
   enrollment: session.enrollment,
@@ -1168,36 +1186,49 @@ export async function loadCoverage(
   sourceUtteranceId?: string,
   drugName?: string,
 ) {
-  const routed = await routeQuery({
-    origin,
-    need: "coverage_status",
+  const q = new URLSearchParams({
     memberId: session.member?.memberId ?? "",
-    planId: session.member?.planId ?? "",
-    overlay: session.overlay,
-    drugName,
-    queryText: drugName,
   });
-  pushRouterTrace(session, {
-    routesUsed: routed.routesUsed,
-    latencyMs: routed.latencyMs,
-    retrieved: routed.retrieved,
-    rejected: routed.rejected,
-    ranked: routed.ranked,
-    injectedDelayMs: 0,
-  });
-  if (routed.evidence.limitation || !routed.evidence.coverage) {
+  if (drugName) q.set("drug", drugName);
+  const headers: Record<string, string> = {
+    "x-authorization-id": session.auth?.authorizationId ?? "",
+  };
+  if (session.overlay) headers["x-demo-overlay"] = session.overlay;
+  const row = await fetch(
+    `${origin}/api/simulated/coverage-review/cases?${q.toString()}`,
+    { cache: "no-store", headers },
+  );
+  const json = (await row.json()) as {
+    data?: {
+      cases?: Array<{
+        caseId?: string;
+        status?: string;
+        requestedMedication?: string;
+        determination?: string | null;
+      }>;
+    };
+  };
+  const data = json.data?.cases?.[0];
+  if (!row.ok || !data || !data.caseId || !data.status) {
     showNow(
       session,
       limitationCard(
         "Coverage lookup limitation",
-        routed.evidence.limitation ||
-          "No coverage case was returned for this member and medication.",
+        "No coverage case was returned for this member and medication.",
       ),
       { priority: "answer", needKind: "coverage_status" },
     );
     return;
   }
-  const c = routed.evidence.coverage;
+  const c = {
+    caseId: String(data.caseId),
+    status: String(data.status),
+    requestedMedication: String(data.requestedMedication ?? ""),
+    determination:
+      data.determination === null || data.determination === undefined
+        ? null
+        : String(data.determination),
+  };
   session.coverage = c;
   upsertNeed(session, "coverage_status", {
     status: "active",
@@ -1216,16 +1247,11 @@ export async function loadCoverage(
       : `${c.caseId} status ${c.status}. No determination is being made here.`,
     sourceLabel: "System record · coverage-review · simulated",
   }, { priority: "answer", needKind: "coverage_status" });
-  session.recommendation = {
-    kind: "warm_transfer",
-    title: "Recommend Coverage Review",
-    body: transferOffer({
-      caseId: c.caseId,
-      requestedMedication: c.requestedMedication,
-    }),
-    sourceLabel: "Governed guidance · scripting · simulated",
-    status: "pending",
-  };
+  await proposeNba(
+    session,
+    origin,
+    `Coverage case ${c.caseId} status ${c.status} for ${c.requestedMedication}. What should the advocate do next?`,
+  );
 }
 
 async function draftHandoff(session: SessionState) {
@@ -1387,58 +1413,6 @@ export function viewEvidence(session: SessionState) {
   });
 }
 
-function existingRequestCard(routed: Awaited<ReturnType<typeof routeQuery>>) {
-  if (routed.evidence.limitation || !routed.evidence.refill) {
-    return limitationCard(
-      "Refill lookup limitation",
-      routed.evidence.limitation || "No refill request was returned.",
-    );
-  }
-  const refill = routed.evidence.refill;
-  const id = refill.requestId as string | undefined;
-  const pharmacy =
-    (refill.pharmacyName as string | undefined) ||
-    ((refill.provider as { organizationName?: string } | undefined)
-      ?.organizationName);
-  const status = refill.fillStatus as string | undefined;
-  if (!id || !status) {
-    return limitationCard(
-      "Refill lookup limitation",
-      "Refill payload was incomplete; no status is claimed.",
-    );
-  }
-  return {
-    title: "Existing refill request",
-    body: `Existing request ${id}${pharmacy ? ` at ${pharmacy}` : ""} is on file (fillStatus ${status}). This confirms the request exists; it does not establish that it is ready today. No new order is created.`,
-    sourceLabel: "System record · pharmacy · simulated",
-  };
-}
-
-function freshReadyCard(routed: Awaited<ReturnType<typeof routeQuery>>) {
-  if (routed.evidence.limitation || !routed.evidence.refillFresh) {
-    return limitationCard(
-      "Refill status limitation",
-      routed.evidence.limitation || "Fresh refill status was not returned.",
-    );
-  }
-  const fresh = routed.evidence.refillFresh;
-  const pharmacy =
-    (fresh.pharmacyName as string | undefined) ||
-    (routed.evidence.refill?.pharmacyName as string | undefined);
-  const status = String(fresh.fillStatus ?? "");
-  const requestId =
-    (fresh.requestId as string | undefined) ||
-    (routed.evidence.refill?.requestId as string | undefined);
-  const ready = /ready/i.test(status);
-  return {
-    title: "Refill status (fresh read)",
-    body: ready
-      ? `The pharmacy's current status is ${status}. Source: ${pharmacy ?? "the recorded pharmacy"} request ${requestId ?? "unreturned"}. Do not treat this as an order, collection, or pickup confirmation.`
-      : `The pharmacy's current status is ${status} (not ready for pickup). Source: ${pharmacy ?? "the recorded pharmacy"} request ${requestId ?? "unreturned"}.`,
-    sourceLabel: "System record · pharmacy · simulated",
-  };
-}
-
 function applyPricingTriggerResult(
   session: SessionState,
   line: {
@@ -1573,34 +1547,6 @@ export async function applyAdvocateObligations(
   applyPricingTriggerResult(session, stamped, triggerCode);
 }
 
-function syntheticRefillRoute(
-  session: SessionState,
-  mode: "existing" | "fresh_status",
-): RouterResult | null {
-  if (!session.prefetch) return null;
-  return {
-    routesUsed: ["structured_lookup"],
-    latencyMs: 0,
-    retrieved: [],
-    rejected: [],
-    ranked: [],
-    injectedDelayMs: 0,
-    evidence: {
-      claims: [],
-      classifications: [],
-      selectedPolicy: null,
-      refill: session.prefetch.refill,
-      refillFresh: mode === "fresh_status" ? session.prefetch.refillFresh : null,
-      chargesEstablished: false,
-      causeSupported: false,
-      missing: [],
-      fast90: session.prefetch.fast90,
-      quotes: [],
-      coverage: null,
-    },
-  };
-}
-
 async function applyInterpretation(
   session: SessionState,
   origin: string,
@@ -1650,6 +1596,8 @@ async function applyInterpretation(
 
   const memberId = session.member?.memberId ?? "";
   const planId = session.member?.planId ?? "";
+  void memberId;
+  void planId;
 
   if (interp.refillCheck === "existing_request" && line.speaker === "member") {
     upsertNeed(session, "refill_status", {
@@ -1659,29 +1607,38 @@ async function applyInterpretation(
       sourceUtteranceId: line.id,
     });
     focus("refill_status", "verify → check existing request");
-    const routed = await routeQuery({
-        origin,
-        need: "refill_status",
-        memberId,
-        planId,
-        overlay: session.overlay,
-        refillMode: "existing",
-      });
-    pushRouterTrace(session, {
-      routesUsed: routed.routesUsed,
-      latencyMs: routed.latencyMs,
-      retrieved: routed.retrieved,
-      rejected: routed.rejected,
-      ranked: routed.ranked,
-      injectedDelayMs: 0,
+    try {
+    const result = await runAnswerLoop({
+      ...answerLoopBase(session, origin, line.text),
+      paintNow: true,
     });
-    const card = existingRequestCard(routed);
+    paintLoopNeed(
+      session,
+      "refill_status",
+      "Existing refill request",
+      result,
+      "verify → check existing request",
+    );
     upsertNeed(session, "refill_status", {
+      status: "active",
       guidance: "ready",
-      flowStep: "verify → check existing request",
-      answer: card,
     });
-    showNow(session, card, { priority: "answer", needKind: "refill_status" });
+    showNow(
+      session,
+      {
+        title: "Existing refill request",
+        body: result.answer,
+        sourceLabel: result.sources.join(" · ") || "System record · pharmacy · simulated",
+      },
+      { priority: "answer", needKind: "refill_status" },
+    );
+    } catch (err) {
+      appendJsonl(session.sessionId, {
+        kind: "answer_loop_error",
+        need: "refill_status",
+        error: String(err),
+      });
+    }
   }
 
   if (interp.historicalAsked && line.speaker === "member") {
@@ -1727,30 +1684,38 @@ async function applyInterpretation(
       "refill_status",
       "check existing request → explain status (fresh)",
     );
-    const routed = await routeQuery({
-        origin,
-        need: "refill_status",
-        memberId,
-        planId,
-        overlay: session.overlay,
-        refillMode: "fresh_status",
-      });
-    pushRouterTrace(session, {
-      routesUsed: routed.routesUsed,
-      latencyMs: routed.latencyMs,
-      retrieved: routed.retrieved,
-      rejected: routed.rejected,
-      ranked: routed.ranked,
-      injectedDelayMs: 0,
+    try {
+    const result = await runAnswerLoop({
+      ...answerLoopBase(session, origin, line.text),
+      paintNow: true,
     });
-    const card = freshReadyCard(routed);
+    paintLoopNeed(
+      session,
+      "refill_status",
+      "Refill status (fresh read)",
+      result,
+      "explain status (fresh read)",
+    );
     upsertNeed(session, "refill_status", {
       status: "active",
       guidance: "ready",
-      flowStep: "explain status (fresh read)",
-      answer: card,
     });
-    showNow(session, card, { priority: "answer", needKind: "refill_status" });
+    showNow(
+      session,
+      {
+        title: "Refill status (fresh read)",
+        body: result.answer,
+        sourceLabel: result.sources.join(" · ") || "System record · pharmacy · simulated",
+      },
+      { priority: "answer", needKind: "refill_status" },
+    );
+    } catch (err) {
+      appendJsonl(session.sessionId, {
+        kind: "answer_loop_error",
+        need: "refill_status",
+        error: String(err),
+      });
+    }
   }
 
   if (commitConsent && interp.communicatedRefillReadiness) {
@@ -1758,7 +1723,6 @@ async function applyInterpretation(
       status: "resolved",
       flowStep: "explain status → wrap path",
     });
-    maybeOfferComparison(session);
   }
 
   if (commitConsent && interp.returnToHistorical && getNeed(session, "historical_price")) {
@@ -2057,21 +2021,25 @@ async function applyInterpretation(
       interp.enrollmentConsent !== "none";
     const covered = session.needs.some((n) => n.sourceUtteranceId === line.id);
     if (!servicing && !covered && !interp.smallTalkOnly) {
+      try {
+      const result = await runAnswerLoop({
+        ...answerLoopBase(session, origin, line.text),
+        paintNow: true,
+      });
       upsertNeed(session, "unrecognized_request", {
-        status: "unresolved_gap",
-        guidance: "invalidated",
-        flowStep: "member question produced no supported need",
+        status: result.supportPartial ? "unresolved_gap" : "resolved",
+        guidance: "ready",
+        flowStep: "answer loop (no mapped need flag)",
         queryText: line.text,
         sourceUtteranceId: line.id,
       });
-      showNow(
-        session,
-        limitationCard(
-          "Unrecognized request",
-          "A member question was heard that did not map to a supported need. Silence must not hide it. COMPLETED_SERVICING is blocked until this is addressed.",
-        ),
-        { priority: "answer", needKind: "unrecognized_request" },
-      );
+      } catch (err) {
+        appendJsonl(session.sessionId, {
+          kind: "answer_loop_error",
+          need: "unrecognized_request",
+          error: String(err),
+        });
+      }
     }
   }
 
@@ -2085,49 +2053,125 @@ export async function prefetchMemberRecords(
   const memberId = session.member?.memberId;
   const planId = session.member?.planId;
   if (!memberId || !planId) return;
-  const [existing, fresh, hist, edu] = await Promise.all([
-    routeQuery({
-      origin,
-      need: "refill_status",
-      memberId,
-      planId,
-      overlay: session.overlay,
-      refillMode: "existing",
+  const headers: Record<string, string> = {
+    "x-authorization-id": session.auth?.authorizationId ?? "",
+  };
+  if (session.overlay) headers["x-demo-overlay"] = session.overlay;
+  const [list, claims, net, fast, obj, svc, prefs] = await Promise.all([
+    fetch(
+      `${origin}/api/simulated/pharmacy/refill-requests?memberId=${encodeURIComponent(memberId)}`,
+      { cache: "no-store", headers },
+    ),
+    fetch(
+      `${origin}/api/simulated/claims/pharmacy?memberId=${encodeURIComponent(memberId)}`,
+      { cache: "no-store", headers },
+    ),
+    fetch(
+      `${origin}/api/simulated/benefits/plans/${planId}/pharmacy-network`,
+      { cache: "no-store", headers },
+    ),
+    fetch(`${origin}/api/simulated/scripting/articles/DEMO-FAST90-v1`, {
+      cache: "no-store",
     }),
-    routeQuery({
-      origin,
-      need: "refill_status",
-      memberId,
-      planId,
-      overlay: session.overlay,
-      refillMode: "fresh_status",
+    fetch(
+      `${origin}/api/simulated/scripting/articles/DEMO-OBJECTION-RETAIL-v1`,
+      { cache: "no-store" },
+    ),
+    fetch(`${origin}/api/simulated/scripting/articles/DEMO-SERVICE-v1`, {
+      cache: "no-store",
     }),
-    routeQuery({
-      origin,
-      need: "historical_price",
-      memberId,
-      planId,
-      overlay: session.overlay,
-      queryText: "",
-    }),
-    routeQuery({
-      origin,
-      need: "service_education",
-      memberId,
-      planId,
-      overlay: session.overlay,
-    }),
+    fetch(
+      `${origin}/api/simulated/eligibility/members/${memberId}/contact-preferences`,
+      { cache: "no-store", headers },
+    ),
   ]);
+  const listJson = list.ok
+    ? ((await list.json()) as {
+        data?: { requests?: Array<Record<string, unknown>> };
+      })
+    : { data: { requests: [] } };
+  const refill = listJson.data?.requests?.[0] ?? null;
+  let refillFresh: Record<string, unknown> | null = null;
+  const rid = refill?.requestId ? String(refill.requestId) : "";
+  if (rid) {
+    const st = await fetch(
+      `${origin}/api/simulated/pharmacy/refill-requests/${rid}/status`,
+      { cache: "no-store", headers },
+    );
+    if (st.ok) {
+      const stJson = (await st.json()) as { data?: Record<string, unknown> };
+      refillFresh = stJson.data ?? null;
+    }
+  }
+  const claimsJson = claims.ok
+    ? ((await claims.json()) as { data?: { claims?: unknown[] } })
+    : { data: { claims: [] } };
+  const netJson = net.ok
+    ? ((await net.json()) as { data?: { rows?: unknown[] } })
+    : { data: { rows: [] } };
+  const fastJson = fast.ok
+    ? ((await fast.json()) as {
+        data?: {
+          articleId?: string;
+          body?: string;
+          lineageSourceId?: string | null;
+          version?: string;
+        };
+      })
+    : { data: {} };
   session.prefetch = {
-    refill: existing.evidence.refill,
-    refillFresh: fresh.evidence.refillFresh,
-    claims: hist.evidence.claims,
-    classifications: hist.evidence.classifications,
-    fast90: edu.evidence.fast90,
+    refill,
+    refillFresh,
+    claims: claimsJson.data?.claims ?? [],
+    classifications: netJson.data?.rows ?? [],
+    fast90: fastJson.data?.articleId
+      ? {
+          articleId: fastJson.data.articleId,
+          body: String(fastJson.data.body ?? ""),
+          lineageSourceId: fastJson.data.lineageSourceId ?? "DEMO-SERVICE-v1",
+          version: fastJson.data.version,
+        }
+      : null,
     serviceGuide: null,
     objection: null,
     prescriptions: [],
+    contactPreferences: null,
   };
+  if (prefs.ok) {
+    const prefsJson = (await prefs.json()) as {
+      data?: { doNotContact?: boolean; mailServiceEnrolled?: boolean };
+    };
+    if (prefsJson.data) {
+      session.prefetch.contactPreferences = {
+        doNotContact: Boolean(prefsJson.data.doNotContact),
+        mailServiceEnrolled: Boolean(prefsJson.data.mailServiceEnrolled),
+      };
+    }
+  }
+  if (obj.ok) {
+    const objJson = (await obj.json()) as {
+      data?: { articleId?: string; body?: string };
+    };
+    if (objJson.data?.body) {
+      session.prefetch.objection = {
+        articleId: objJson.data.articleId ?? "DEMO-OBJECTION-RETAIL-v1",
+        body: objJson.data.body,
+      };
+    }
+  }
+  if (svc.ok) {
+    const svcJson = (await svc.json()) as {
+      data?: { articleId?: string; displayName?: string; body?: string };
+    };
+    const d = svcJson.data;
+    if (d) {
+      session.prefetch.serviceGuide = {
+        articleId: d.articleId ?? "DEMO-SERVICE-v1",
+        displayName: d.displayName ?? "",
+        body: d.body ?? "",
+      };
+    }
+  }
   const rxResp = await fetch(
     `${origin}/api/simulated/pharmacy/prescriptions?memberId=${encodeURIComponent(memberId)}`,
     { cache: "no-store" },
@@ -2139,38 +2183,6 @@ export async function prefetchMemberRecords(
     session.prefetch.prescriptions = (rxJson.data?.prescriptions ?? [])
       .map((p) => ({ drugName: String(p.drugName ?? "") }))
       .filter((p) => p.drugName);
-  }
-  const objResp = await fetch(
-    `${origin}/api/simulated/scripting/articles/DEMO-OBJECTION-RETAIL-v1`,
-    { cache: "no-store" },
-  );
-  if (objResp.ok) {
-    const objJson = (await objResp.json()) as {
-      data?: { articleId?: string; body?: string };
-    };
-    if (objJson.data?.body) {
-      session.prefetch.objection = {
-        articleId: objJson.data.articleId ?? "DEMO-OBJECTION-RETAIL-v1",
-        body: objJson.data.body,
-      };
-    }
-  }
-  const svcResp = await fetch(
-    `${origin}/api/simulated/scripting/articles/DEMO-SERVICE-v1`,
-    { cache: "no-store" },
-  );
-  if (svcResp.ok) {
-    const svcJson = (await svcResp.json()) as {
-      data?: { articleId?: string; displayName?: string; body?: string };
-    };
-    const d = svcJson.data;
-    if (d) {
-      session.prefetch.serviceGuide = {
-        articleId: d.articleId ?? "DEMO-SERVICE-v1",
-        displayName: d.displayName ?? "",
-        body: d.body ?? "",
-      };
-    }
   }
 }
 
@@ -2277,7 +2289,6 @@ export async function applyGovernedUtteranceRules(
       status: "resolved",
       flowStep: "explain status → wrap path",
     });
-    maybeOfferComparison(session);
     await maybeCompleteServicing(session);
   }
   if (

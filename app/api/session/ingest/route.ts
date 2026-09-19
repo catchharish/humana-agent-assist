@@ -72,7 +72,12 @@ export async function POST(request: Request) {
   } else if (ev.type === "system" && ev.name === "authorization") {
     const authResp = await fetch(
       `${origin}/api/simulated/eligibility/authorizations`,
-      { method: "POST", cache: "no-store" },
+      {
+        method: "POST",
+        cache: "no-store",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ memberId: session.selectedMemberId }),
+      },
     );
     const authJson = (await authResp.json()) as { data?: AuthResult };
     const auth = authJson.data;

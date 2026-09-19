@@ -1,0 +1,32 @@
+[
+  {
+    "memberId": "DEMO-M001",
+    "doNotContact": false,
+    "mailServiceEnrolled": false,
+    "notes": "Harry — not enrolled; comparison may be in play after identity."
+  },
+  {
+    "memberId": "DEMO-M002",
+    "doNotContact": false,
+    "mailServiceEnrolled": true,
+    "notes": "Already enrolled in CenterWell mail; do not offer enrollment."
+  },
+  {
+    "memberId": "DEMO-M003",
+    "doNotContact": true,
+    "mailServiceEnrolled": false,
+    "notes": "Do-not-contact; suppress offers."
+  },
+  {
+    "memberId": "DEMO-M004",
+    "doNotContact": false,
+    "mailServiceEnrolled": false,
+    "notes": "Other plan; MAPD-001 cost policy must be rejected."
+  },
+  {
+    "memberId": "DEMO-M005",
+    "doNotContact": false,
+    "mailServiceEnrolled": false,
+    "notes": "Already filling 90-day preferred mail; no open coverage case — nothing to offer (model none, not a code stop)."
+  }
+]

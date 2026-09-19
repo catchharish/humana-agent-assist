@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureDocumentEmbeddings } from "@/lib/embeddings";
+import { ensureReadyAnswers } from "@/lib/readyAnswers";
 import { warmupLuna } from "@/lib/openaiWarmup";
 import {
   createSession,
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
     overlay?: string | null;
     scenarioId?: string;
     injectedDelayMs?: number;
+    memberId?: string;
   };
   const disclosureUrl = `${origin}/api/simulated/scripting/disclosures`;
   const discResp = await fetch(disclosureUrl, { cache: "no-store" });
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
     scenarioId: body.scenarioId ?? "t01_m2a",
     injectedDelayMs: Number(body.injectedDelayMs) || 0,
     utteranceRules: rulesJson.data?.rules ?? null,
+    selectedMemberId: body.memberId || "DEMO-M001",
   });
   void warmupLuna().then((warmup) => {
     recordWarmup(session.sessionId, {
@@ -48,6 +51,7 @@ export async function POST(request: Request) {
   });
   void ensureDocumentEmbeddings(origin).then((info) => {
     recordEmbeddings(session.sessionId, info);
+    void ensureReadyAnswers(origin);
   });
   return NextResponse.json({
     session: publicState(session),

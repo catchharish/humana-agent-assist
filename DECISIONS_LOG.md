@@ -1,5 +1,39 @@
 # DECISIONS_LOG
 
+- **Advocate vs presenter chrome (19 Sep 2026):** Display-only split. Demo bar (scenario/member, Resume, Simulated data, Show demo details) is presenter chrome. Default advocate view hides IDs, simulated/source-system lines, obligation design notes, diagnostics, timings, event IDs, and pause copy on the Now card. No session/API behavior change.
+- **Historical SEARCH (19 Sep 2026):** Removed the per-need force-search on historical_price. SEARCH runs when the model (or search-only pre-load on every member question) calls it. T01 `injectedDelayMs` attaches to that search POST whenever it happens (`x-demo-delay-ms`).
+- **Quotes (middle, 19 Sep 2026):** On comparison `absolute_yes`, code calls `fetchMemberQuotes` (same GET the model `getQuotes` tool uses). `loadQuotes` no longer uses `routeQuery`. After consent, Terra uses `getQuotes` for follow-up price questions. Amounts never appear before consent; the Now card still waits for the exact pricing statement. `lib/queryRouter.ts` deleted; no remaining `routeQuery({ need })` callers.
+- **M005 none (19 Sep 2026):** Code hard stops stay the six (unverified, due-now, already enrolled, said no, DNC, dismissed). M005 is not `mailServiceEnrolled`, so it is not `already_enrolled`. “Nothing to offer” is a model `none` with logged reasons (`DEMO-PLAYBOOK-NONE-v1`). M002 remains the enrolled code stop.
+- **Chain eval / graph (19 Sep 2026, `runs/chain_eval_1789835175024.json`):** 10 live multi-step questions across M001–M005. **10/10** grader-correct, **0/10 over 8s**, **0** errors. No missed fact-link: coverage hops used list→case id (`getOpenCases` then `getCoverageCase`); quotes used `getQuotes` after consent. Snapshot-only 1-round answers (c01, c03, c05, c06) are not graph candidates.
+
+| id | member | rounds | tools | ms | result |
+|---|---|---|---|---|---|
+| c01 $8/$27 | M001 | 1 | snapshot | 1870 | ok |
+| c02 refill+pharmacy+case | M001 | 3 | 5 tools | 4849 | ok |
+| c03 preferred vs standard | M001 | 1 | snapshot | 1622 | ok |
+| c04 mail vs today pickup | M001 | 2 | search | 2624 | ok |
+| c05 lisinopril pay | M002 | 1 | snapshot | 1429 | ok |
+| c06 other-plan $12 | M004 | 1 | snapshot | 1683 | ok |
+| c07 case id chain | M001 | 3 | open+case | 3433 | ok |
+| c08 Ozempic case | M003 | 3 | open+case | 3965 | ok |
+| c09 mail fill + no case | M005 | 2 | open+pharmacy | 2554 | ok |
+| c10 quotes after consent | M001 | 4 | getQuotes | 6420 | ok |
+
+**Recommendation: do not build a graph now.** Chains complete under 8s; failures in the prior run were a 404 list shape and Harry-centric support check, not missing joins.
+
+- **Isolation pack (18 Sep 2026, `runs/speed_gate_after_1789772462394.json`):** Baseline thin snapshot Q1 median 6549 ms slowest 7263 ms (4/5 grader-correct); Q2 median 6713 ms slowest 9011 ms (5/5, 1/5 over 8s). All later variants 5/5 correct, 0 support-partial, 0 rate-limits.
+  - **1 loaded snapshot:** Q1 median 5251 slowest 5587; Q2 5602 / 5968. Largest drop; Q1 often 1 round.
+  - **2 short answers:** Q1 4067 / 4407; Q2 5259 / 5685. Faster write round.
+  - **5 priority Terra:** Q1 3561 / 7843; Q2 4300 / 4855. Fastest single lever. List price 2× standard ($4/$24 vs $2/$12 per 1M in/out).
+  - **8 start-on-partial (keep):** Q1 4675 / 5034; Q2 5456 / 5842. Did not beat short or priority on total; facts ~2s. Kept anyway per Harish.
+  - **All together:** Q1 median **1778** slowest **2948**; Q2 median **4169** slowest **4544**. Q1 often no tool round (firstFact null).
+- **Pre-load share (already run, `runs/speed_gate_preload_1789772619373.json`):** Q1 100% of pre-loaded items used (not re-fetched); Q2 median **20%** (search only). Totals worse with pre-load (Q1 2.70s vs 1.91s; Q2 5.09s vs 4.47s).
+- **Search pre-load ON for document questions (19 Sep 2026, `runs/speed_gate_doc_preload_1789825279865.json`):** G1 why preferred vs standard: without SEARCH pre-load median 2 rounds / 3538 ms (slowest 3619); with: 1 round / 1619 ms (slowest 2000); share used **100%**. G2 mail vs today’s retail Rx: without 3 rounds / 3992 ms (slowest 4809); with 2 rounds / 2507 ms (slowest 3553); share used **100%** (SEARCH not re-fetched; Terra still called `lookupReadyAnswer`). Live loop uses **search-only** pre-load (`preloadSearchOnly`), not Luna-named extra tools. Full Luna+SEARCH pre-load on Harry $8/$27 still slower — do not turn that back on.
+
+
+- **Pre-load (Harish, 18 Sep 2026):** On each member question, search the member’s words and Luna-named allowed tools in parallel; hand results to Terra labelled pre-loaded. Adds information only; Terra may still call tools. No intent→lookup table. No quotes before comparison yes; no other member. Learning which pre-loads to run from past run logs is the **planned next step, not built now**.
+- **Speed gate (18 Sep 2026):** Minimal Terra loop, current Harry APIs, 5 warm runs each. Q1 median 6549 ms max 7263 ms (all <8s, 4/5 grader-correct). Q2 five-step median 6713 ms max 9011 ms (1/5 over 8s when hops were serial). Full table in `runs/speed_gate_1789770868148.json`. No corpus/members expansion until Harish decides on the 8s miss.
+- **Reasoning loop override (Harish, 18 Sep 2026):** Model routes answers (ready answers / session-bound APIs / search / chains). No five-need `routeQuery`, no per-question tables, no graph in this pass. Session binds memberId/planId; model cannot request another member. Quotes locked until comparison `absolute_yes`. NBA hard stops include dismissed-this-call. Live facts (refill status, quotes, enrollment, case status) always fetched fresh. Ready answers generated from common-questions + each doc’s topics, groundedness-checked, gitignored cache keyed by source hash. Tool results / docs / member speech are information not instructions (extend C03). Speed gate before new corpus: $8/$27 + one five-step chain; stop if chain > 8s. ≥10-chain eval later is the graph decision point. Overrides contract “do not inflate corpus,” “one governed derived answer,” PLAN item 6, and AGENTS “no large corpora.” Harry §15 unchanged. Do not undo without asking.
 - **Simulated REST override (Harish, 17 Sep 2026):** Per-system `/api/simulated/{benefits|eligibility|claims|pharmacy|provider|scripting}` is the only retrieval boundary; app code must not import fixtures. This overrides the contract header “source labels do not require six integrations.” Do not undo without asking. Enrollment POST 403 without human actor. Delay/404/overlay for replays.
 - **Models (catalog re-check 17 Sep 2026, developers.openai.com/api/docs/models):** Fast `gpt-5.6-luna` (`reasoning.effort: none`, 1s trigger/interpretation); mid `gpt-5.6-terra` (`reasoning.effort: none` unless C05 fails); embeddings `text-embedding-3-small`. Not gpt-4o / gpt-4o-mini / gpt-5.4-mini.
 - **Coverage/telephony placement:** Coverage-review sits **beside** the six (`sourceSystem: "coverage-review"`), same as telephony. Not a claims resource.

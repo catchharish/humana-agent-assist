@@ -1,0 +1,14 @@
+[
+  {
+    "planId": "DEMO-MAPD-001",
+    "lineOfBusiness": "MAPD",
+    "planYear": 2026,
+    "productType": "MAPD"
+  },
+  {
+    "planId": "DEMO-OTHER-PLAN",
+    "lineOfBusiness": "MAPD",
+    "planYear": 2026,
+    "productType": "MAPD"
+  }
+]

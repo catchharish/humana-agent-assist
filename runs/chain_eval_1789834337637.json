@@ -1,0 +1,183 @@
+{
+  "at": "2026-09-19T16:12:17.637Z",
+  "origin": "http://127.0.0.1:3012",
+  "correct": 6,
+  "of": 10,
+  "over8s": 0,
+  "breaks": 4,
+  "recommendGraph": "Build a thin fact graph next: several questions still miss 8s or break on multi-hop ids.",
+  "rows": [
+    {
+      "id": "c01_harry_827",
+      "memberId": "DEMO-M001",
+      "question": "Why was my metformin $8 last month and $27 yesterday?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1899.1107920000002,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your matched 30-day metformin 500 mg fill was $8 on August 18 at Oak Street Pharmacy because it was classified as preferred retail; yesterday’s fill at Lakeview Pharmacy was $27 because it was classified as standard retail. The prescription did not change—the difference was the pharmacy’s network cost-share category on each fill date."
+    },
+    {
+      "id": "c02_harry_five_step",
+      "memberId": "DEMO-M001",
+      "question": "Confirm whether my atorvastatin refill is ready for pickup right now, not just that a request exists; give the pharmacy directory name; then check whether I have an open coverage-review case and report that case's current status and requested medication.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 3,
+      "toolsUsed": [
+        "getRefillRequests",
+        "getOpenCases",
+        "getRefillStatus",
+        "getPharmacy",
+        "getCoverageCase"
+      ],
+      "totalMs": 5286.103417,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is currently ready for pickup at Lakeview Pharmacy. You have an open coverage-review case, DEMO-CVR001, for Jardiance 10 mg tablets; its current status is pending review, with no determination recorded."
+    },
+    {
+      "id": "c03_harry_preferred_rule",
+      "memberId": "DEMO-M001",
+      "question": "Why can the same 30-day fill cost more at a standard pharmacy than a preferred one on this plan?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1945.0348330000006,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "On this MAPD plan, preferred and standard retail are different cost-share categories, so the same 30-day medication can have a lower amount at a preferred pharmacy and a higher amount at a standard pharmacy. For the recorded metformin 500 mg 30-day supply, the plan rule lists $8 at preferred retail and $27 at standard retail; this reflects the pharmacy’s network classification on the fill date, not a change in the prescription."
+    },
+    {
+      "id": "c04_harry_mail_vs_today",
+      "memberId": "DEMO-M001",
+      "question": "If I enroll in CenterWell mail, does that change today's retail atorvastatin pickup, and what happens to the existing prescription?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "searchKnowledge"
+      ],
+      "totalMs": 3081.1022080000002,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "No—enrolling in CenterWell mail does not alter today’s retail atorvastatin pickup. Your existing prescription remains available for eligible 90-day mail service if selected; enrollment itself does not place a fill or start automatic refills, and you can keep using retail."
+    },
+    {
+      "id": "c05_m002_lisinopril",
+      "memberId": "DEMO-M002",
+      "question": "What did I pay for lisinopril on 2026-09-01 and which pharmacy filled it?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1493.4060420000005,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "You paid $4.00 for lisinopril on September 1, 2026. It was filled by CenterWell."
+    },
+    {
+      "id": "c06_m004_other_plan",
+      "memberId": "DEMO-M004",
+      "question": "Why was my metformin $12? Use my plan's cost rule, not MAPD-001.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing 12"
+      ],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1909.4509579999994,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Charges confirmed; rule not confirmed."
+    },
+    {
+      "id": "c07_harry_case_chain",
+      "memberId": "DEMO-M001",
+      "question": "Look up my open coverage-review cases, then report the case id, status, and requested medication from the case record itself.",
+      "error": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "correct": false,
+      "notes": [
+        "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+      ],
+      "chained": false,
+      "rounds": null,
+      "toolsUsed": [],
+      "totalMs": 1700.2365410000002,
+      "over8s": false,
+      "supportPartial": null,
+      "answer": null
+    },
+    {
+      "id": "c08_m003_ozempic_case",
+      "memberId": "DEMO-M003",
+      "question": "Do I have an open coverage-review case? If so, what medication is requested and what is the status — do not approve it.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getOpenCases"
+      ],
+      "totalMs": 2826.2763750000013,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Yes—there is an open coverage-review case for Ozempic 0.25 mg. Its status is pending review, with no determination recorded; I cannot approve it."
+    },
+    {
+      "id": "c09_m005_mail_and_cases",
+      "memberId": "DEMO-M005",
+      "question": "Where was my last atorvastatin fill, what did I pay, and do I have any open coverage-review case?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing atorvastatin",
+        "missing CenterWell/preferred"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "totalMs": 3290.0895420000015,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Charges confirmed; rule not confirmed."
+    },
+    {
+      "id": "c10_harry_quotes_after_consent",
+      "memberId": "DEMO-M001",
+      "question": "Comparison consent is already yes. What are the prospective 90-day member costs at CenterWell versus Lakeview for metformin on this member?",
+      "error": "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "correct": false,
+      "notes": [
+        "SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+      ],
+      "chained": false,
+      "rounds": null,
+      "toolsUsed": [],
+      "totalMs": 1439.7220420000012,
+      "over8s": false,
+      "supportPartial": null,
+      "answer": null
+    }
+  ]
+}

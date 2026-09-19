@@ -226,6 +226,7 @@ describe("per-field luna apply", () => {
       serviceGuide: null,
       objection: null,
       prescriptions: [],
+      contactPreferences: null,
     };
     copilot.setLunaTestHooks({
       interpret: async (_s, line) => {

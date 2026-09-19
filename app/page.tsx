@@ -3,7 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { outcomeWith, outcomeWithout } from "@/lib/copy";
 import { quoteAmountsMayRender } from "@/lib/utteranceRules";
-import type { NeedKind, SessionState } from "@/lib/types";
+import type {
+  NeedKind,
+  ObligationStatus,
+  SessionState,
+  TranscriptLine,
+} from "@/lib/types";
 
 type StreamEvent = {
   id: string;
@@ -36,15 +41,163 @@ const SCENARIO_OVERLAY: Record<ScenarioKind, string | null> = {
   t08b: "T08B",
 };
 
-const OBLIGATION_LABEL: Record<string, string> = {
-  not_applicable: "Not applicable",
-  due_now: "Due now",
-  exact_timely: "Exact / timely",
-  paraphrased: "Paraphrased",
-  pending_later: "Pending later",
-  late_finding: "Late / finding",
-  unable_to_verify: "Unable to verify",
+const SCENARIOS: { id: ScenarioKind; label: string }[] = [
+  { id: "t01_m2a", label: "Main call (T01)" },
+  { id: "t02a", label: "Replay T02A" },
+  { id: "t03a", label: "Replay T03A" },
+  { id: "t03b", label: "Replay T03B" },
+  { id: "t04b", label: "Replay T04B" },
+  { id: "t06a", label: "Replay T06A" },
+  { id: "t08b", label: "Replay T08B" },
+];
+
+const MEMBERS = [
+  { id: "DEMO-M001", label: "Harry Whitfield" },
+  { id: "DEMO-M002", label: "Mina Chen" },
+  { id: "DEMO-M003", label: "Owen Brooks" },
+  { id: "DEMO-M004", label: "Priya Nair" },
+  { id: "DEMO-M005", label: "Luis Ortega" },
+];
+
+const NEED_PLAIN: Record<string, string> = {
+  opening: "Opening",
+  refill_status: "Refill status",
+  "refill status": "Refill status",
+  historical_price: "Past charges",
+  prospective_comparison: "Price comparison",
+  service_education: "Delivery service",
+  service_election: "Enrollment choice",
+  coverage_status: "Coverage case",
+  unrecognized_request: "Unrecognized request",
+  unsupported_work: "Not available here",
 };
+
+const STEP_PLAIN: Record<string, string> = {
+  "verify greeting → await identity": "Verify greeting, then identity",
+  "greeting verified · await identity": "Greeting done — verify identity",
+  "identity verified · refill workflow": "Identity verified — refill",
+};
+
+const OBLIGATION_PLAIN: Record<
+  ObligationStatus,
+  { label: string; sym: string; kind: string }
+> = {
+  not_applicable: { label: "Not needed yet", sym: "–", kind: "idle" },
+  pending_later: { label: "Not needed yet", sym: "–", kind: "idle" },
+  due_now: { label: "Due now", sym: "!", kind: "due" },
+  exact_timely: { label: "Said", sym: "✓", kind: "said" },
+  paraphrased: { label: "Wording differs", sym: "≠", kind: "late" },
+  late_finding: { label: "Said late", sym: "⚠", kind: "late" },
+  unable_to_verify: { label: "Could not verify", sym: "?", kind: "verify" },
+};
+
+function formatElapsed(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(total / 60);
+  return `${m}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function plainNeed(value: string) {
+  return NEED_PLAIN[value] ?? value.replace(/_/g, " ");
+}
+
+function plainStep(value: string) {
+  if (STEP_PLAIN[value]) return STEP_PLAIN[value];
+  return value.replace(/→/g, ",").replace(/·/g, " — ").replace(/_/g, " ");
+}
+
+function shortSource(label: string | undefined) {
+  if (!label) return null;
+  const l = label.toLowerCase();
+  if (l.includes("pharmacy")) return "Pharmacy system";
+  if (l.includes("claims")) return "Claims system";
+  if (l.includes("eligibility")) return "Eligibility system";
+  if (l.includes("provider")) return "Pharmacy directory";
+  if (l.includes("telephony")) return "Phone menu";
+  if (l.includes("coverage")) return "Coverage review";
+  if (l.includes("playbook")) return "Playbook";
+  if (l.includes("benefits") || l.includes("scripting") || l.includes("governed")) {
+    return "Plan rules";
+  }
+  return "Plan rules";
+}
+
+function speakerLabel(
+  speaker: string,
+  memberVisible: boolean,
+  memberName: string | null,
+) {
+  if (speaker === "advocate") return "You";
+  if (speaker === "member") {
+    return memberVisible && memberName ? memberName : "Caller";
+  }
+  return speaker;
+}
+
+function compactTranscript(lines: TranscriptLine[]): TranscriptLine[] {
+  const slots = new Map<string, TranscriptLine>();
+  const order: string[] = [];
+  const alias = new Map<string, string>();
+  const resolve = (id: string) => {
+    let cur = id;
+    while (alias.has(cur)) cur = alias.get(cur)!;
+    return cur;
+  };
+  for (const line of lines) {
+    if (line.correctsEventId) {
+      const target = resolve(line.correctsEventId);
+      if (slots.has(target)) {
+        slots.set(target, { ...line, id: target });
+        alias.set(line.id, target);
+        continue;
+      }
+    }
+    if (line.stability === "partial" || line.stability === "final") {
+      const lastPartial = [...order].reverse().find((id) => {
+        const existing = slots.get(id);
+        return (
+          existing &&
+          existing.speaker === line.speaker &&
+          existing.stability === "partial"
+        );
+      });
+      if (lastPartial) {
+        slots.set(lastPartial, { ...line, id: lastPartial });
+        alias.set(line.id, lastPartial);
+        continue;
+      }
+    }
+    slots.set(line.id, line);
+    order.push(line.id);
+  }
+  return order.map((id) => slots.get(id)!);
+}
+
+function ObligationChip(props: {
+  name: string;
+  status: ObligationStatus | undefined;
+  exact: string | undefined;
+  note?: string;
+  demo: boolean;
+}) {
+  const meta = props.status
+    ? OBLIGATION_PLAIN[props.status]
+    : OBLIGATION_PLAIN.not_applicable;
+  return (
+    <details className={`chip ${meta.kind}`}>
+      <summary>
+        <span className="sym" aria-hidden="true">
+          {meta.sym}
+        </span>
+        <span>
+          {props.name}: {meta.label}
+        </span>
+      </summary>
+      {props.exact && <p>{props.exact}</p>}
+      {props.demo && props.note && <p className="source">{props.note}</p>}
+    </details>
+  );
+}
 
 export default function Page() {
   const [session, setSession] = useState<SessionState | null>(null);
@@ -52,6 +205,10 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [disclosureNetwork, setDisclosureNetwork] = useState<string>("");
   const [enrollToken, setEnrollToken] = useState<string | null>(null);
+  const [scenario, setScenario] = useState<ScenarioKind>("t01_m2a");
+  const [memberId, setMemberId] = useState("DEMO-M001");
+  const [members, setMembers] = useState(MEMBERS);
+  const [demoDetails, setDemoDetails] = useState(false);
   const pausedRef = useRef(false);
   const sessionIdRef = useRef<string | null>(null);
 
@@ -106,7 +263,7 @@ export default function Page() {
     [ingest],
   );
 
-  async function startCall(kind: ScenarioKind) {
+  async function startCall(kind: ScenarioKind, selectedMemberId: string) {
     setBusy(true);
     setError(null);
     try {
@@ -123,6 +280,7 @@ export default function Page() {
           scenarioId: kind,
           overlay: SCENARIO_OVERLAY[kind],
           injectedDelayMs: kind.startsWith("t01") ? 2800 : 0,
+          memberId: selectedMemberId,
         }),
       });
       const startJson = (await start.json()) as { session: SessionState };
@@ -201,6 +359,24 @@ export default function Page() {
     return () => es.close();
   }, [session?.sessionId]);
 
+  useEffect(() => {
+    void fetch("/api/simulated/eligibility/members")
+      .then((r) => r.json())
+      .then((json: { data?: Array<{ memberId: string; given: string; family: string }> }) => {
+        const rows = json.data ?? [];
+        if (!rows.length) return;
+        setMembers(
+          rows.map((m) => ({
+            id: m.memberId,
+            label: `${m.given} ${m.family}`,
+          })),
+        );
+      })
+      .catch(() => {
+        /* keep fixture list */
+      });
+  }, []);
+
   const greetingReq = session?.disclosures.find(
     (d) => d.requirementId === "DEMO-GREETING-v1",
   );
@@ -211,31 +387,109 @@ export default function Page() {
     (d) => d.requirementId === "DEMO-CLOSING-v2",
   );
   const memberVisible = session?.auth?.decision.toLowerCase() === "valid";
+  const memberName = session?.member
+    ? `${session.member.name.given} ${session.member.name.family}`
+    : null;
   const lastRouter =
     session?.diagnostics.router[session.diagnostics.router.length - 1];
-  const rejectedOther = session?.diagnostics.router
+  const rejectedWrongPlan = session?.diagnostics.router
     .flatMap((r) => r.rejected)
-    .filter((x) => x.id === "DEMO-POLICY-OTHER-v1");
+    .filter((x) => x.reason === "rejected: wrong plan");
+
+  const advocateNow = Boolean(session) && !memberVisible && !demoDetails;
+  const nowTitle = advocateNow
+    ? "Verify the caller's identity"
+    : (session?.nowCard.title ?? "Opening");
+  const nowBody = advocateNow
+    ? null
+    : (session?.nowCard.body ?? "Start the call to load the workspace.");
+  const phoneHint =
+    advocateNow && session?.ivrReason
+      ? `Phone menu hinted a ${session.ivrReason}.`
+      : null;
+  const nowSource = session?.nowCard.sourceLabel;
+  const displayLines = compactTranscript(session?.transcript ?? []);
 
   return (
     <main className={session?.paused ? "workspace paused" : "workspace"}>
-      <p className="banner">
-        Prototype workspace standing in for an embedded advocate desktop.
-        Telephony, identity, and business systems are{" "}
-        <strong>simulated</strong>. Required wording is registry text. M3
-        replays T02A–T08B.
-      </p>
+      <div className="demo-bar">
+        <label>
+          Scenario
+          <select
+            value={scenario}
+            disabled={Boolean(session) || busy}
+            onChange={(e) => setScenario(e.target.value as ScenarioKind)}
+          >
+            {SCENARIOS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Member (presenter)
+          <select
+            value={memberId}
+            disabled={Boolean(session) || busy}
+            onChange={(e) => setMemberId(e.target.value)}
+          >
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {!session && (
+          <button disabled={busy} onClick={() => startCall(scenario, memberId)}>
+            Start
+          </button>
+        )}
+        {session?.paused && (
+          <button className="secondary" onClick={resume}>
+            Resume
+          </button>
+        )}
+        <span className="sim-badge">
+          <span className="sym" aria-hidden="true">
+            ⌬
+          </span>
+          Simulated data
+        </span>
+        <label>
+          <input
+            type="checkbox"
+            checked={demoDetails}
+            onChange={(e) => setDemoDetails(e.target.checked)}
+          />
+          Show demo details
+        </label>
+        {session?.paused && (
+          <span className="pause-notice">
+            <span className="mark">Paused</span>
+            {session.lastPauseLabel ??
+              "Presenter-gated pause — excluded from machine response time."}
+          </span>
+        )}
+      </div>
 
       <header className="strip">
         <dl>
           <div>
-            <dt>Identity / role</dt>
+            <dt>Caller</dt>
             <dd>
               {memberVisible
-                ? `${session?.member?.name.given} ${session?.member?.name.family} · ${session?.auth?.role} · ${session?.identityStatus}`
-                : `Unverified · simulated authorization pending`}
+                ? `${memberName}${session?.member?.lineOfBusiness ? ` · ${session.member.lineOfBusiness}` : ""}`
+                : "Not verified"}
             </dd>
           </div>
+          {memberVisible && session?.member && (
+            <div>
+              <dt>Plan</dt>
+              <dd>{session.member.planId}</dd>
+            </div>
+          )}
           <div>
             <dt>Call type</dt>
             <dd>{session?.callType ?? "—"}</dd>
@@ -244,119 +498,65 @@ export default function Page() {
             <dt>Need / step</dt>
             <dd>
               {session
-                ? `${session.currentNeed} · ${session.flowStep}`
+                ? `${plainNeed(session.currentNeed)} · ${plainStep(session.flowStep)}`
                 : "Not started"}
             </dd>
           </div>
           <div>
-            <dt>Elapsed (excl. pause)</dt>
-            <dd>
-              {session ? `${(session.elapsedMs / 1000).toFixed(1)}s` : "—"}
-            </dd>
+            <dt>Elapsed</dt>
+            <dd>{session ? formatElapsed(session.elapsedMs) : "0:00"}</dd>
           </div>
+          {demoDetails && session?.auth && (
+            <div>
+              <dt>Authorization</dt>
+              <dd>
+                {session.auth.authorizationId} · {session.auth.role} ·{" "}
+                {session.identityStatus}
+              </dd>
+            </div>
+          )}
         </dl>
-        <div className="strip-actions">
-          {!session && (
-            <>
-              <button disabled={busy} onClick={() => startCall("t01_m2a")}>
-                Start main call
-              </button>
-              {(
-                [
-                  ["t02a", "T02A"],
-                  ["t03a", "T03A"],
-                  ["t03b", "T03B"],
-                  ["t04b", "T04B"],
-                  ["t06a", "T06A"],
-                  ["t08b", "T08B"],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  className="secondary"
-                  disabled={busy}
-                  onClick={() => startCall(id)}
-                >
-                  Replay {label}
-                </button>
-              ))}
-            </>
-          )}
-          {session?.paused && (
-            <button className="secondary" onClick={resume}>
-              Resume (presenter pause only)
-            </button>
-          )}
-        </div>
       </header>
 
-      <aside className="rail">
-        <h2>Obligations</h2>
-        <div className="ob-status">
-          <strong>DEMO-GREETING-v1</strong>
-          <span className={session?.greeting === "exact_timely" ? "exact" : ""}>
-            {session ? OBLIGATION_LABEL[session.greeting] : "Not applicable yet"}
-          </span>
-          <span className="source">
-            Governed guidance · scripting · simulated
-          </span>
-        </div>
-        {greetingReq && (
-          <details>
-            <summary>Exact greeting text</summary>
-            <p>{greetingReq.verbatimText}</p>
-          </details>
-        )}
-        <div className="ob-status">
-          <strong>DEMO-PRICING-v1</strong>
-          <span>
-            {session ? OBLIGATION_LABEL[session.pricing] : "Not applicable"}
-          </span>
-          <span className="source">
-            Historical charges do not trigger this statement.
-          </span>
-        </div>
-        {pricingReq && (
-          <details>
-            <summary>Exact pricing text</summary>
-            <p>{pricingReq.verbatimText}</p>
-          </details>
-        )}
-        <div className="ob-status">
-          <strong>DEMO-CLOSING-v2</strong>
-          <span>
-            {session ? OBLIGATION_LABEL[session.closing] : "Not applicable"}
-          </span>
-          <span className="source">
-            Clicking Offer does not create this obligation.
-          </span>
-        </div>
-        {closingReq && (
-          <details>
-            <summary>Exact closing text</summary>
-            <p>{closingReq.verbatimText}</p>
-            {session?.closingNote && (
-              <p className="source">{session.closingNote}</p>
-            )}
-          </details>
-        )}
-      </aside>
+      <div className="chips">
+        <ObligationChip
+          name="Recorded-line greeting"
+          status={session?.greeting}
+          exact={greetingReq?.verbatimText}
+          note={demoDetails ? greetingReq?.requirementId : undefined}
+          demo={demoDetails}
+        />
+        <ObligationChip
+          name="Pricing disclaimer"
+          status={session?.pricing}
+          exact={pricingReq?.verbatimText}
+          note={
+            demoDetails
+              ? "Historical charges do not trigger this statement."
+              : undefined
+          }
+          demo={demoDetails}
+        />
+        <ObligationChip
+          name="Closing statement"
+          status={session?.closing}
+          exact={closingReq?.verbatimText}
+          note={
+            demoDetails
+              ? session?.closingNote ??
+                "Clicking Offer does not create this obligation."
+              : undefined
+          }
+          demo={demoDetails}
+        />
+      </div>
 
       <section className="now">
         <h2>Now</h2>
-        {session?.paused && (
-          <p className="pause-banner">
-            <span className="mark">Paused</span>
-            {" "}
-            Presenter-gated pause — excluded from machine response time.
-          </p>
-        )}
         {session?.nudge && (
           <div className="nudge">
             <strong>{session.nudge.template}</strong>
-            {session.nudge.requiredText && (
-              <p>{session.nudge.requiredText}</p>
-            )}
+            {session.nudge.requiredText && <p>{session.nudge.requiredText}</p>}
             {session.nudge.heard && (
               <p className="diff">
                 Heard: {session.nudge.heard}
@@ -369,24 +569,57 @@ export default function Page() {
           </div>
         )}
         {session?.pricingNote && <p className="exact">{session.pricingNote}</p>}
-        <h3 className="now-title">
-          {session?.nowCard.title ?? "Opening"}
-        </h3>
-        <p>
-          {session?.nowCard.body ?? "Start the call to load the workspace."}
-        </p>
-        <p className="source">{session?.nowCard.sourceLabel}</p>
+        <h3 className="now-title">{nowTitle}</h3>
+        {phoneHint && <p className="now-secondary">{phoneHint}</p>}
+        {demoDetails && (session?.nowCard.liveSteps?.length ?? 0) > 0 && (
+          <ol className="live-steps">
+            {session!.nowCard.liveSteps!.map((step, i) => (
+              <li key={`${step}-${i}`}>{step}</li>
+            ))}
+          </ol>
+        )}
+        {(session?.nowCard.earlyFacts?.length ?? 0) > 0 && (
+          <div className="early-facts">
+            <h4 className="subhead">Facts</h4>
+            <ul>
+              {session!.nowCard.earlyFacts!.map((f, i) => (
+                <li key={`${f.text}-${i}`}>
+                  {f.text}
+                  {demoDetails ? (
+                    <span className="source"> {f.source}</span>
+                  ) : (
+                    shortSource(f.source) && (
+                      <span className="source-tag"> {shortSource(f.source)}</span>
+                    )
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {nowBody && <p>{nowBody}</p>}
+        {nowSource &&
+          (demoDetails ? (
+            <p className="source">{nowSource}</p>
+          ) : (
+            !advocateNow &&
+            session?.pricing !== "due_now" &&
+            session?.closing !== "due_now" &&
+            shortSource(nowSource) && (
+              <span className="source-tag">{shortSource(nowSource)}</span>
+            )
+          ))}
         {session && (
           <div className="actions">
             <button
-              className="secondary"
+              className="linkish"
               type="button"
               onClick={() => human("/api/session/human/view-evidence")}
             >
               View evidence
             </button>
             <button
-              className="secondary"
+              className="linkish"
               type="button"
               onClick={() =>
                 human("/api/session/human/flag-issue", {
@@ -408,7 +641,9 @@ export default function Page() {
         )}
         {session?.recommendation?.status === "pending" && (
           <div className="actions">
-            {session.recommendation.kind === "optional_comparison" && (
+            {(session.recommendation.advocateControl ?? "offer_dismiss") ===
+              "offer_dismiss" &&
+              session.recommendation.kind !== "warm_transfer" && (
               <>
                 <button
                   type="button"
@@ -429,7 +664,8 @@ export default function Page() {
                 </button>
               </>
             )}
-            {session.recommendation.kind === "warm_transfer" && (
+            {(session.recommendation.advocateControl === "confirm_transfer" ||
+              session.recommendation.kind === "warm_transfer") && (
               <button
                 type="button"
                 onClick={() => human("/api/session/human/confirm-transfer")}
@@ -438,6 +674,16 @@ export default function Page() {
               </button>
             )}
             <p className="source">{session.recommendation.body}</p>
+            {session.recommendation.reasons?.length ? (
+              <p className="source">
+                Reasons: {session.recommendation.reasons.join("; ")}
+              </p>
+            ) : null}
+            {session.recommendation.facts?.length ? (
+              <p className="source">
+                Facts: {session.recommendation.facts.join("; ")}
+              </p>
+            ) : null}
           </div>
         )}
         {session &&
@@ -447,27 +693,27 @@ export default function Page() {
           session.pricing !== "due_now" &&
           session.pricing !== "late_finding" &&
           session.pricing !== "paraphrased" && (
-          <table className="quote-table">
-            <thead>
-              <tr>
-                <th>Drug</th>
-                <th>Pharmacy</th>
-                <th>90-day estimate</th>
-                <th>Validity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {session.quotes.map((q) => (
-                <tr key={q.quoteId}>
-                  <td>{q.drugName}</td>
-                  <td>{q.pharmacyName}</td>
-                  <td>${q.estimatedMemberCost.value}</td>
-                  <td>{q.validityStatus}</td>
+            <table className="quote-table">
+              <thead>
+                <tr>
+                  <th>Drug</th>
+                  <th>Pharmacy</th>
+                  <th>90-day estimate</th>
+                  <th>Validity</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody>
+                {session.quotes.map((q) => (
+                  <tr key={q.quoteId}>
+                    <td>{q.drugName}</td>
+                    <td>{q.pharmacyName}</td>
+                    <td>${q.estimatedMemberCost.value}</td>
+                    <td>{q.validityStatus}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         {session?.enrollment.readback && (
           <div>
             <p className="source">
@@ -489,7 +735,11 @@ export default function Page() {
               </button>
               <button
                 type="button"
-                disabled={!enrollToken || !session.enrollment.confirmed || session.enrollment.withdrawn}
+                disabled={
+                  !enrollToken ||
+                  !session.enrollment.confirmed ||
+                  session.enrollment.withdrawn
+                }
                 onClick={() =>
                   human("/api/session/human/submit-enrollment", {
                     token: enrollToken,
@@ -532,7 +782,7 @@ export default function Page() {
             </div>
             {session.enrollment.resultId && (
               <p>
-                Returned {session.enrollment.resultId} scope{" "}
+                {demoDetails ? `Returned ${session.enrollment.resultId} scope ` : "Returned scope "}
                 {(session.enrollment.returnedScope ?? []).join(", ")}.{" "}
                 {session.enrollment.scopeOk
                   ? `Matches confirmed scope (${(session.enrollment.returnedScope ?? []).join(", ")}).`
@@ -543,9 +793,9 @@ export default function Page() {
         )}
         {session?.coverage && (
           <p className="source">
-            {session.coverage.caseId}: {session.coverage.requestedMedication} ·{" "}
-            {session.coverage.status} · determination{" "}
-            {session.coverage.determination ?? "null"}
+            {demoDetails ? `${session.coverage.caseId}: ` : ""}
+            {session.coverage.requestedMedication} · {session.coverage.status} ·
+            determination {session.coverage.determination ?? "null"}
           </p>
         )}
         {session?.handoffDraft && (
@@ -576,8 +826,11 @@ export default function Page() {
           )}
         {session?.transfer.connectionStatus && (
           <p>
-            {session.transfer.transferId}: {session.transfer.connectionStatus}.
-            Coverage case {session.coverage?.caseId} remains{" "}
+            {demoDetails && session.transfer.transferId
+              ? `${session.transfer.transferId}: `
+              : ""}
+            {session.transfer.connectionStatus}. Coverage case{" "}
+            {demoDetails ? session.coverage?.caseId : ""} remains{" "}
             {session.coverage?.status ?? "unreturned"}.
           </p>
         )}
@@ -640,17 +893,19 @@ export default function Page() {
                 copy is not claiming a caught miss.
               </p>
             )}
-            <p className="source">
-              Greeting {session.greeting}; pricing {session.pricing}
-              {session.pricingNote ? ` (${session.pricingNote})` : ""}; closing{" "}
-              {session.closing}
-              {session.closingNote ? ` (${session.closingNote})` : ""}.
-              Enrollment {session.enrollment.resultId ?? "none"} scope{" "}
-              {(session.enrollment.returnedScope ?? []).join(", ") || "n/a"}.
-              Coverage {session.coverage?.caseId} {session.coverage?.status};
-              connection {session.transfer.connectionStatus ?? "none"};
-              disposition {session.disposition.confirmed ?? "unconfirmed"}.
-            </p>
+            {demoDetails && (
+              <p className="source">
+                Greeting {session.greeting}; pricing {session.pricing}
+                {session.pricingNote ? ` (${session.pricingNote})` : ""}; closing{" "}
+                {session.closing}
+                {session.closingNote ? ` (${session.closingNote})` : ""}.
+                Enrollment {session.enrollment.resultId ?? "none"} scope{" "}
+                {(session.enrollment.returnedScope ?? []).join(", ") || "n/a"}.
+                Coverage {session.coverage?.caseId} {session.coverage?.status};
+                connection {session.transfer.connectionStatus ?? "none"};
+                disposition {session.disposition.confirmed ?? "unconfirmed"}.
+              </p>
+            )}
           </div>
         )}
         {error && <p>{error}</p>}
@@ -659,10 +914,7 @@ export default function Page() {
       <aside className="drawer">
         <h2>Context</h2>
         {!memberVisible && (
-          <p>
-            Protected member fields withheld until simulated identity-and-role
-            authorization (DEMO-AUTH001).
-          </p>
+          <p>Member details appear after the caller is verified.</p>
         )}
         {memberVisible && session?.member && (
           <p>
@@ -671,11 +923,13 @@ export default function Page() {
             Plan {session.member.planId} ({session.member.lineOfBusiness})
           </p>
         )}
-        <p className="source">
-          {memberVisible
-            ? "System record · eligibility · simulated"
-            : "System record · telephony · simulated"}
-        </p>
+        {demoDetails && (
+          <p className="source">
+            {memberVisible
+              ? "System record · eligibility · simulated"
+              : "System record · telephony · simulated"}
+          </p>
+        )}
         <h3 className="subhead">Open needs</h3>
         {(session?.needs ?? []).length === 0 &&
           !session?.consent.clarification && <p>None yet.</p>}
@@ -691,8 +945,8 @@ export default function Page() {
         {(session?.needs ?? []).map((need) => (
           <div key={need.kind} className="need">
             <div className="need-head">
-              <strong>{need.kind.replace(/_/g, " ")}</strong>
-              <span className="mark">{need.status}</span>
+              <strong>{plainNeed(need.kind)}</strong>
+              <span className="mark">{need.status.replace(/_/g, " ")}</span>
               {need.guidance === "deferred_valid" && (
                 <span className="mark">Answer ready</span>
               )}
@@ -700,10 +954,8 @@ export default function Page() {
                 <span className="mark">ready</span>
               )}
             </div>
-            <p className="source">{need.flowStep}</p>
-            {need.answer && (
-              <p>{need.answer.body}</p>
-            )}
+            <p className="source">{plainStep(need.flowStep)}</p>
+            {need.answer && <p>{need.answer.body}</p>}
             <button
               className="secondary"
               type="button"
@@ -754,48 +1006,75 @@ export default function Page() {
             )}
           </div>
         )}
-        <details className="diagnostics">
-          <summary>Diagnostics (not advocate default)</summary>
-          <pre>
-            {disclosureNetwork}
-            {"\n"}
-            overlay: {session?.overlay ?? "none"}
-            {"\n"}
-            {session?.diagnostics.disclosureFetch}
-            {"\n"}
-            {session?.diagnostics.warmup}
-            {"\n"}
-            {session?.diagnostics.embeddings}
-            {"\n"}
-            rejected OTHER: {JSON.stringify(rejectedOther)}
-            {"\n"}
-            last routes: {JSON.stringify(lastRouter, null, 2)}
-            {"\n"}
-            triggers: {JSON.stringify(session?.diagnostics.triggers, null, 2)}
-            {"\n"}
-            rechecks: {JSON.stringify(session?.diagnostics.rechecks)}
-            {"\n"}
-            interpretation: {JSON.stringify(session?.lastInterpretation, null, 2)}
-          </pre>
-        </details>
+        {demoDetails && (
+          <details className="diagnostics" open>
+            <summary>Diagnostics (not advocate default)</summary>
+            <pre>
+              {disclosureNetwork}
+              {"\n"}
+              overlay: {session?.overlay ?? "none"}
+              {"\n"}
+              {session?.diagnostics.disclosureFetch}
+              {"\n"}
+              {session?.diagnostics.warmup}
+              {"\n"}
+              {session?.diagnostics.embeddings}
+              {"\n"}
+              rejected wrong-plan: {JSON.stringify(rejectedWrongPlan)}
+              {"\n"}
+              last routes: {JSON.stringify(lastRouter, null, 2)}
+              {"\n"}
+              triggers: {JSON.stringify(session?.diagnostics.triggers, null, 2)}
+              {"\n"}
+              rechecks: {JSON.stringify(session?.diagnostics.rechecks)}
+              {"\n"}
+              interpretation:{" "}
+              {JSON.stringify(session?.lastInterpretation, null, 2)}
+              {"\n"}
+              timings: {JSON.stringify(session?.lastTimings, null, 2)}
+            </pre>
+          </details>
+        )}
       </aside>
 
       <section className="transcript">
         <h2>Transcript</h2>
-        {(session?.transcript ?? []).map((line) => (
+        {displayLines.map((line) => (
           <p key={line.id} className="line">
-            <span
-              className={
-                line.stability === "uncertain" ? "mark mark-uncertain" : "mark"
-              }
-            >
-              {line.stability === "uncertain" ? "UNCERTAIN" : line.stability}
+            {line.stability === "uncertain" && (
+              <span className="mark mark-uncertain">? Uncertain</span>
+            )}
+            {line.stability === "corrected" && (
+              <span className="mark">✎ Corrected</span>
+            )}
+            <span className="mark">
+              {speakerLabel(line.speaker, memberVisible, memberName)}
             </span>
-            <span className="mark">{line.speaker}</span>
             {line.text}
-            {line.correctsEventId ? ` (corrects ${line.correctsEventId})` : ""}
           </p>
         ))}
+        {demoDetails && (
+          <details className="diagnostics">
+            <summary>Full transcript events</summary>
+            {(session?.transcript ?? []).map((line) => (
+              <p key={`full-${line.id}`} className="line">
+                <span
+                  className={
+                    line.stability === "uncertain"
+                      ? "mark mark-uncertain"
+                      : "mark"
+                  }
+                >
+                  {line.stability === "uncertain" ? "UNCERTAIN" : line.stability}
+                </span>
+                <span className="mark">{line.speaker}</span>
+                <span className="mark">{line.id}</span>
+                {line.text}
+                {line.correctsEventId ? ` (corrects ${line.correctsEventId})` : ""}
+              </p>
+            ))}
+          </details>
+        )}
       </section>
     </main>
   );

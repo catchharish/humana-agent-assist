@@ -1,0 +1,141 @@
+[
+  {
+    "id": "DEMO-POLICY-COST-v1",
+    "kind": "policy",
+    "planId": "DEMO-MAPD-001",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["matched 30-day metformin preferred vs standard amounts"],
+    "text": "For this plan and period, the matched 30-day metformin 500 mg supply is $8 preferred retail and $27 standard retail under the recorded conditions."
+  },
+  {
+    "id": "DEMO-POLICY-OTHER-v1",
+    "kind": "policy",
+    "planId": "DEMO-OTHER-PLAN",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["other-plan cost sharing is not MAPD-001"],
+    "text": "For this other plan and period, a 30-day metformin 500 mg retail fill is $12.00 under other_plan_retail. Do not apply DEMO-MAPD-001 preferred/standard amounts."
+  },
+  {
+    "id": "DEMO-TIER-MAPD-2026",
+    "kind": "article",
+    "planId": "DEMO-MAPD-001",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["why preferred retail costs less than standard retail"],
+    "text": "On this MAPD pharmacy benefit, preferred retail and standard retail are different cost-share categories for the same days-supply when the network classification on the date of service differs. Preferred retail applies a lower member amount; standard retail applies a higher member amount. The difference is the category that applied at that pharmacy on that date, not a change to the written prescription."
+  },
+  {
+    "id": "DEMO-NETWORK-RULES-v1",
+    "kind": "article",
+    "planId": "DEMO-MAPD-001",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["dated pharmacy network classification"],
+    "text": "Network tier is read from the dated pharmacy-network classification for the plan and the fill date. Use the as-of date that matches the claim date of service. A pharmacy can be preferred on one date and standard on another. Do not assume today's network for a past fill."
+  },
+  {
+    "id": "DEMO-SERVICE-v1",
+    "kind": "article",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["mail-service enrollment vs today's retail pickup"],
+    "text": "The recorded option supports a 90-day supply for eligible existing prescriptions. Pharmacy-service enrollment does not itself place a fill, start automatic refills, or alter today's pickup. Individual medications can be selected. Retail remains an option. Mixed retail and delivery choices are allowed."
+  },
+  {
+    "id": "DEMO-REFILL-RULES-v1",
+    "kind": "article",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["existing refill request vs fresh pickup status"],
+    "text": "An existing refill request on file is not the same as ready-for-pickup status. Confirm the request first, then read current fill status from pharmacy. Creating a new order is not part of a status check. Status can change during the call; always use a fresh status read for pickup readiness."
+  },
+  {
+    "id": "DEMO-CALL-SCRIPTS-v1",
+    "kind": "article",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["required wording is not AI-authored"],
+    "text": "Recorded-line greeting, pricing exact wording, and closing wording come from the disclosure registry. The assist must not rewrite those sentences. Nudges are fixed templates. Enrollment is a human POST only."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-OFFERS-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["when a retail vs delivery comparison may be offered"],
+    "text": "Action id: optional_comparison. Advocate control: offer_dismiss. Marks pricing upcoming: yes. Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["retail hesitation"],
+    "text": "Action id: objection_retail. Advocate control: offer_dismiss. We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["warm transfer to coverage review"],
+    "text": "Action id: warm_transfer. Advocate control: confirm_transfer. If an open coverage-review case exists and the member agrees to a warm transfer, the advocate initiates the transfer. The assist does not determine coverage. Read case status only. After a connected transfer, wrap with the case id and queue."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["coverage-review status is read-only"],
+    "text": "Coverage-review cases are status reads. Pending review means no determination has been recorded. The assist must not approve, deny, or predict an outcome. A pending case can be a reason to offer a warm transfer, not a coverage decision."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-DNC-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["do-not-contact and already enrolled hard stops"],
+    "text": "If contact preferences record do-not-contact, do not propose outreach or a new enrollment offer. If the member is already enrolled in the mail service, do not propose enrollment again. If the member refused or dismissed the offer this call, do not re-raise it. Log the suppression."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-NONE-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["nothing to offer"],
+    "text": "Propose none when there is no open coverage-review case and the member already fills at the plan preferred mail pharmacy on a 90-day supply with no enrollment gap to close. That is not a code hard stop; record reasons from these facts. Do not invent a retail-versus-mail offer or a transfer. Action id: none."
+  },
+  {
+    "id": "DEMO-FAQ-PHARMACY-v1",
+    "kind": "faq",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": [
+      "preferred vs standard pharmacy cost",
+      "mail enrollment and existing retail prescription",
+      "90-day supply after enrollment"
+    ],
+    "text": "Q: Why can the same 30-day fill cost more at one retail pharmacy than another?\nA: Preferred retail and standard retail are different cost-share categories. The dated network classification for that pharmacy on the fill date selects the category.\nQ: After enrolling in the CenterWell pharmacy mail service, what happens to a prescription already waiting at retail for pickup today?\nA: Enrollment does not itself place a fill, start automatic refills, or alter today's pickup. Retail remains an option.\nQ: Does the 90-day option change today's pickup?\nA: No. The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order and does not change today's pickup."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+    "kind": "playbook",
+    "planId": "DEMO-OTHER-PLAN",
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["explain this plan's own retail category"],
+    "text": "Action id: other_plan_cost_explain. Advocate control: offer_dismiss. When the session member is on this other plan, propose explaining this plan's own retail cost-share category. Do not offer a MAPD preferred-versus-standard comparison and do not use another plan's amounts. Prefer this action over optional_comparison for this plan."
+  }
+]

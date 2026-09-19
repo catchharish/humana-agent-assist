@@ -1,0 +1,37 @@
+[
+  {
+    "authorizationId": "DEMO-AUTH001",
+    "memberId": "DEMO-M001",
+    "role": "pharmacy_ops",
+    "decision": "valid",
+    "permittedScopes": ["inspect_records", "explain_charges", "prepare_enrollment"]
+  },
+  {
+    "authorizationId": "DEMO-AUTH002",
+    "memberId": "DEMO-M002",
+    "role": "pharmacy_ops",
+    "decision": "valid",
+    "permittedScopes": ["inspect_records", "explain_charges", "prepare_enrollment"]
+  },
+  {
+    "authorizationId": "DEMO-AUTH003",
+    "memberId": "DEMO-M003",
+    "role": "pharmacy_ops",
+    "decision": "valid",
+    "permittedScopes": ["inspect_records", "explain_charges", "prepare_enrollment"]
+  },
+  {
+    "authorizationId": "DEMO-AUTH004",
+    "memberId": "DEMO-M004",
+    "role": "pharmacy_ops",
+    "decision": "valid",
+    "permittedScopes": ["inspect_records", "explain_charges", "prepare_enrollment"]
+  },
+  {
+    "authorizationId": "DEMO-AUTH005",
+    "memberId": "DEMO-M005",
+    "role": "pharmacy_ops",
+    "decision": "valid",
+    "permittedScopes": ["inspect_records", "explain_charges", "prepare_enrollment"]
+  }
+]
