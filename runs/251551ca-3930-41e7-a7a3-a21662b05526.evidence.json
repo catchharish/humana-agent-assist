@@ -1,0 +1,354 @@
+{
+  "sessionId": "251551ca-3930-41e7-a7a3-a21662b05526",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 56,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 44,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Partial answer",
+    "body": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) The cause is not confirmed.",
+    "sourceLabel": "Claims · Claims · Plan rules · Plan rules (snapshot cost-share for this plan)",
+    "causeSupported": false,
+    "chargesEstablished": true,
+    "statements": [
+      {
+        "text": "Your August 18 metformin claim was a 30-day supply at Oak Street Pharmacy with an $8 payment under the preferred-retail cost-share category.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "Your September 16 metformin claim was the same 30-day supply at Lakeview Pharmacy with a $27 payment under the standard-retail cost-share category.",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "For this plan and period, the recorded amounts for a matched 30-day metformin 500 mg supply are $8 at preferred retail and $27 at standard retail.",
+        "sourceId": "DEMO-POLICY-COST-v1",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "8"
+      },
+      {
+        "text": "The September 16 network record classifies Lakeview Pharmacy as standard retail on that fill date.",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "value_not_in_source:The September",
+        "highlight": "The September"
+      },
+      {
+        "text": "The difference reflects the cost-share category applied at the pharmacy on each fill date rather than a change to your prescription.",
+        "sourceId": "DEMO-TIER-MAPD-2026",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "The difference reflects "
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ]
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Partial answer",
+    "body": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) The cause is not confirmed.",
+    "sourceLabel": "Claims · Claims · Plan rules · Plan rules (snapshot cost-share for this plan)",
+    "statements": [
+      {
+        "text": "Your August 18 metformin claim was a 30-day supply at Oak Street Pharmacy with an $8 payment under the preferred-retail cost-share category.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "Your September 16 metformin claim was the same 30-day supply at Lakeview Pharmacy with a $27 payment under the standard-retail cost-share category.",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "For this plan and period, the recorded amounts for a matched 30-day metformin 500 mg supply are $8 at preferred retail and $27 at standard retail.",
+        "sourceId": "DEMO-POLICY-COST-v1",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "8"
+      },
+      {
+        "text": "The September 16 network record classifies Lakeview Pharmacy as standard retail on that fill date.",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "value_not_in_source:The September",
+        "highlight": "The September"
+      },
+      {
+        "text": "The difference reflects the cost-share category applied at the pharmacy on each fill date rather than a change to your prescription.",
+        "sourceId": "DEMO-TIER-MAPD-2026",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "The difference reflects "
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ]
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789863286952,
+      "tPaint": 1789863286968,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789863287019,
+      "tPaint": 1789863287032,
+      "paintMs": 13,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789863287088,
+      "tPaint": 1789863287094,
+      "paintMs": 6,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789863287155,
+      "tPaint": 1789863287278,
+      "paintMs": 123,
+      "measured": true,
+      "excludedPauseMs": 20
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789863287352,
+      "tPaint": 1789863288488,
+      "paintMs": 1136,
+      "measured": true,
+      "excludedPauseMs": 20
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789863288554,
+      "tPaint": 1789863288568,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 20
+    }
+  ],
+  "needPaths": []
+}

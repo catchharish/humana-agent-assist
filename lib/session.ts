@@ -122,8 +122,8 @@ export function createSession(init: {
     needs: [],
     nowCard: {
       title: "Opening",
-      body: "Recorded-line greeting is due. Exact wording is on the obligation rail (not a Now card). No member record until simulated authorization.",
-      sourceLabel: "Governed guidance · scripting · simulated",
+      body: "Recorded-line greeting is due. Exact wording is on the obligation rail. No member record until the caller is verified.",
+      sourceLabel: "Plan rules",
     },
     recommendation: null,
     quotes: [],
@@ -162,6 +162,7 @@ export function createSession(init: {
     wrapStable: "",
     flaggedIssues: [],
     openEvidence: null,
+    retrievedSources: [],
     transfer: {
       destinationConfirmed: false,
       connectionStatus: null,
@@ -290,9 +291,9 @@ function applyGreeting(session: SessionState, line: TranscriptLine) {
     session.flowStep = "greeting verified · await identity";
     if (session.ivrReason && !late) {
       session.nowCard = {
-        title: "IVR routing (simulated)",
+        title: "Phone menu",
         body: `Provisional hint: ${session.ivrReason}. Not identity evidence. Greeting matched on the rail.`,
-        sourceLabel: "System record · telephony · simulated",
+        sourceLabel: "Phone menu",
       };
     }
     appendJsonl(session.sessionId, {
@@ -332,9 +333,9 @@ export function setIvrHint(session: SessionState, ivrReason: string) {
   if (/refill/i.test(ivrReason)) session.callType = "Refill";
   else if (/pric/i.test(ivrReason)) session.callType = "Pricing";
   session.nowCard = {
-    title: "IVR routing (simulated)",
+    title: "Phone menu",
     body: `Provisional hint: ${ivrReason}. Not identity evidence. Greeting still due.`,
-    sourceLabel: "System record · telephony · simulated",
+    sourceLabel: "Phone menu",
   };
   appendJsonl(session.sessionId, { kind: "ivr_hint", ivrReason });
 }
@@ -394,13 +395,13 @@ export function applyAuth(
   if (session.greeting === "due_now" && !session.greetingLocked) {
     session.greeting = "late_finding";
   }
-  session.flowStep = "identity verified · refill workflow";
-  session.currentNeed = "refill status";
+  session.flowStep = "listening";
+  session.currentNeed = "listening";
   if (member && auth.decision.toLowerCase() === "valid") {
     session.nowCard = {
-      title: "Member authorized (simulated)",
-      body: `${member.name.given} ${member.name.family} · ${member.lineOfBusiness} · ${member.planId}. Protected fields were withheld until DEMO-AUTH001.`,
-      sourceLabel: "System record · eligibility · simulated",
+      title: "Caller verified",
+      body: `${member.name.given} ${member.name.family} · ${member.lineOfBusiness}. Member details are available.`,
+      sourceLabel: "Eligibility",
     };
   }
   appendJsonl(session.sessionId, {

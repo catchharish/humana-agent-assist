@@ -1,0 +1,192 @@
+{
+  "sessionId": "0b603141-e6fb-462d-b6c3-a9b485542fb4",
+  "scenarioId": "t03a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "exact_timely",
+  "closingNote": null,
+  "closingHistory": [
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-explain",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 0,
+      "retrieved": [
+        {
+          "id": "DEMO-FAST90-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    }
+  ],
+  "historical": null,
+  "fast90": {
+    "title": "90-day option",
+    "body": "The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order, not automatic refills, and does not change today's pickup.",
+    "sourceLabel": "Derived from source/version · scripting · simulated (DEMO-FAST90-v1 ← DEMO-SERVICE-v1)"
+  },
+  "nowCard": {
+    "title": "90-day option",
+    "body": "The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order, not automatic refills, and does not change today's pickup.",
+    "sourceLabel": "Derived from source/version · scripting · simulated (DEMO-FAST90-v1 ← DEMO-SERVICE-v1)"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789863085770,
+      "tPaint": 1789863085786,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789863085846,
+      "tPaint": 1789863085860,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789863085910,
+      "tPaint": 1789863085920,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789863085980,
+      "tPaint": 1789863086101,
+      "paintMs": 121,
+      "measured": true,
+      "excludedPauseMs": 20
+    },
+    {
+      "eventId": "e-90",
+      "kind": "transcript",
+      "tEvent": 1789863086178,
+      "tPaint": 1789863087288,
+      "paintMs": 1110,
+      "measured": true,
+      "excludedPauseMs": 20
+    },
+    {
+      "eventId": "e-pause-edu",
+      "kind": "pause_gate",
+      "tEvent": 1789863087344,
+      "tPaint": 1789863087353,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 20
+    },
+    {
+      "eventId": "e-explain",
+      "kind": "transcript",
+      "tEvent": 1789863087415,
+      "tPaint": 1789863087431,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 42
+    },
+    {
+      "eventId": "e-close",
+      "kind": "transcript",
+      "tEvent": 1789863087486,
+      "tPaint": 1789863087502,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 42
+    },
+    {
+      "eventId": "e-pause-done",
+      "kind": "pause_gate",
+      "tEvent": 1789863087558,
+      "tPaint": 1789863087566,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 42
+    }
+  ],
+  "needPaths": [
+    {
+      "eventId": "e-90",
+      "need": "service_education",
+      "path": "code_rule"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "sessionId": "9e206555-dab7-4bb1-b2a8-f3bd2f97eecc",
+  "scenarioId": "t08b",
+  "overlay": "T08B",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "exact_timely",
+  "closingNote": null,
+  "closingHistory": [
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-intro",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-readback",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-add-scope",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 0,
+      "retrieved": [
+        {
+          "id": "DEMO-FAST90-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    }
+  ],
+  "historical": null,
+  "fast90": {
+    "title": "90-day option",
+    "body": "The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order, not automatic refills, and does not change today's pickup.",
+    "sourceLabel": "Derived from source/version · scripting · simulated (DEMO-FAST90-v1 ← DEMO-SERVICE-v1)"
+  },
+  "nowCard": {
+    "title": "Enrollment withdrawn",
+    "body": "Withdrawal blocks the pending submission. No business action is claimed. Other needs and already applicable closing remain.",
+    "sourceLabel": "Governed guidance · scripting · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [
+      "metformin",
+      "atorvastatin"
+    ],
+    "readback": "You want to enroll in the CenterWell pharmacy service for future metformin and atorvastatin fills. Today's ready refill stays at Lakeview Pharmacy. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": true,
+    "scopeChangedAt": 1789847226919
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789847221170,
+      "tPaint": 1789847221182,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789847221238,
+      "tPaint": 1789847221253,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789847221305,
+      "tPaint": 1789847221313,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789847221372,
+      "tPaint": 1789847221488,
+      "paintMs": 116,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-90",
+      "kind": "transcript",
+      "tEvent": 1789847221560,
+      "tPaint": 1789847222942,
+      "paintMs": 1382,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-intro",
+      "kind": "transcript",
+      "tEvent": 1789847223005,
+      "tPaint": 1789847223024,
+      "paintMs": 19,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-elect",
+      "kind": "transcript",
+      "tEvent": 1789847223081,
+      "tPaint": 1789847224427,
+      "paintMs": 1346,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-pause-readback",
+      "kind": "pause_gate",
+      "tEvent": 1789847224488,
+      "tPaint": 1789847224499,
+      "paintMs": 11,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-readback",
+      "kind": "transcript",
+      "tEvent": 1789847224566,
+      "tPaint": 1789847224583,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 45
+    },
+    {
+      "eventId": "e-yes",
+      "kind": "transcript",
+      "tEvent": 1789847224641,
+      "tPaint": 1789847225770,
+      "paintMs": 1129,
+      "measured": true,
+      "excludedPauseMs": 45
+    },
+    {
+      "eventId": "e-pause-mint",
+      "kind": "pause_gate",
+      "tEvent": 1789847225836,
+      "tPaint": 1789847225846,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 45
+    },
+    {
+      "eventId": "e-add-scope",
+      "kind": "transcript",
+      "tEvent": 1789847226594,
+      "tPaint": 1789847226644,
+      "paintMs": 50,
+      "measured": true,
+      "excludedPauseMs": 751
+    },
+    {
+      "eventId": "e-pause-edit",
+      "kind": "pause_gate",
+      "tEvent": 1789847226697,
+      "tPaint": 1789847226704,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 751
+    },
+    {
+      "eventId": "e-withdraw",
+      "kind": "transcript",
+      "tEvent": 1789847226975,
+      "tPaint": 1789847228610,
+      "paintMs": 1635,
+      "measured": true,
+      "excludedPauseMs": 977
+    },
+    {
+      "eventId": "e-pause-withdraw",
+      "kind": "pause_gate",
+      "tEvent": 1789847228670,
+      "tPaint": 1789847228680,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 977
+    },
+    {
+      "eventId": "e-close",
+      "kind": "transcript",
+      "tEvent": 1789847228746,
+      "tPaint": 1789847228764,
+      "paintMs": 18,
+      "measured": true,
+      "excludedPauseMs": 1002
+    },
+    {
+      "eventId": "e-pause-done",
+      "kind": "pause_gate",
+      "tEvent": 1789847228821,
+      "tPaint": 1789847228829,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 1002
+    }
+  ],
+  "needPaths": [
+    {
+      "eventId": "e-90",
+      "need": "service_education",
+      "path": "code_rule"
+    }
+  ]
+}

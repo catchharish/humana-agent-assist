@@ -1,0 +1,166 @@
+{
+  "sessionId": "8e551534-34b8-4fc1-8fe3-df93b12bc568",
+  "scenarioId": "t03b",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "exact_timely",
+  "closingNote": null,
+  "closingHistory": [
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-intro",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Optional work stopped",
+    "body": "Member declined delivery and asked to keep retail. Stop comparison, enrollment, and repeated rebuttals. Today's pickup and any real open need stay. Closing remains applicable if the service was discussed. No inferred negative plan effect.",
+    "sourceLabel": "Governed guidance · scripting · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789847201886,
+      "tPaint": 1789847201898,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789847201950,
+      "tPaint": 1789847201967,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789847202019,
+      "tPaint": 1789847202029,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789847202089,
+      "tPaint": 1789847202193,
+      "paintMs": 104,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-intro",
+      "kind": "transcript",
+      "tEvent": 1789847202306,
+      "tPaint": 1789847202410,
+      "paintMs": 104,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-refuse",
+      "kind": "transcript",
+      "tEvent": 1789847202513,
+      "tPaint": 1789847203638,
+      "paintMs": 1125,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-pause-stop",
+      "kind": "pause_gate",
+      "tEvent": 1789847203696,
+      "tPaint": 1789847203706,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 19
+    },
+    {
+      "eventId": "e-close",
+      "kind": "transcript",
+      "tEvent": 1789847203772,
+      "tPaint": 1789847203790,
+      "paintMs": 18,
+      "measured": true,
+      "excludedPauseMs": 45
+    },
+    {
+      "eventId": "e-pause-done",
+      "kind": "pause_gate",
+      "tEvent": 1789847203847,
+      "tPaint": 1789847203855,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 45
+    }
+  ],
+  "needPaths": []
+}

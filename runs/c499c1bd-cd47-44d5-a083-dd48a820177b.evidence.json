@@ -1,0 +1,166 @@
+{
+  "sessionId": "c499c1bd-cd47-44d5-a083-dd48a820177b",
+  "scenarioId": "t03b",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "exact_timely",
+  "closingNote": null,
+  "closingHistory": [
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-intro",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Interpretation unavailable",
+    "body": "Fast-tier interpretation did not return. No member conclusion was invented.",
+    "sourceLabel": "Governed guidance · scripting · simulated"
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789864581176,
+      "tPaint": 1789864581190,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789864581241,
+      "tPaint": 1789864581262,
+      "paintMs": 21,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789864581319,
+      "tPaint": 1789864581326,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789864581382,
+      "tPaint": 1789864581495,
+      "paintMs": 113,
+      "measured": true,
+      "excludedPauseMs": 17
+    },
+    {
+      "eventId": "e-intro",
+      "kind": "transcript",
+      "tEvent": 1789864581573,
+      "tPaint": 1789864581613,
+      "paintMs": 40,
+      "measured": true,
+      "excludedPauseMs": 17
+    },
+    {
+      "eventId": "e-refuse",
+      "kind": "transcript",
+      "tEvent": 1789864581690,
+      "tPaint": 1789864582605,
+      "paintMs": 915,
+      "measured": true,
+      "excludedPauseMs": 17
+    },
+    {
+      "eventId": "e-pause-stop",
+      "kind": "pause_gate",
+      "tEvent": 1789864582671,
+      "tPaint": 1789864582679,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 17
+    },
+    {
+      "eventId": "e-close",
+      "kind": "transcript",
+      "tEvent": 1789864582741,
+      "tPaint": 1789864582762,
+      "paintMs": 21,
+      "measured": true,
+      "excludedPauseMs": 37
+    },
+    {
+      "eventId": "e-pause-done",
+      "kind": "pause_gate",
+      "tEvent": 1789864582815,
+      "tPaint": 1789864582827,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 37
+    }
+  ],
+  "needPaths": []
+}

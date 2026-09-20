@@ -1,0 +1,175 @@
+{
+  "sessionId": "02a24e26-45d0-4a6d-aa9d-117e3cc70ecf",
+  "scenarioId": "t04b",
+  "overlay": "T04B",
+  "greeting": "exact_timely",
+  "pricing": "due_now",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Pricing statement due now",
+    "body": "Any price estimate we discuss is based on the information available today and may change when your prescription is filled.",
+    "sourceLabel": "Governed guidance · scripting · simulated"
+  },
+  "quotes": [
+    {
+      "quoteId": "DEMO-Q-ATO-L",
+      "drugName": "atorvastatin",
+      "pharmacyId": "lakeview",
+      "pharmacyName": "Lakeview Pharmacy",
+      "estimatedMemberCost": {
+        "value": "15.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "invalidated"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-L",
+      "drugName": "metformin",
+      "pharmacyId": "lakeview",
+      "pharmacyName": "Lakeview Pharmacy",
+      "estimatedMemberCost": {
+        "value": "60.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "invalidated"
+    },
+    {
+      "quoteId": "DEMO-Q-ATO-O",
+      "drugName": "atorvastatin",
+      "pharmacyId": "oak-street",
+      "pharmacyName": "Oak Street Pharmacy",
+      "estimatedMemberCost": {
+        "value": "6.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-O",
+      "drugName": "metformin",
+      "pharmacyId": "oak-street",
+      "pharmacyName": "Oak Street Pharmacy",
+      "estimatedMemberCost": {
+        "value": "24.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "valid"
+    }
+  ],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789864669480,
+      "tPaint": 1789864669492,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789864669548,
+      "tPaint": 1789864669627,
+      "paintMs": 79,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789864669699,
+      "tPaint": 1789864669706,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789864669764,
+      "tPaint": 1789864669874,
+      "paintMs": 110,
+      "measured": true,
+      "excludedPauseMs": 18
+    },
+    {
+      "eventId": "e-lakeview-quote",
+      "kind": "transcript",
+      "tEvent": 1789864669945,
+      "tPaint": 1789864672010,
+      "paintMs": 2065,
+      "measured": true,
+      "excludedPauseMs": 18
+    },
+    {
+      "eventId": "e-correct-oak",
+      "kind": "transcript",
+      "tEvent": 1789864672068,
+      "tPaint": 1789864672771,
+      "paintMs": 703,
+      "measured": true,
+      "excludedPauseMs": 18
+    },
+    {
+      "eventId": "e-pause-quotes",
+      "kind": "pause_gate",
+      "tEvent": 1789864672835,
+      "tPaint": 1789864672845,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 18
+    }
+  ],
+  "needPaths": []
+}

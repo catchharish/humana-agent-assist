@@ -1,0 +1,1502 @@
+{
+  "sessionId": "ed250721-bfd9-4feb-b2bc-d746aeb5e349",
+  "scenarioId": "t01_m2a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "late_finding",
+  "pricingNote": "Delivered correctly, but late.",
+  "closing": "exact_timely",
+  "closingNote": "Uncertain first attempt preserved. Later reread verified.",
+  "closingHistory": [
+    {
+      "text": "Your decision today has no — membership",
+      "stability": "uncertain",
+      "assessment": "unable_to_verify"
+    },
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [
+    {
+      "at": "e-price-miss",
+      "stage": 1,
+      "fired": true,
+      "classification": "prospective_estimate",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_all_hold",
+      "suppressed": false
+    }
+  ],
+  "triggerLog": [
+    {
+      "at": "e-greet-partial",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-greet-corrected",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-advocate-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-adv-offer-intro",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-adv-obj",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-adv-interest",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-adv-clarify",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-price-miss",
+      "stage": 1,
+      "fired": true,
+      "classification": "prospective_estimate",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_all_hold",
+      "suppressed": false
+    },
+    {
+      "at": "e-paraphrase",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-pricing-exact",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "exact_requirement_reading",
+      "suppressed": false
+    },
+    {
+      "at": "e-readback",
+      "stage": 2,
+      "fired": false,
+      "classification": "service_choice",
+      "latencyMs": 584.0403750000405,
+      "modelCall": true,
+      "reason": "luna_stream:service_choice:service_choice",
+      "suppressed": false
+    },
+    {
+      "at": "e-adv-offer-xfer",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close-uncertain",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close-exact",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2849,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2866,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2844,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2828,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2840,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": true
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2840,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": true
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2851,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 0,
+      "retrieved": [
+        {
+          "id": "DEMO-FAST90-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2859,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": true
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 2849,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 2800,
+      "recheck": true
+    }
+  ],
+  "historical": {
+    "title": "Partial answer",
+    "body": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) The cost difference came from the pharmacy cost-share category on each fill date rather than a change to your prescription. The cause is not confirmed.",
+    "sourceLabel": "Claims · Claims · Plan rules · Plan rules · Plan rules (snapshot cost-share for this plan)",
+    "causeSupported": false,
+    "chargesEstablished": true,
+    "statements": [
+      {
+        "text": "Your August 18 metformin fill at Oak Street Pharmacy was a 30-day preferred-retail claim with an $8 member cost share.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "Your September 16 metformin fill at Lakeview Pharmacy was a 30-day standard-retail claim with a $27 member cost share.",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "The cost difference came from the pharmacy cost-share category on each fill date rather than a change to your prescription.",
+        "sourceId": "DEMO-TIER-MAPD-2026",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "The cost difference came"
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ]
+  },
+  "fast90": {
+    "title": "90-day option",
+    "body": "The 90-day option uses a 90-day supply for eligible existing prescriptions. Enrollment is not an order, not automatic refills, and does not change today's pickup.",
+    "sourceLabel": "Derived from source/version · scripting · simulated (DEMO-FAST90-v1 ← DEMO-SERVICE-v1)"
+  },
+  "nowCard": {
+    "title": "Connection result",
+    "body": "DEMO-TRANSFER001: receiving_specialist_connected. DEMO-CVR001 remains pending_review. Connection is not a coverage determination.",
+    "sourceLabel": "System record · telephony · simulated"
+  },
+  "quotes": [
+    {
+      "quoteId": "DEMO-Q-ATO-L",
+      "drugName": "atorvastatin",
+      "pharmacyId": "lakeview",
+      "pharmacyName": "Lakeview Pharmacy",
+      "estimatedMemberCost": {
+        "value": "15.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-ATO-O",
+      "drugName": "atorvastatin",
+      "pharmacyId": "oak-street",
+      "pharmacyName": "Oak Street Pharmacy",
+      "estimatedMemberCost": {
+        "value": "6.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-ATO-C",
+      "drugName": "atorvastatin",
+      "pharmacyId": "centerwell",
+      "pharmacyName": "CenterWell",
+      "estimatedMemberCost": {
+        "value": "6.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 90,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-L",
+      "drugName": "metformin",
+      "pharmacyId": "lakeview",
+      "pharmacyName": "Lakeview Pharmacy",
+      "estimatedMemberCost": {
+        "value": "60.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-O",
+      "drugName": "metformin",
+      "pharmacyId": "oak-street",
+      "pharmacyName": "Oak Street Pharmacy",
+      "estimatedMemberCost": {
+        "value": "24.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "valid"
+    },
+    {
+      "quoteId": "DEMO-Q-MET-C",
+      "drugName": "metformin",
+      "pharmacyId": "centerwell",
+      "pharmacyName": "CenterWell",
+      "estimatedMemberCost": {
+        "value": "18.00",
+        "currency": "USD"
+      },
+      "daysSupply": 90,
+      "quantity": 180,
+      "validityStatus": "valid"
+    }
+  ],
+  "wrap": "Atorvastatin is ready for pickup at Lakeview Pharmacy (30-day supply). Historical metformin claims show $8 paid at Oak Street Pharmacy on 2026-08-18 and $27 paid at Lakeview Pharmacy on 2026-09-16; the cause is not confirmed. Enrollment for future metformin fills with CenterWell pharmacy service was submitted; atorvastatin remains at retail and today’s ready refill remains at Lakeview. A coverage review for Jardiance 10 mg tablets is pending.\n\nConnection result: DEMO-TRANSFER001 — receiving_specialist_connected. DEMO-CVR001 remains pending_review. Connection is not a coverage determination.\n\nDEMO-ENR001 · metformin · ready · DEMO-CVR001",
+  "handoff": "Coverage Review handoff: Member Harry Whitfield (member ID DEMO-M001), case DEMO-CVR001. Requested medication: Jardiance 10 mg tablets; coverage status: pending_review. Member asked to enroll in CenterWell pharmacy service for future metformin fills; enrollment was submitted and returned scope is metformin (result ID DEMO-ENR001). Checked coverage case status, enrollment submission/scope, and refill information. Today's ready refill remains restricted to retail at Lakeview Pharmacy. Connection has not occurred.",
+  "enrollment": {
+    "medications": [
+      "metformin"
+    ],
+    "readback": "You want to enroll in the CenterWell pharmacy service for future metformin fills. Atorvastatin stays at retail. Today's ready refill stays at Lakeview Pharmacy. This does not order medication, start automatic refills, or change your health-plan membership. Do you want me to submit that enrollment?",
+    "confirmed": true,
+    "submitted": true,
+    "resultId": "DEMO-ENR001",
+    "returnedScope": [
+      "metformin"
+    ],
+    "scopeOk": true,
+    "withdrawn": false,
+    "scopeChangedAt": 1789863536245
+  },
+  "coverage": {
+    "caseId": "DEMO-CVR001",
+    "status": "pending_review",
+    "requestedMedication": "Jardiance 10 mg tablets",
+    "determination": null
+  },
+  "transfer": {
+    "destinationConfirmed": true,
+    "connectionStatus": "receiving_specialist_connected",
+    "transferId": "DEMO-TRANSFER001"
+  },
+  "disposition": {
+    "recommended": "TRANSFERRED_COVERAGE_REVIEW",
+    "confirmed": "TRANSFERRED_COVERAGE_REVIEW"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789863483951,
+      "tPaint": 1789863483974,
+      "paintMs": 23,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-partial",
+      "kind": "transcript",
+      "tEvent": 1789863484019,
+      "tPaint": 1789863484030,
+      "paintMs": 11,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789863484080,
+      "tPaint": 1789863484094,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-corrected",
+      "kind": "transcript",
+      "tEvent": 1789863484140,
+      "tPaint": 1789863484158,
+      "paintMs": 18,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-noise-uncertain",
+      "kind": "transcript",
+      "tEvent": 1789863484241,
+      "tPaint": 1789863484272,
+      "paintMs": 31,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789863484323,
+      "tPaint": 1789863484337,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789863484400,
+      "tPaint": 1789863484730,
+      "paintMs": 330,
+      "measured": true,
+      "excludedPauseMs": 33
+    },
+    {
+      "eventId": "e-rx-partial",
+      "kind": "transcript",
+      "tEvent": 1789863484854,
+      "tPaint": 1789863484866,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 33
+    },
+    {
+      "eventId": "e-rx-final",
+      "kind": "transcript",
+      "tEvent": 1789863484909,
+      "tPaint": 1789863492834,
+      "paintMs": 7925,
+      "measured": true,
+      "excludedPauseMs": 33
+    },
+    {
+      "eventId": "e-pause-existing",
+      "kind": "pause_gate",
+      "tEvent": 1789863492884,
+      "tPaint": 1789863492906,
+      "paintMs": 22,
+      "measured": true,
+      "excludedPauseMs": 33
+    },
+    {
+      "eventId": "e-hist-partial",
+      "kind": "transcript",
+      "tEvent": 1789863492960,
+      "tPaint": 1789863492968,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 56
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789863493016,
+      "tPaint": 1789863494362,
+      "paintMs": 1346,
+      "measured": true,
+      "excludedPauseMs": 56
+    },
+    {
+      "eventId": "e-interrupt-partial",
+      "kind": "transcript",
+      "tEvent": 1789863494504,
+      "tPaint": 1789863494518,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 56
+    },
+    {
+      "eventId": "e-interrupt-final",
+      "kind": "transcript",
+      "tEvent": 1789863494648,
+      "tPaint": 1789863502826,
+      "paintMs": 8178,
+      "measured": true,
+      "excludedPauseMs": 56
+    },
+    {
+      "eventId": "e-pause-ready",
+      "kind": "pause_gate",
+      "tEvent": 1789863502876,
+      "tPaint": 1789863502890,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 56
+    },
+    {
+      "eventId": "e-advocate-ready",
+      "kind": "transcript",
+      "tEvent": 1789863502943,
+      "tPaint": 1789863502962,
+      "paintMs": 19,
+      "measured": true,
+      "excludedPauseMs": 78
+    },
+    {
+      "eventId": "e-return-met",
+      "kind": "transcript",
+      "tEvent": 1789863503005,
+      "tPaint": 1789863519783,
+      "paintMs": 16778,
+      "measured": true,
+      "excludedPauseMs": 78
+    },
+    {
+      "eventId": "e-pause-historical",
+      "kind": "pause_gate",
+      "tEvent": 1789863519833,
+      "tPaint": 1789863519860,
+      "paintMs": 27,
+      "measured": true,
+      "excludedPauseMs": 78
+    },
+    {
+      "eventId": "e-adv-offer-intro",
+      "kind": "transcript",
+      "tEvent": 1789863520246,
+      "tPaint": 1789863520279,
+      "paintMs": 33,
+      "measured": true,
+      "excludedPauseMs": 434
+    },
+    {
+      "eventId": "e-90day",
+      "kind": "transcript",
+      "tEvent": 1789863520330,
+      "tPaint": 1789863521656,
+      "paintMs": 1326,
+      "measured": true,
+      "excludedPauseMs": 434
+    },
+    {
+      "eventId": "e-pause-90",
+      "kind": "pause_gate",
+      "tEvent": 1789863521708,
+      "tPaint": 1789863521716,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 434
+    },
+    {
+      "eventId": "e-hesitate",
+      "kind": "transcript",
+      "tEvent": 1789863521766,
+      "tPaint": 1789863523768,
+      "paintMs": 2002,
+      "measured": true,
+      "excludedPauseMs": 453
+    },
+    {
+      "eventId": "e-pause-obj",
+      "kind": "pause_gate",
+      "tEvent": 1789863523817,
+      "tPaint": 1789863523826,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 453
+    },
+    {
+      "eventId": "e-adv-obj",
+      "kind": "transcript",
+      "tEvent": 1789863524058,
+      "tPaint": 1789863524082,
+      "paintMs": 24,
+      "measured": true,
+      "excludedPauseMs": 655
+    },
+    {
+      "eventId": "e-adv-interest",
+      "kind": "transcript",
+      "tEvent": 1789863524127,
+      "tPaint": 1789863524144,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 655
+    },
+    {
+      "eventId": "e-hedge",
+      "kind": "transcript",
+      "tEvent": 1789863524190,
+      "tPaint": 1789863525273,
+      "paintMs": 1083,
+      "measured": true,
+      "excludedPauseMs": 655
+    },
+    {
+      "eventId": "e-pause-hedge",
+      "kind": "pause_gate",
+      "tEvent": 1789863525322,
+      "tPaint": 1789863525333,
+      "paintMs": 11,
+      "measured": true,
+      "excludedPauseMs": 655
+    },
+    {
+      "eventId": "e-adv-clarify",
+      "kind": "transcript",
+      "tEvent": 1789863525393,
+      "tPaint": 1789863525411,
+      "paintMs": 18,
+      "measured": true,
+      "excludedPauseMs": 684
+    },
+    {
+      "eventId": "e-yes-partial",
+      "kind": "transcript",
+      "tEvent": 1789863525453,
+      "tPaint": 1789863525462,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 684
+    },
+    {
+      "eventId": "e-yes-compare",
+      "kind": "transcript",
+      "tEvent": 1789863525507,
+      "tPaint": 1789863526686,
+      "paintMs": 1179,
+      "measured": true,
+      "excludedPauseMs": 684
+    },
+    {
+      "eventId": "e-pause-quotes",
+      "kind": "pause_gate",
+      "tEvent": 1789863526733,
+      "tPaint": 1789863526742,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 684
+    },
+    {
+      "eventId": "e-price-miss",
+      "kind": "transcript",
+      "tEvent": 1789863526798,
+      "tPaint": 1789863526815,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 709
+    },
+    {
+      "eventId": "e-pause-nudge",
+      "kind": "pause_gate",
+      "tEvent": 1789863526861,
+      "tPaint": 1789863526869,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 709
+    },
+    {
+      "eventId": "e-paraphrase",
+      "kind": "transcript",
+      "tEvent": 1789863526921,
+      "tPaint": 1789863526936,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 730
+    },
+    {
+      "eventId": "e-pause-para",
+      "kind": "pause_gate",
+      "tEvent": 1789863526978,
+      "tPaint": 1789863526985,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 730
+    },
+    {
+      "eventId": "e-pricing-exact",
+      "kind": "transcript",
+      "tEvent": 1789863527034,
+      "tPaint": 1789863527052,
+      "paintMs": 18,
+      "measured": true,
+      "excludedPauseMs": 748
+    },
+    {
+      "eventId": "e-pause-compare",
+      "kind": "pause_gate",
+      "tEvent": 1789863527095,
+      "tPaint": 1789863527101,
+      "paintMs": 6,
+      "measured": true,
+      "excludedPauseMs": 748
+    },
+    {
+      "eventId": "e-elect",
+      "kind": "transcript",
+      "tEvent": 1789863527154,
+      "tPaint": 1789863536278,
+      "paintMs": 9124,
+      "measured": true,
+      "excludedPauseMs": 770
+    },
+    {
+      "eventId": "e-pause-enroll",
+      "kind": "pause_gate",
+      "tEvent": 1789863536324,
+      "tPaint": 1789863536333,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 770
+    },
+    {
+      "eventId": "e-readback",
+      "kind": "transcript",
+      "tEvent": 1789863536388,
+      "tPaint": 1789863536406,
+      "paintMs": 18,
+      "measured": true,
+      "excludedPauseMs": 794
+    },
+    {
+      "eventId": "e-yes-enroll",
+      "kind": "transcript",
+      "tEvent": 1789863536452,
+      "tPaint": 1789863537575,
+      "paintMs": 1123,
+      "measured": true,
+      "excludedPauseMs": 794
+    },
+    {
+      "eventId": "e-pause-submit",
+      "kind": "pause_gate",
+      "tEvent": 1789863537631,
+      "tPaint": 1789863537640,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 794
+    },
+    {
+      "eventId": "e-jardiance",
+      "kind": "transcript",
+      "tEvent": 1789863539057,
+      "tPaint": 1789863543306,
+      "paintMs": 4249,
+      "measured": true,
+      "excludedPauseMs": 2180
+    },
+    {
+      "eventId": "e-pause-cvr",
+      "kind": "pause_gate",
+      "tEvent": 1789863543354,
+      "tPaint": 1789863543362,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 2180
+    },
+    {
+      "eventId": "e-adv-offer-xfer",
+      "kind": "transcript",
+      "tEvent": 1789863546483,
+      "tPaint": 1789863546515,
+      "paintMs": 32,
+      "measured": true,
+      "excludedPauseMs": 5269
+    },
+    {
+      "eventId": "e-member-agree-xfer",
+      "kind": "transcript",
+      "tEvent": 1789863546562,
+      "tPaint": 1789863547684,
+      "paintMs": 1122,
+      "measured": true,
+      "excludedPauseMs": 5269
+    },
+    {
+      "eventId": "e-pause-handoff",
+      "kind": "pause_gate",
+      "tEvent": 1789863547736,
+      "tPaint": 1789863547746,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 5269
+    },
+    {
+      "eventId": "e-close-uncertain",
+      "kind": "transcript",
+      "tEvent": 1789863547804,
+      "tPaint": 1789863547819,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 5296
+    },
+    {
+      "eventId": "e-pause-close",
+      "kind": "pause_gate",
+      "tEvent": 1789863547868,
+      "tPaint": 1789863547878,
+      "paintMs": 10,
+      "measured": true,
+      "excludedPauseMs": 5296
+    },
+    {
+      "eventId": "e-close-exact",
+      "kind": "transcript",
+      "tEvent": 1789863547936,
+      "tPaint": 1789863547951,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 5324
+    },
+    {
+      "eventId": "e-pause-connect",
+      "kind": "pause_gate",
+      "tEvent": 1789863547992,
+      "tPaint": 1789863548000,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 5324
+    },
+    {
+      "eventId": "wrap-generated",
+      "kind": "wrap",
+      "tEvent": 1789863548011,
+      "tPaint": 1789863550337,
+      "paintMs": 2326,
+      "measured": true,
+      "excludedPauseMs": 5324
+    }
+  ],
+  "needPaths": [
+    {
+      "eventId": "e-return-met",
+      "need": "historical_price",
+      "path": "code_rule"
+    },
+    {
+      "eventId": "e-90day",
+      "need": "service_education",
+      "path": "code_rule"
+    },
+    {
+      "eventId": "e-yes-compare",
+      "need": "prospective_comparison",
+      "path": "code_rule"
+    },
+    {
+      "eventId": "e-elect",
+      "need": "historical_price",
+      "path": "code_rule"
+    }
+  ]
+}

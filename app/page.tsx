@@ -60,7 +60,8 @@ const MEMBERS = [
 ];
 
 const NEED_PLAIN: Record<string, string> = {
-  opening: "Opening",
+  opening: "Listening",
+  listening: "Listening",
   refill_status: "Refill status",
   "refill status": "Refill status",
   historical_price: "Past charges",
@@ -76,6 +77,7 @@ const STEP_PLAIN: Record<string, string> = {
   "verify greeting → await identity": "Verify greeting, then identity",
   "greeting verified · await identity": "Greeting done — verify identity",
   "identity verified · refill workflow": "Identity verified — refill",
+  listening: "Listening",
 };
 
 const OBLIGATION_PLAIN: Record<
@@ -90,6 +92,30 @@ const OBLIGATION_PLAIN: Record<
   late_finding: { label: "Said late", sym: "⚠", kind: "late" },
   unable_to_verify: { label: "Could not verify", sym: "?", kind: "verify" },
 };
+
+function hideDemoIds(text: string) {
+  return text.replace(/\bDEMO-[A-Z0-9-]+\b/g, "").replace(/\s{2,}/g, " ").trim();
+}
+
+function needStepLabel(session: SessionState) {
+  const need = session.currentNeed?.trim() || "listening";
+  if (need === "listening" || need === "opening") return "Listening";
+  return `${plainNeed(need)} · ${plainStep(session.flowStep)}`;
+}
+
+function Highlighted(props: { text: string; highlight?: string }) {
+  const h = props.highlight?.trim();
+  if (!h) return props.text;
+  const i = props.text.toLowerCase().indexOf(h.toLowerCase());
+  if (i < 0) return props.text;
+  return (
+    <>
+      {props.text.slice(0, i)}
+      <mark>{props.text.slice(i, i + h.length)}</mark>
+      {props.text.slice(i + h.length)}
+    </>
+  );
+}
 
 function formatElapsed(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -400,9 +426,13 @@ export default function Page() {
   const nowTitle = advocateNow
     ? "Verify the caller's identity"
     : (session?.nowCard.title ?? "Opening");
+  const rawBody =
+    session?.nowCard.body ?? "Start the call to load the workspace.";
   const nowBody = advocateNow
     ? null
-    : (session?.nowCard.body ?? "Start the call to load the workspace.");
+    : demoDetails
+      ? rawBody
+      : hideDemoIds(rawBody);
   const phoneHint =
     advocateNow && session?.ivrReason
       ? `Phone menu hinted a ${session.ivrReason}.`
@@ -452,10 +482,14 @@ export default function Page() {
           </button>
         )}
         <span className="sim-badge">
-          <span className="sym" aria-hidden="true">
-            ⌬
-          </span>
-          Simulated data
+          {demoDetails ? (
+            <>
+              <span className="sym" aria-hidden="true">
+                ⌬
+              </span>
+              Simulated data
+            </>
+          ) : null}
         </span>
         <label>
           <input
@@ -465,7 +499,7 @@ export default function Page() {
           />
           Show demo details
         </label>
-        {session?.paused && (
+        {session?.paused && demoDetails && (
           <span className="pause-notice">
             <span className="mark">Paused</span>
             {session.lastPauseLabel ??
@@ -484,7 +518,7 @@ export default function Page() {
                 : "Not verified"}
             </dd>
           </div>
-          {memberVisible && session?.member && (
+          {memberVisible && session?.member && demoDetails && (
             <div>
               <dt>Plan</dt>
               <dd>{session.member.planId}</dd>
@@ -496,11 +530,7 @@ export default function Page() {
           </div>
           <div>
             <dt>Need / step</dt>
-            <dd>
-              {session
-                ? `${plainNeed(session.currentNeed)} · ${plainStep(session.flowStep)}`
-                : "Not started"}
-            </dd>
+            <dd>{session ? needStepLabel(session) : "Not started"}</dd>
           </div>
           <div>
             <dt>Elapsed</dt>
@@ -584,20 +614,45 @@ export default function Page() {
             <ul>
               {session!.nowCard.earlyFacts!.map((f, i) => (
                 <li key={`${f.text}-${i}`}>
-                  {f.text}
-                  {demoDetails ? (
-                    <span className="source"> {f.source}</span>
-                  ) : (
-                    shortSource(f.source) && (
-                      <span className="source-tag"> {shortSource(f.source)}</span>
-                    )
-                  )}
+                  {demoDetails ? f.text : hideDemoIds(f.text)}
+                  <button
+                    className="source-tag"
+                    type="button"
+                    onClick={() =>
+                      human("/api/session/human/view-evidence", {
+                        sourceId: f.source,
+                      })
+                    }
+                  >
+                    {shortSource(f.source) ?? f.source}
+                  </button>
                 </li>
               ))}
             </ul>
           </div>
         )}
-        {nowBody && <p>{nowBody}</p>}
+        {(session?.nowCard.statements?.length ?? 0) > 0 ? (
+          <div className="statements">
+            {session!.nowCard.statements!.map((st, i) => (
+              <p key={`${st.text}-${i}`}>
+                {demoDetails ? st.text : hideDemoIds(st.text)}{" "}
+                <button
+                  className="source-tag"
+                  type="button"
+                  onClick={() =>
+                    human("/api/session/human/view-evidence", {
+                      sourceId: st.sourceId,
+                    })
+                  }
+                >
+                  {st.confirmed ? st.sourceTag : "Not confirmed"}
+                </button>
+              </p>
+            ))}
+          </div>
+        ) : (
+          nowBody && <p>{nowBody}</p>
+        )}
         {nowSource &&
           (demoDetails ? (
             <p className="source">{nowSource}</p>
@@ -635,8 +690,15 @@ export default function Page() {
           <div>
             <h3 className="subhead">Opened record</h3>
             <p>{session.openEvidence.title}</p>
-            <p>{session.openEvidence.body}</p>
-            <p className="source">{session.openEvidence.sourceLabel}</p>
+            <p>
+              <Highlighted
+                text={session.openEvidence.body}
+                highlight={session.openEvidence.highlight}
+              />
+            </p>
+            {demoDetails && (
+              <p className="source">{session.openEvidence.sourceLabel}</p>
+            )}
           </div>
         )}
         {session?.recommendation?.status === "pending" && (
@@ -673,17 +735,46 @@ export default function Page() {
                 Confirm Coverage Review destination
               </button>
             )}
-            <p className="source">{session.recommendation.body}</p>
+            <p>
+              {demoDetails
+                ? session.recommendation.body
+                : hideDemoIds(session.recommendation.body)}
+            </p>
             {session.recommendation.reasons?.length ? (
-              <p className="source">
-                Reasons: {session.recommendation.reasons.join("; ")}
-              </p>
+              <ul>
+                {session.recommendation.reasons.map((r, i) => (
+                  <li key={r}>
+                    {demoDetails ? r : hideDemoIds(r)}
+                    {session.recommendation?.facts?.[i] ? (
+                      <button
+                        className="source-tag"
+                        type="button"
+                        onClick={() =>
+                          human("/api/session/human/view-evidence", {
+                            sourceId: session.recommendation?.playbookIds?.[0],
+                          })
+                        }
+                      >
+                        Record
+                      </button>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
             ) : null}
-            {session.recommendation.facts?.length ? (
-              <p className="source">
-                Facts: {session.recommendation.facts.join("; ")}
-              </p>
-            ) : null}
+            {session.recommendation.playbookPassage && (
+              <button
+                className="source-tag"
+                type="button"
+                onClick={() =>
+                  human("/api/session/human/view-evidence", {
+                    sourceId: session.recommendation?.playbookIds?.[0],
+                  })
+                }
+              >
+                Playbook
+              </button>
+            )}
           </div>
         )}
         {session &&
@@ -801,7 +892,30 @@ export default function Page() {
         {session?.handoffDraft && (
           <div>
             <h3 className="subhead">Handoff draft</h3>
-            <p>{session.handoffDraft}</p>
+            {session.handoffLines?.length ? (
+              session.handoffLines.map((ln, i) => (
+                <p key={i}>
+                  {demoDetails ? ln.text : hideDemoIds(ln.text)}{" "}
+                  <button
+                    className="source-tag"
+                    type="button"
+                    onClick={() =>
+                      human("/api/session/human/view-evidence", {
+                        sourceId: ln.sourceId,
+                      })
+                    }
+                  >
+                    {ln.sourceTag}
+                  </button>
+                </p>
+              ))
+            ) : (
+              <p>
+                {demoDetails
+                  ? session.handoffDraft
+                  : hideDemoIds(session.handoffDraft)}
+              </p>
+            )}
             {!session.transfer.destinationConfirmed && (
               <button
                 type="button"
@@ -837,6 +951,26 @@ export default function Page() {
         {session?.wrapDraft && (
           <div>
             <h3 className="subhead">Wrap (editable)</h3>
+            {session.wrapLines?.length ? (
+              <div>
+                {session.wrapLines.map((ln, i) => (
+                  <p key={i}>
+                    {demoDetails ? ln.text : hideDemoIds(ln.text)}{" "}
+                    <button
+                      className="source-tag"
+                      type="button"
+                      onClick={() =>
+                        human("/api/session/human/view-evidence", {
+                          sourceId: ln.sourceId,
+                        })
+                      }
+                    >
+                      {ln.sourceTag}
+                    </button>
+                  </p>
+                ))}
+              </div>
+            ) : null}
             <textarea
               className="wrap"
               defaultValue={session.wrapDraft}
@@ -867,7 +1001,7 @@ export default function Page() {
             )}
           </div>
         )}
-        {session?.outcomeReady && (
+        {session?.outcomeReady && demoDetails && (
           <div className="outcome">
             <h3 className="subhead">End-of-demo outcome (said once)</h3>
             {session.pricing === "late_finding" ? (
@@ -919,8 +1053,15 @@ export default function Page() {
         {memberVisible && session?.member && (
           <p>
             {session.member.name.given} {session.member.name.family}
-            <br />
-            Plan {session.member.planId} ({session.member.lineOfBusiness})
+            {session.member.lineOfBusiness
+              ? ` · ${session.member.lineOfBusiness}`
+              : ""}
+            {demoDetails ? (
+              <>
+                <br />
+                Plan {session.member.planId}
+              </>
+            ) : null}
           </p>
         )}
         {demoDetails && (
@@ -955,7 +1096,13 @@ export default function Page() {
               )}
             </div>
             <p className="source">{plainStep(need.flowStep)}</p>
-            {need.answer && <p>{need.answer.body}</p>}
+            {need.answer && (
+              <p>
+                {demoDetails
+                  ? need.answer.body
+                  : hideDemoIds(need.answer.body)}
+              </p>
+            )}
             <button
               className="secondary"
               type="button"

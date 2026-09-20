@@ -31,11 +31,17 @@ describe("plan applicability is session-relative", () => {
     const r = supportCheck({
       question: "Why was my metformin $12? Use my plan's cost rule, not MAPD-001.",
       answer:
-        "Your metformin 30-day retail fill was $12.00 under other_plan_retail on DEMO-OTHER-PLAN.",
-      toolsUsed: [],
+        "Your metformin 30-day retail fill was $12.00 under other_plan_retail on this plan.",
+      toolsUsed: ["getCostShare"],
       snapshotHasPlanRule: true,
-      sources: [
-        "Governed guidance · scripting · simulated (DEMO-POLICY-OTHER-v1)",
+      sources: ["DEMO-POLICY-OTHER-v1"],
+      retrieved: [
+        {
+          id: "DEMO-POLICY-OTHER-v1",
+          kind: "document",
+          sourceTag: "Plan rules",
+          text: "other_plan_retail $12.00 for a 30-day metformin fill on this plan",
+        },
       ],
     });
     expect(r.partial).toBe(false);

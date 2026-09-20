@@ -82,6 +82,7 @@ export type NeedRecord = {
     sourceLabel: string;
     causeSupported?: boolean;
     chargesEstablished?: boolean;
+    statements?: import("@/lib/citations").CitedStatement[];
   };
 };
 
@@ -175,6 +176,7 @@ export type SessionState = {
     waitingForFocus?: boolean;
     liveSteps?: string[];
     earlyFacts?: { text: string; source: string }[];
+    statements?: import("@/lib/citations").CitedStatement[];
   };
   recommendation: {
     kind: string;
@@ -188,6 +190,7 @@ export type SessionState = {
     advocateControl?: "offer_dismiss" | "confirm_transfer";
     marksPricingUpcoming?: boolean;
     sourceLabel: string;
+    playbookPassage?: string;
     status: "pending" | "offered" | "dismissed" | "used";
   } | null;
   quotes: Array<{
@@ -242,10 +245,18 @@ export type SessionState = {
     determination: string | null;
   } | null;
   handoffDraft: string;
+  handoffLines?: import("@/lib/citations").CitedStatement[];
   wrapDraft: string;
+  wrapLines?: import("@/lib/citations").CitedStatement[];
   wrapStable: string;
   flaggedIssues: Array<{ at: string; note: string }>;
-  openEvidence: { title: string; body: string; sourceLabel: string } | null;
+  openEvidence: {
+    title: string;
+    body: string;
+    sourceLabel: string;
+    highlight?: string;
+  } | null;
+  retrievedSources: import("@/lib/citations").RetrievedSource[];
   transfer: {
     destinationConfirmed: boolean;
     connectionStatus: string | null;
@@ -296,5 +307,6 @@ export type SessionState = {
       historicalStatus: string | null;
     }>;
     nba: Record<string, unknown>[];
+    supportCheckMs?: number;
   };
 };

@@ -1,0 +1,223 @@
+{
+  "sessionId": "1b48eefa-2241-4d36-95c2-3274bf34427b",
+  "scenarioId": "t02a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-said-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 436,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Refill status (fresh read)",
+    "body": "MODEL_ERROR 429",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)"
+  },
+  "quotes": [],
+  "wrap": "Wrap draft unavailable. Use a labeled manual template.",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": "COMPLETED_SERVICING",
+    "confirmed": "COMPLETED_SERVICING"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789864574153,
+      "tPaint": 1789864574444,
+      "paintMs": 291,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789864574621,
+      "tPaint": 1789864574654,
+      "paintMs": 33,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789864574708,
+      "tPaint": 1789864574715,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789864575116,
+      "tPaint": 1789864575603,
+      "paintMs": 487,
+      "measured": true,
+      "excludedPauseMs": 359
+    },
+    {
+      "eventId": "e-smalltalk",
+      "kind": "transcript",
+      "tEvent": 1789864575704,
+      "tPaint": 1789864576623,
+      "paintMs": 919,
+      "measured": true,
+      "excludedPauseMs": 359
+    },
+    {
+      "eventId": "e-ready",
+      "kind": "transcript",
+      "tEvent": 1789864576686,
+      "tPaint": 1789864578875,
+      "paintMs": 2189,
+      "measured": true,
+      "excludedPauseMs": 359
+    },
+    {
+      "eventId": "e-pause-ready",
+      "kind": "pause_gate",
+      "tEvent": 1789864578943,
+      "tPaint": 1789864578971,
+      "paintMs": 28,
+      "measured": true,
+      "excludedPauseMs": 359
+    },
+    {
+      "eventId": "e-said-ready",
+      "kind": "transcript",
+      "tEvent": 1789864579036,
+      "tPaint": 1789864579055,
+      "paintMs": 19,
+      "measured": true,
+      "excludedPauseMs": 385
+    },
+    {
+      "eventId": "e-pause-disp",
+      "kind": "pause_gate",
+      "tEvent": 1789864579112,
+      "tPaint": 1789864579119,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 385
+    }
+  ],
+  "needPaths": []
+}

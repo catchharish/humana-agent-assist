@@ -1,0 +1,254 @@
+{
+  "sessionId": "1f568c98-496d-4e57-8505-23a6d4de493a",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 58,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Partial answer",
+    "body": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) The cause is not confirmed.",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)",
+    "causeSupported": false,
+    "chargesEstablished": true,
+    "statements": [
+      {
+        "text": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid)",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "8.00"
+      },
+      {
+        "text": "metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid)",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "27.00"
+      },
+      {
+        "text": "Lakeview Pharmacy on 2026-09-16: standard_retail",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "highlight": "2026-09-16",
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ]
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Partial answer",
+    "body": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) The cause is not confirmed.",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)",
+    "statements": [
+      {
+        "text": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid)",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "8.00"
+      },
+      {
+        "text": "metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid)",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "27.00"
+      },
+      {
+        "text": "Lakeview Pharmacy on 2026-09-16: standard_retail",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "highlight": "2026-09-16",
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ]
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789864974276,
+      "tPaint": 1789864974290,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789864974352,
+      "tPaint": 1789864974367,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789864974427,
+      "tPaint": 1789864974435,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789864974500,
+      "tPaint": 1789864974642,
+      "paintMs": 142,
+      "measured": true,
+      "excludedPauseMs": 23
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789864974720,
+      "tPaint": 1789864975477,
+      "paintMs": 757,
+      "measured": true,
+      "excludedPauseMs": 23
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789864975562,
+      "tPaint": 1789864975575,
+      "paintMs": 13,
+      "measured": true,
+      "excludedPauseMs": 23
+    }
+  ],
+  "needPaths": []
+}

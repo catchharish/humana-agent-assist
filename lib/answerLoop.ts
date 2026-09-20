@@ -13,6 +13,14 @@ import {
 } from "@/lib/session";
 import type { SessionState } from "@/lib/types";
 import { supportCheck } from "@/lib/supportCheck";
+import {
+  recordFactsFromSources,
+  sourcesFromTool,
+  statementsFromModel,
+  statementsFromRecords,
+  type CitedStatement,
+  type RetrievedSource,
+} from "@/lib/citations";
 import { lookupReadyAnswers } from "@/lib/readyAnswers";
 import { pushRouterTrace } from "@/lib/session";
 import {
@@ -248,6 +256,9 @@ export type LoopResult = {
   toolsUsed: string[];
   facts: string[];
   liveSteps: string[];
+  statements: CitedStatement[];
+  retrieved: RetrievedSource[];
+  supportCheckMs: number;
   earlyKeep?: "keep" | "restart";
   preloadNames: string[];
   preloadUsed: string[];
@@ -406,7 +417,7 @@ export async function loadStableSnapshot(opts: {
   planId: string;
   authId: string;
   overlay?: string | null;
-}): Promise<string> {
+}): Promise<{ text: string; sources: RetrievedSource[] }> {
   const { origin, memberId, planId, authId } = opts;
   const demo = overlayHeaders(opts);
   const [plan, cost, rx, claims, prefs] = await Promise.all([
@@ -447,7 +458,17 @@ export async function loadStableSnapshot(opts: {
       ),
     ),
   );
-  return `SESSION SNAPSHOT after simulated auth. Stable facts (reuse; do not re-fetch unless missing):
+  const sources = [
+    ...sourcesFromTool("getPlan", plan.json),
+    ...sourcesFromTool("getCostShare", cost.json),
+    ...sourcesFromTool("getPrescriptions", rx.json),
+    ...sourcesFromTool("getClaims", claims.json),
+    ...sourcesFromTool("getContactPreferences", prefs.json),
+    ...nets.flatMap((n) => sourcesFromTool("getPharmacyNetwork", n.json)),
+  ];
+  return {
+    sources,
+    text: `SESSION SNAPSHOT after simulated auth. Stable facts (reuse; do not re-fetch unless missing):
 - memberId ${memberId} planId ${planId} (bound in code; never pass as tool args)
 - plan: ${JSON.stringify((plan.json as { data?: unknown }).data ?? plan.json)}
 - prescriptions: ${JSON.stringify((rx.json as { data?: unknown }).data ?? rx.json)}
@@ -455,7 +476,8 @@ export async function loadStableSnapshot(opts: {
 - cost-share / plan rule: ${JSON.stringify((cost.json as { data?: unknown }).data ?? cost.json)}
 - contact preferences: ${JSON.stringify((prefs.json as { data?: unknown }).data ?? prefs.json)}
 - pharmacy network by claim date: ${JSON.stringify(nets.map((n) => (n.json as { data?: unknown }).data))}
-LIVE — never use snapshot; fetch fresh: refill status, quotes, enrollment result, case status.`;
+LIVE — never use snapshot; fetch fresh: refill status, quotes, enrollment result, case status.`,
+  };
 }
 
 function thinSnapshot(memberId: string, planId: string) {
@@ -510,90 +532,7 @@ function factsFromTool(
   name: string,
   json: unknown,
 ): { text: string; source: string }[] {
-  const facts: { text: string; source: string }[] = [];
-  const data = innerData(json);
-  if (name === "getClaims") {
-    const claims =
-      (data as { claims?: Array<Record<string, unknown>> })?.claims ?? [];
-    for (const c of claims) {
-      const paid = c.memberPaidAmount as { value?: string } | undefined;
-      const ph = c.pharmacy as { name?: string } | undefined;
-      if (paid?.value && ph?.name) {
-        facts.push({
-          text: `${c.drugName} ${c.dateOfService}: ${ph.name} $${paid.value} (${c.appliedCostShareCategory})`,
-          source: `System record · claims · simulated (${c.claimId})`,
-        });
-      }
-    }
-  }
-  if (name === "getPharmacyNetwork") {
-    const rows =
-      (data as { rows?: Array<Record<string, unknown>> })?.rows ?? [];
-    for (const r of rows) {
-      facts.push({
-        text: `${r.pharmacyName} on ${r.asOfDate}: ${r.networkTier}`,
-        source: `System record · benefits · simulated (${r.classificationId})`,
-      });
-    }
-  }
-  if (name === "getCostShare") {
-    const body = (data as { body?: string; policyId?: string }).body;
-    if (body) {
-      facts.push({
-        text: body,
-        source: `Governed guidance · scripting · simulated (${(data as { policyId?: string }).policyId ?? "cost-share"})`,
-      });
-    }
-  }
-  if (name === "getRefillStatus") {
-    const st = (data as { fillStatus?: string; pharmacyName?: string; drugName?: string });
-    if (st.fillStatus) {
-      facts.push({
-        text: `${st.drugName ?? "refill"} status ${st.fillStatus}${st.pharmacyName ? ` at ${st.pharmacyName}` : ""}`,
-        source: "System record · pharmacy · simulated",
-      });
-    }
-  }
-  if (name === "getPharmacy") {
-    const n =
-      (data as { organizationName?: string }).organizationName ??
-      (data as { name?: string }).name;
-    if (n) {
-      facts.push({
-        text: `Pharmacy directory: ${n}`,
-        source: "System record · provider · simulated",
-      });
-    }
-  }
-  if (name === "getOpenCases" || name === "getCoverageCase") {
-    const rows =
-      (data as { cases?: Array<{ caseId?: string; status?: string; requestedMedication?: string }> })
-        .cases ??
-      ((data as { caseId?: string }).caseId
-        ? [data as { caseId?: string; status?: string; requestedMedication?: string }]
-        : []);
-    for (const row of rows) {
-      if (row.caseId) {
-        facts.push({
-          text: `Case ${row.caseId}: ${row.status} for ${row.requestedMedication}`,
-          source: `System record · coverage-review · simulated (${row.caseId})`,
-        });
-      }
-    }
-  }
-  if (name === "searchKnowledge") {
-    const cands =
-      (data as { candidates?: Array<{ id: string; text?: string }> })
-        .candidates ?? [];
-    const hit = cands.find((c) => /POLICY/i.test(c.id)) ?? cands[0];
-    if (hit?.text) {
-      facts.push({
-        text: hit.text,
-        source: `Governed guidance · scripting · simulated (${hit.id})`,
-      });
-    }
-  }
-  return facts;
+  return recordFactsFromSources(sourcesFromTool(name, json));
 }
 
 async function executeTool(
@@ -816,12 +755,19 @@ type PreloadPack = {
   names: string[];
   blocks: string[];
   facts: { text: string; source: string }[];
+  sources: RetrievedSource[];
 };
 
 async function runPreload(opts: LoopOpts): Promise<PreloadPack> {
   const names: string[] = ["searchKnowledge"];
   const blocks: string[] = [];
   const facts: { text: string; source: string }[] = [];
+  const sources: RetrievedSource[] = [];
+
+  const take = (n: string, json: unknown) => {
+    sources.push(...sourcesFromTool(n, json));
+    facts.push(...factsFromTool(n, json));
+  };
 
   const searchP = executeTool(opts, "searchKnowledge", {
     query: opts.question,
@@ -832,7 +778,8 @@ async function runPreload(opts: LoopOpts): Promise<PreloadPack> {
       `searchKnowledge (pre-loaded on member words): ${searchOut.output.slice(0, 4000)}`,
     );
     facts.push(...factsFromTool("searchKnowledge", searchOut.json));
-    return { names, blocks, facts };
+    sources.push(...sourcesFromTool("searchKnowledge", searchOut.json));
+    return { names, blocks, facts, sources };
   }
   const lunaP = lunaSuggestLookups(opts.question).then((raw) =>
     filterPreloadNames(raw, Boolean(opts.comparisonConsentYes)),
@@ -842,7 +789,7 @@ async function runPreload(opts: LoopOpts): Promise<PreloadPack> {
   blocks.push(
     `searchKnowledge (pre-loaded on member words): ${searchOut.output.slice(0, 4000)}`,
   );
-  facts.push(...factsFromTool("searchKnowledge", searchOut.json));
+  take("searchKnowledge", searchOut.json);
 
   const extra = lunaNames.filter((n) => n !== "searchKnowledge");
   const firstWave = extra.filter(
@@ -859,7 +806,7 @@ async function runPreload(opts: LoopOpts): Promise<PreloadPack> {
   );
   for (const { n, out } of firstResults) {
     blocks.push(`${n} (pre-loaded): ${out.output.slice(0, 2500)}`);
-    facts.push(...factsFromTool(n, out.json));
+    take(n, out.json);
   }
 
   if (extra.includes("getRefillStatus")) {
@@ -870,7 +817,7 @@ async function runPreload(opts: LoopOpts): Promise<PreloadPack> {
     if (id) {
       const out = await executeTool(opts, "getRefillStatus", { requestId: id });
       blocks.push(`getRefillStatus (pre-loaded): ${out.output.slice(0, 1500)}`);
-      facts.push(...factsFromTool("getRefillStatus", out.json));
+      take("getRefillStatus", out.json);
     }
   }
   if (extra.includes("getCoverageCase")) {
@@ -883,10 +830,10 @@ async function runPreload(opts: LoopOpts): Promise<PreloadPack> {
     if (caseId) {
       const out = await executeTool(opts, "getCoverageCase", { caseId });
       blocks.push(`getCoverageCase (pre-loaded): ${out.output.slice(0, 1500)}`);
-      facts.push(...factsFromTool("getCoverageCase", out.json));
+      take("getCoverageCase", out.json);
     }
   }
-  return { names: [...new Set(names)], blocks, facts };
+  return { names: [...new Set(names)], blocks, facts, sources };
 }
 
 function paintStep(session: SessionState | undefined, label: string) {
@@ -914,7 +861,7 @@ ${
     ? "Comparison consent is yes. Use getQuotes for follow-up prospective price questions. Do not put amounts on a suggestion card."
     : "Quotes/prospective prices are unavailable. Do not mention future fill estimates."
 }
-${short ? "Final answer: TWO or THREE sentences max for the advocate. Then a JSON object {\"sources\":[\"id or label\",...]} on its own line after the sentences." : "When done, write the final answer in prose."}
+${short ? "When done, return JSON only: {\"statements\":[{\"text\":\"one sentence\",\"sourceId\":\"an id from a tool result this turn\"}]}. Each statement cites a source you actually retrieved. One fact per statement. Do not guess." : "When done, write the final answer in prose, then the same statements JSON."}
 If support is missing, say so. Do not guess.`;
 }
 
@@ -935,20 +882,33 @@ async function nbaDraft(opts: LoopOpts, snapshot: string): Promise<NbaDraft | nu
     question: opts.question,
     conversation,
     planId: opts.planId,
+    needsSupport: opts.session
+      ? JSON.stringify({
+          needs: opts.session.needs.map((n) => ({
+            kind: n.kind,
+            status: n.status,
+            support: n.answer?.statements ?? [],
+          })),
+        })
+      : undefined,
     serviceTier: opts.serviceTier,
   });
 }
 
 export async function runAnswerLoop(opts: LoopOpts): Promise<LoopResult> {
-  const emptyPre: PreloadPack = { names: [], blocks: [], facts: [] };
-  const [snapshot, preloadPack] = await Promise.all([
+  const emptyPre: PreloadPack = { names: [], blocks: [], facts: [], sources: [] };
+  const [snapshotPack, preloadPack] = await Promise.all([
     opts.loadedSnapshot
       ? loadStableSnapshot(opts)
-      : Promise.resolve(thinSnapshot(opts.memberId, opts.planId)),
+      : Promise.resolve({
+          text: thinSnapshot(opts.memberId, opts.planId),
+          sources: [] as RetrievedSource[],
+        }),
     opts.preload || opts.preloadSearchOnly
       ? runPreload(opts)
       : Promise.resolve(emptyPre),
   ]);
+  const snapshot = snapshotPack.text;
   const usage: UsageAcc = { input: 0, output: 0, cached: 0 };
   const roundTraces: RoundTrace[] = [];
   const toolsUsed: string[] = [];
@@ -956,6 +916,10 @@ export async function runAnswerLoop(opts: LoopOpts): Promise<LoopResult> {
   const factSources: string[] = [];
   const liveSteps: string[] = [];
   const httpErrors: string[] = [];
+  const retrieved: RetrievedSource[] = [
+    ...(snapshotPack.sources ?? []),
+    ...(preloadPack.sources ?? []),
+  ];
   let rateLimitErrors = 0;
   let firstFactMs: number | null = null;
   for (const f of preloadPack.facts) {
@@ -1054,6 +1018,7 @@ export async function runAnswerLoop(opts: LoopOpts): Promise<LoopResult> {
         const out = await executeTool(opts, c.name, args);
         toolsUsed.push(c.name);
         const extracted = factsFromTool(c.name, out.json);
+        retrieved.push(...sourcesFromTool(c.name, out.json));
         for (const f of extracted) {
           facts.push(f.text);
           factSources.push(f.source);
@@ -1088,33 +1053,54 @@ export async function runAnswerLoop(opts: LoopOpts): Promise<LoopResult> {
   }
 
   await nbaPromise;
+  let parsedAns = statementsFromModel(answer);
+  if (/MODEL_ERROR|rate.?limit/i.test(answer)) {
+    const fromRecords = statementsFromRecords(retrieved);
+    if (fromRecords.length) {
+      parsedAns = {
+        prose: fromRecords.map((s) => s.text).join(" "),
+        statements: fromRecords,
+      };
+    }
+  }
+  if (parsedAns.statements.length) {
+    answer = parsedAns.prose || answer;
+  }
   let sources = factSources;
   if (opts.loadedSnapshot) {
     sources = [
       ...sources,
-      `Governed guidance · scripting · simulated (snapshot cost-share for ${opts.planId})`,
+      `Plan rules (snapshot cost-share for this plan)`,
     ];
-  }
-  if (opts.shortAnswers) {
-    const srcMatch = answer.match(/\{[\s\S]*"sources"[\s\S]*\}/);
-    if (srcMatch) {
-      try {
-        const parsed = JSON.parse(srcMatch[0]) as { sources?: string[] };
-        if (parsed.sources?.length) sources = parsed.sources;
-        answer = answer.replace(srcMatch[0], "").trim();
-      } catch {
-        /* keep prose */
-      }
-    }
   }
   const checked = supportCheck({
     question: opts.question,
     answer,
+    statements: parsedAns.statements.length ? parsedAns.statements : undefined,
+    retrieved,
     toolsUsed,
     snapshotHasPlanRule: opts.loadedSnapshot,
     sources,
   });
-  if (checked.partial) {
+  if (opts.session) {
+    opts.session.retrievedSources = [
+      ...opts.session.retrievedSources,
+      ...retrieved,
+    ];
+    opts.session.nowCard = {
+      ...opts.session.nowCard,
+      statements: checked.statements,
+    };
+    opts.session.diagnostics.supportCheckMs = checked.ms;
+    appendJsonl(opts.session.sessionId, {
+      kind: "support_check",
+      ms: checked.ms,
+      partial: checked.partial,
+      note: checked.note,
+      statements: checked.statements.length,
+    });
+  }
+  if (checked.body) {
     answer = checked.body;
   }
   const totalMs = performance.now() - opts.clockStart;
@@ -1138,9 +1124,10 @@ export async function runAnswerLoop(opts: LoopOpts): Promise<LoopResult> {
         {
           title: eightSecondPartial || checked.partial ? "Partial answer" : "Answer",
           body: answer,
-          sourceLabel: sources.join(" · ") || "System record · simulated",
+          sourceLabel: sources[0] || "Claims",
           liveSteps,
           earlyFacts: (opts.session.nowCard.earlyFacts ?? []).slice(),
+          statements: checked.statements,
         },
         { priority: "answer" },
       );
@@ -1169,6 +1156,9 @@ export async function runAnswerLoop(opts: LoopOpts): Promise<LoopResult> {
     toolsUsed,
     facts,
     liveSteps,
+    statements: checked.statements,
+    retrieved,
+    supportCheckMs: checked.ms,
     preloadNames: preloadPack.names,
     preloadUsed: preloadPack.names.filter((n) => !toolsUsed.includes(n)),
     preloadFetchedAnyway: toolsUsed,

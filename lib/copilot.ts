@@ -2,6 +2,7 @@ import { invalidateSessionTokens, normalizeScopeKey } from "@/lib/enrollmentToke
 import { interpretUtterance, finalCompatibleWithPartial, type Interpretation } from "@/lib/interpret";
 import { terraComplete, parseJsonObject } from "@/lib/openai";
 import { runAnswerLoop } from "@/lib/answerLoop";
+import { supportCheck } from "@/lib/supportCheck";
 import { proposeNba, logNbaAdvocate } from "@/lib/nba";
 import { fetchMemberQuotes } from "@/lib/quotesFetch";
 import { publishSession } from "@/lib/sse";
@@ -395,7 +396,12 @@ function recordNeedPath(
 function presentHistorical(
   session: SessionState,
   routed: { evidence: { causeSupported?: boolean; chargesEstablished?: boolean } },
-  drafted: { title: string; body: string; sourceLabel: string },
+  drafted: {
+    title: string;
+    body: string;
+    sourceLabel: string;
+    statements?: import("@/lib/citations").CitedStatement[];
+  },
   origin?: string,
 ) {
   const focusIsHistorical =
@@ -413,6 +419,7 @@ function presentHistorical(
       title: drafted.title,
       body: drafted.body,
       sourceLabel: drafted.sourceLabel,
+      statements: drafted.statements,
     }, { priority: "answer", needKind: "historical_price" });
     if (origin) void proposeNba(session, origin, drafted.title + " " + drafted.body);
   } else {
@@ -480,23 +487,26 @@ async function runHistorical(
     answer: {
       title: result.supportPartial ? "Partial answer" : "Completed charges",
       body: result.answer,
-      sourceLabel: result.sources.join(" · ") || "System record · simulated",
-      causeSupported: cause.causeSupported && !result.supportPartial,
+      sourceLabel: result.sources.join(" · ") || "Claims",
+      causeSupported: cause.causeSupported,
       chargesEstablished: cause.chargesEstablished,
+      statements: result.statements,
     },
   });
+  session.retrievedSources = result.retrieved ?? session.retrievedSources;
   presentHistorical(
     session,
     {
       evidence: {
-        causeSupported: cause.causeSupported && !result.supportPartial,
+        causeSupported: cause.causeSupported,
         chargesEstablished: cause.chargesEstablished,
       },
     },
     {
       title: result.supportPartial ? "Partial answer" : "Completed charges",
       body: result.answer,
-      sourceLabel: result.sources.join(" · ") || "System record · simulated",
+      sourceLabel: result.sources.join(" · ") || "Claims",
+      statements: result.statements,
     },
     origin,
   );
@@ -1090,6 +1100,37 @@ ${JSON.stringify({
   if (!session.transfer.connectionStatus) {
     session.wrapDraft = session.wrapStable;
   }
+  const wrapRetrieved = [
+    ...session.retrievedSources,
+    {
+      id: "session-evidence",
+      kind: "record" as const,
+      sourceTag: "Pharmacy system",
+      text: JSON.stringify({
+        refill: getNeed(session, "refill_status")?.answer ?? session.prefetch?.refill,
+        enrollment: session.enrollment,
+        coverage: session.coverage,
+      }),
+    },
+    ...session.transcript.map((t) => ({
+      id: t.id,
+      kind: "transcript" as const,
+      sourceTag: "Transcript",
+      text: t.text,
+    })),
+  ];
+  session.retrievedSources = wrapRetrieved;
+  const wrapCheck = supportCheck({
+    question: "wrap",
+    answer: session.wrapDraft,
+    retrieved: wrapRetrieved,
+    toolsUsed: [],
+    snapshotHasPlanRule: false,
+    sources: wrapRetrieved.map((s) => s.id),
+  });
+  session.wrapLines = wrapCheck.statements;
+  session.diagnostics.supportCheckMs =
+    (session.diagnostics.supportCheckMs ?? 0) + wrapCheck.ms;
   publishSession(session);
 }
 
@@ -1272,7 +1313,25 @@ ${JSON.stringify({
     parsed?.handoff ??
     (terra.ok
       ? terra.text
-      : `Handoff draft unavailable. ${session.coverage?.caseId ?? "The coverage case"} remains pending review.`);
+      : `Handoff draft unavailable. The coverage case remains pending review.`);
+  const handRetrieved = [
+    ...session.retrievedSources,
+    {
+      id: "coverage-status",
+      kind: "record" as const,
+      sourceTag: "Coverage review",
+      text: JSON.stringify(session.coverage ?? {}),
+    },
+  ];
+  const handCheck = supportCheck({
+    question: "handoff",
+    answer: session.handoffDraft,
+    retrieved: handRetrieved,
+    toolsUsed: [],
+    snapshotHasPlanRule: false,
+    sources: handRetrieved.map((s) => s.id),
+  });
+  session.handoffLines = handCheck.statements;
 }
 
 export async function confirmTransferDestination(session: SessionState) {
@@ -1404,12 +1463,35 @@ export function flagIssue(session: SessionState, note: string) {
   appendJsonl(session.sessionId, { kind: "issue_flagged", note });
 }
 
-export function viewEvidence(session: SessionState) {
-  session.openEvidence = { ...session.nowCard };
+export function viewEvidence(session: SessionState, sourceId?: string) {
+  if (sourceId) {
+    const st = [
+      ...(session.nowCard.statements ?? []),
+      ...(session.wrapLines ?? []),
+      ...(session.handoffLines ?? []),
+    ].find((s) => s.sourceId === sourceId);
+    const retrieved = session.retrievedSources.find((s) => s.id === sourceId);
+    const playbook = session.recommendation?.playbookPassage;
+    session.openEvidence = {
+      title: retrieved?.id || st?.sourceTag || "Opened record",
+      body: retrieved?.text || playbook || session.nowCard.body,
+      sourceLabel: retrieved
+        ? `${retrieved.sourceTag}`
+        : (st?.sourceTag ?? session.nowCard.sourceLabel),
+      highlight: st?.highlight ?? sourceId,
+    };
+  } else {
+    session.openEvidence = {
+      title: session.nowCard.title,
+      body: session.nowCard.body,
+      sourceLabel: session.nowCard.sourceLabel,
+    };
+  }
   appendJsonl(session.sessionId, {
     kind: "evidence_opened",
-    title: session.nowCard.title,
-    sourceLabel: session.nowCard.sourceLabel,
+    title: session.openEvidence.title,
+    sourceLabel: session.openEvidence.sourceLabel,
+    sourceId: sourceId ?? null,
   });
 }
 
@@ -2503,7 +2585,23 @@ export async function processTranscriptEvent(
         raw: interp.raw.slice(0, 500),
       };
       if (!interp.ok) {
-        if (line.stability !== "partial") {
+        if (line.stability !== "partial" && line.speaker === "member") {
+          const looksPastCharge =
+            /(\$|\bdollars?\b|\bpaid\b|\bcharged\b)/i.test(line.text) &&
+            /\b(last month|yesterday|ago|last fill|past)\b/i.test(line.text);
+          await applyInterpretation(
+            session,
+            origin,
+            line,
+            {
+              ...interp,
+              historicalAsked: interp.historicalAsked || looksPastCharge,
+            },
+            true,
+            { seq, consentAnchor },
+          );
+          publishSession(session);
+        } else if (line.stability !== "partial") {
           showNow(session, {
             title: "Interpretation unavailable",
             body: "Fast-tier interpretation did not return. No member conclusion was invented.",

@@ -5,6 +5,11 @@ import { appendJsonl } from "@/lib/log";
 import { parseJsonObject, terraComplete } from "@/lib/openai";
 import { requiredPricingOnNow } from "@/lib/session";
 import type { SessionState } from "@/lib/types";
+import type { CitedStatement } from "@/lib/citations";
+import {
+  confirmedTokens,
+  unconfirmedTokens,
+} from "@/lib/supportCheck";
 
 export type NbaStop =
   | "unverified"
@@ -12,7 +17,8 @@ export type NbaStop =
   | "already_enrolled"
   | "said_no"
   | "do_not_contact"
-  | "dismissed_this_call";
+  | "dismissed_this_call"
+  | "unconfirmed_fact";
 
 export type NbaConsidered = { action: string; whyNot: string };
 
@@ -27,6 +33,7 @@ export type NbaDraft = {
   preferredVsMail: string;
   advocateControl: "offer_dismiss" | "confirm_transfer";
   marksPricingUpcoming: boolean;
+  playbookPassage?: string;
 };
 
 const FORBIDDEN_ACTION = /^(enroll|coverage_decision|take_payment|clinical)/i;
@@ -62,7 +69,16 @@ function emptyDraft(reasons: string[]): NbaDraft {
   };
 }
 
-export function nbaHardStop(session: SessionState): {
+export function sessionStatements(session: SessionState): CitedStatement[] {
+  const fromNeeds = session.needs.flatMap((n) => n.answer?.statements ?? []);
+  const fromNow = session.nowCard.statements ?? [];
+  return [...fromNow, ...fromNeeds];
+}
+
+export function nbaHardStop(
+  session: SessionState,
+  draft?: NbaDraft | null,
+): {
   stop: NbaStop | null;
   detail: string;
 } {
@@ -85,6 +101,23 @@ export function nbaHardStop(session: SessionState): {
   if (session.nbaDismissedThisCall || session.recommendation?.status === "dismissed") {
     return { stop: "dismissed_this_call", detail: "already dismissed on this call" };
   }
+  if (draft && draft.action !== "none") {
+    const statements = sessionStatements(session);
+    const unconf = unconfirmedTokens(statements);
+    const conf = new Set(confirmedTokens(statements));
+    const blob = [draft.body, ...(draft.reasons ?? []), ...(draft.facts ?? [])]
+      .join(" ")
+      .toLowerCase();
+    const hit = unconf.find(
+      (tok) => tok.length > 3 && !conf.has(tok) && blob.includes(tok),
+    );
+    if (hit) {
+      return {
+        stop: "unconfirmed_fact",
+        detail: hit,
+      };
+    }
+  }
   return { stop: null, detail: "" };
 }
 
@@ -100,6 +133,7 @@ export async function draftNbaFromPlaybook(args: {
   question: string;
   conversation: string;
   planId: string;
+  needsSupport?: string;
   serviceTier?: "priority" | "fast";
 }): Promise<NbaDraft> {
   const search = await fetch(
@@ -139,7 +173,7 @@ export async function draftNbaFromPlaybook(args: {
 You cannot enroll, determine coverage, take payment, or give clinical advice.
 Do not mention prospective dollar amounts.
 Use only the session member's plan and records, not another member.
-Hard stops (identity, due-now wording, enrolled, said no, DNC, dismissed) are applied in code after you answer — still reason as if you must justify none vs an offer.
+Hard stops (identity, due-now wording, enrolled, said no, DNC, dismissed, unconfirmed fact) are applied in code after you answer — still reason as if you must justify none vs an offer.
 Action ids come only from the playbooks below (plus none). Do not invent ids.
 Return JSON only:
 {"action":string,"title":string,"body":string,"reasons":string[],"facts":string[],"playbookIds":string[],"considered":[{"action":string,"whyNot":string}],"preferredVsMail":string}
@@ -147,12 +181,16 @@ action must be one of: ${uniqueIds.join(", ")}
 considered must list every other action you thought about and why you rejected it.
 preferredVsMail: if this member has a preferred-retail vs standard-retail gap AND a mail-order comparison could also apply, say which you chose and why. Otherwise "".
 Do not copy another member's amounts.
+Each reasons item must name the member fact it rests on. Do not use a fact the support list marks as not confirmed.
 
 Playbooks:
 ${playbooks.map((p) => `${p.id}: ${p.text}`).join("\n")}
 
 Member snapshot:
 ${args.snapshot}
+
+Needs (resolved and unresolved) and support-check results:
+${args.needsSupport ?? "(none yet)"}
 
 Recent conversation:
 ${args.conversation}
@@ -203,6 +241,7 @@ ${args.question}`,
     preferredVsMail: String(parsed.preferredVsMail ?? ""),
     advocateControl: meta.advocateControl,
     marksPricingUpcoming: meta.marksPricingUpcoming,
+    playbookPassage: fromPlaybook?.text,
   };
 }
 
@@ -210,13 +249,14 @@ export function applyNbaAfterAnswer(
   session: SessionState,
   draft: NbaDraft | null,
 ) {
-  const gate = nbaHardStop(session);
+  const gate = nbaHardStop(session, draft);
   if (gate.stop) {
     logNba(session, {
       at: new Date().toISOString(),
       event: "hard_stop",
       stop: gate.stop,
       detail: gate.detail,
+      fact: gate.stop === "unconfirmed_fact" ? gate.detail : undefined,
       proposal: draft?.action ?? null,
       reasons: draft?.reasons ?? [],
       facts: draft?.facts ?? [],
@@ -257,9 +297,23 @@ export function applyNbaAfterAnswer(
     preferredVsMail: draft.preferredVsMail,
     advocateControl: draft.advocateControl,
     marksPricingUpcoming: draft.marksPricingUpcoming,
-    sourceLabel: "Playbook · scripting · simulated",
+    sourceLabel: draft.playbookIds[0]
+      ? `Playbook · ${draft.playbookIds[0]}`
+      : "Playbook",
+    playbookPassage: draft.playbookPassage,
     status: "pending",
   };
+  if (draft.playbookPassage && draft.playbookIds[0]) {
+    session.retrievedSources = [
+      ...session.retrievedSources,
+      {
+        id: draft.playbookIds[0],
+        kind: "playbook",
+        sourceTag: "Playbook",
+        text: draft.playbookPassage,
+      },
+    ];
+  }
   logNba(session, {
     at: new Date().toISOString(),
     event: "proposal",
@@ -289,7 +343,22 @@ export async function proposeNba(
     JSON.stringify(session.prefetch?.contactPreferences ?? {}),
     JSON.stringify(session.prefetch?.claims ?? []),
     JSON.stringify(session.coverage ?? null),
-    JSON.stringify(session.prefetch?.prescriptions ?? []),
+    JSON.stringify({
+      needs: session.needs.map((n) => ({
+        kind: n.kind,
+        status: n.status,
+        support: (n.answer?.statements ?? []).map((s) => ({
+          text: s.text,
+          confirmed: s.confirmed,
+          sourceId: s.sourceId,
+        })),
+      })),
+      nowSupport: (session.nowCard.statements ?? []).map((s) => ({
+        text: s.text,
+        confirmed: s.confirmed,
+        sourceId: s.sourceId,
+      })),
+    }),
   ].join("\n");
   const conversation = session.transcript
     .slice(-8)
@@ -302,6 +371,13 @@ export async function proposeNba(
     question,
     conversation,
     planId: session.member?.planId ?? "",
+    needsSupport: JSON.stringify({
+      needs: session.needs.map((n) => ({
+        kind: n.kind,
+        status: n.status,
+        support: n.answer?.statements ?? [],
+      })),
+    }),
   });
   applyNbaAfterAnswer(session, draft);
 }

@@ -1,0 +1,210 @@
+{
+  "sessionId": "64149784-1daf-4e4e-938d-715efe88cf34",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 741,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Completed charges",
+    "body": "MODEL_ERROR 429",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)",
+    "causeSupported": false,
+    "chargesEstablished": true,
+    "statements": [
+      {
+        "text": "MODEL_ERROR 429",
+        "sourceId": "DEMO-MAPD-001",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "MODEL_ERROR 429"
+      }
+    ]
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Completed charges",
+    "body": "MODEL_ERROR 429",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)",
+    "statements": [
+      {
+        "text": "MODEL_ERROR 429",
+        "sourceId": "DEMO-MAPD-001",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "MODEL_ERROR 429"
+      }
+    ]
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789864774875,
+      "tPaint": 1789864774899,
+      "paintMs": 24,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789864774961,
+      "tPaint": 1789864774982,
+      "paintMs": 21,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789864775042,
+      "tPaint": 1789864775050,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789864775120,
+      "tPaint": 1789864775268,
+      "paintMs": 148,
+      "measured": true,
+      "excludedPauseMs": 29
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789864775340,
+      "tPaint": 1789864776384,
+      "paintMs": 1044,
+      "measured": true,
+      "excludedPauseMs": 29
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789864777185,
+      "tPaint": 1789864777232,
+      "paintMs": 47,
+      "measured": true,
+      "excludedPauseMs": 29
+    }
+  ],
+  "needPaths": []
+}

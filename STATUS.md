@@ -1,25 +1,25 @@
 # STATUS
 
-**Milestone:** M4 complete (reasoning loop, chain 10/10, no graph). T01 + six replays green.
-**Last updated:** 19 Sep 2026
+**Milestone:** M4. General citations/NBA/facts pass (20 Sep). Overlay names out of product conditionals.
+**Last updated:** 20 Sep 2026
 
 ## Works
-- Model-routed answers (Terra + session-bound tools). `queryRouter` gone. Quotes: code-on-yes uses the same `getQuotes` GET; model after consent.
-- Plan filter and support check use the session plan. M004 $12 / DEMO-POLICY-OTHER kept; MAPD cost policy rejected for that session.
-- Coverage list returns 200 `{ cases: [] }`. Chain hops c02/c07/c08 work.
-- NBA action ids from playbook text. M005 “none” is model-reasoned (not a code stop). M002 enrolled / M003 DNC still code stops. Playbook-only `other_plan_cost_explain` for M004.
-- Presenter member selector (M001–M005). Not-canned tests passed. Log kind `lookup_trace`.
-- Chain `runs/chain_eval_1789835175024.json`: **10/10**, 0 over 8s. Graph: do not build now.
-- GitHub `main`: https://github.com/catchharish/humana-agent-assist (GitHub linked on Vercel).
-- **Production:** https://humana-agent-assist.vercel.app — T01 Start + Resume verified 19 Sep: greeting Said, Harry MAPD after auth, refill answer (Lakeview / ready for pickup). OPENAI_* set. Run log + ready-answer cache write to `/tmp` on Vercel.
+- Six replays **6/6** (T06A via unmatched classifications → “cause is not confirmed”, not a T06A branch).
+- Facts panel = member records; preferred/standard only from dated classification rows.
+- After auth, Need/step is **Listening** until a need is detected (no refill-on-auth default).
+- NBA hard stops are seven; `unconfirmed_fact` logs the token. Playbook text covers refill-only / unconfirmed cause.
+- Per-statement support check typically **0.1–3 ms** (`support_check.ms`).
 
 ## Broken / incomplete
-- None for production Start (EROFS fixed; logs/cache under `/tmp` on Vercel).
+- T01 this run: failed waiting for coverage (luna interpret empty; no coverage cue fallback). An earlier run in this pass completed after Listening; **T01 does not depend on a refill-on-auth default.**
+- Chain last file `runs/chain_eval_1789865125185.json`: **5/10**, 0 over 8s (prior `1789863778279.json` was **9/10**, c08 Ozempic wipe). Misses logged, not averaged.
+- `tests/not_canned.test.ts`: 1/3 (same-member hist vs refill bodies matched claim dump; M004 model `none` not `other_plan_cost_explain`).
+- `tests/nba_members.test.ts`: Harry suggestion not pending (7th stop or model none).
 
 ## Next three tasks
-1. Optional freeze / SUBMISSION.md pass if presenting.
-2. Confirm the GitHub-connected Vercel deploy of this commit stays green.
-3. Stop unless asked.
+1. Re-run T01 / chain / not-canned when Luna is not empty/429.
+2. Item 6 full T01 screenshot set with demo details off (idle screenshot taken; pause-by-pause not completed this run).
+3. Freeze / SUBMISSION only if Harish asks.
 
 ## Open questions for Harish
 - None.

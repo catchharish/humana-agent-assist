@@ -9,28 +9,60 @@ import { questionCouldChange } from "@/lib/answerLoop";
 import type { DisclosureRequirement } from "@/lib/types";
 
 describe("support check", () => {
-  it("marks price-cause without a plan-rule source as partial", () => {
+  it("marks a preferred-retail cause without a dated classification as not confirmed", () => {
     const r = supportCheck({
       question: "Why was my metformin $8 last month and $27 yesterday?",
       answer:
-        "Oak Street was preferred so you paid $8 and Lakeview was standard so you paid $27.",
+        "Oak Street Pharmacy was preferred so you paid $8.00 and Lakeview Pharmacy was standard so you paid $27.00.",
       toolsUsed: ["getClaims", "getPharmacyNetwork"],
       snapshotHasPlanRule: false,
-      sources: ["System record · claims · simulated"],
+      sources: ["DEMO-C0818"],
+      retrieved: [
+        {
+          id: "DEMO-C0818",
+          kind: "record",
+          sourceTag: "Claims",
+          text: JSON.stringify({
+            claimId: "DEMO-C0818",
+            memberPaidAmount: "8.00",
+            pharmacy: "Oak Street Pharmacy",
+          }),
+        },
+      ],
     });
     expect(r.partial).toBe(true);
-    expect(r.body).toBe("Charges confirmed; rule not confirmed.");
+    expect(r.body).toMatch(/not confirmed/i);
   });
 
-  it("accepts a plan-rule tool as support", () => {
+  it("confirms a network-tier sentence from a dated classification record", () => {
     const r = supportCheck({
       question: "Why was my metformin $8 last month and $27 yesterday?",
-      answer: "Preferred vs standard under the plan rule.",
-      toolsUsed: ["getClaims", "getCostShare"],
+      answer: "Oak Street Pharmacy was preferred retail on 2026-08-18.",
+      statements: [
+        {
+          text: "Oak Street Pharmacy was preferred retail on 2026-08-18.",
+          sourceId: "DEMO-NET0818",
+        },
+      ],
+      toolsUsed: ["getPharmacyNetwork"],
       snapshotHasPlanRule: false,
-      sources: ["Governed guidance · scripting · simulated"],
+      sources: ["DEMO-NET0818"],
+      retrieved: [
+        {
+          id: "DEMO-NET0818",
+          kind: "classification",
+          sourceTag: "Plan rules",
+          text: JSON.stringify({
+            classificationId: "DEMO-NET0818",
+            pharmacyName: "Oak Street Pharmacy",
+            asOfDate: "2026-08-18",
+            networkTier: "preferred_retail",
+          }),
+        },
+      ],
     });
     expect(r.partial).toBe(false);
+    expect(r.statements[0]?.confirmed).toBe(true);
   });
 });
 

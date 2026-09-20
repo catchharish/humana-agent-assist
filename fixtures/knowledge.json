@@ -69,7 +69,7 @@
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
     "mainTopics": ["when a retail vs delivery comparison may be offered"],
-    "text": "Action id: optional_comparison. Advocate control: offer_dismiss. Marks pricing upcoming: yes. Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+    "text": "Action id: optional_comparison. Advocate control: offer_dismiss. Marks pricing upcoming: yes. Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. Do not offer when the only matter on the call is refill or other servicing and the member never raised price, cost, estimate, or comparison. Do not state or depend on a pharmacy network category or other cause that the support check marked as not confirmed. A comparison may still be offered without claiming that cause. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
   },
   {
     "id": "DEMO-PLAYBOOK-OBJECTION-v1",

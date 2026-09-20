@@ -13,6 +13,8 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
     expect(s.needs.some((n) => n.kind === "prospective_comparison")).toBe(false);
     expect(s.enrollment.submitted).toBe(false);
     expect(s.pricing).toBe("not_applicable");
+    expect(s.recommendation?.status === "pending").toBe(false);
+    expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
     expect(s.disposition.recommended).toBe("COMPLETED_SERVICING");
     expect(s.disposition.confirmed).toBe("COMPLETED_SERVICING");
   }, 180_000);
@@ -57,6 +59,16 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
     const hist = s.needs.find((n) => n.kind === "historical_price");
     expect(hist?.answer?.chargesEstablished).toBe(true);
     expect(hist?.answer?.causeSupported).toBe(false);
+    expect(hist?.answer?.body).toMatch(/\$8|8/);
+    expect(hist?.answer?.body).toMatch(/\$27|27/);
+    expect(hist?.answer?.body).toMatch(/not confirmed/i);
+    expect(hist?.answer?.body).not.toMatch(/because|classified as/i);
+    expect(s.nowCard.body).toMatch(/not confirmed/i);
+    expect(s.nowCard.body).not.toMatch(/preferred versus standard/i);
+    expect(JSON.stringify(s.nowCard.earlyFacts ?? [])).not.toMatch(
+      /preferred retail/i,
+    );
+    expect(s.recommendation?.status === "pending").toBe(false);
   }, 180_000);
 
   it("T08B changed scope and withdrawal", async () => {

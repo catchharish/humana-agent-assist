@@ -85,6 +85,15 @@ describe("NBA hard stops", () => {
   });
   it("shows at most one pending suggestion when no hard stop", () => {
     const s = sessionWithPrefs({});
+    s.transcript = [
+      {
+        id: "e1",
+        speaker: "member",
+        stability: "final",
+        text: "Why was it eight dollars last month?",
+        receivedAt: 1,
+      },
+    ];
     applyNbaAfterAnswer(s, {
       action: "optional_comparison",
       title: "Compare",
@@ -99,5 +108,59 @@ describe("NBA hard stops", () => {
     });
     expect(s.recommendation?.kind).toBe("optional_comparison");
     expect(s.recommendation?.reasons).toContain("not enrolled");
+  });
+  it("applies a model proposal when no hard stop hits", () => {
+    const s = sessionWithPrefs({});
+    s.transcript = [
+      {
+        id: "e1",
+        speaker: "member",
+        stability: "final",
+        text: "Can you check if my atorvastatin is ready today?",
+        receivedAt: 1,
+      },
+    ];
+    applyNbaAfterAnswer(s, {
+      action: "optional_comparison",
+      title: "Compare",
+      body: "Offer a retail vs delivery comparison.",
+      reasons: ["not enrolled"],
+      facts: ["active plan"],
+      playbookIds: ["DEMO-PLAYBOOK-OFFERS-v1"],
+      considered: [],
+      preferredVsMail: "",
+      advocateControl: "offer_dismiss",
+      marksPricingUpcoming: true,
+    });
+    expect(s.recommendation?.kind).toBe("optional_comparison");
+  });
+  it("blocks a suggestion that relies on a fact the support check did not confirm", () => {
+    const s = sessionWithPrefs({});
+    s.nowCard.statements = [
+      {
+        text: "Oak Street Pharmacy was preferred retail on 2026-08-18.",
+        sourceId: "DEMO-NET0818",
+        sourceTag: "Not confirmed",
+        confirmed: false,
+        note: "network_tier_without_dated_classification",
+      },
+    ];
+    applyNbaAfterAnswer(s, {
+      action: "optional_comparison",
+      title: "Offer",
+      body: "after explaining preferred versus standard retail network status",
+      reasons: ["preferred retail gap"],
+      facts: ["August claim preferred retail"],
+      playbookIds: ["DEMO-PLAYBOOK-OFFERS-v1"],
+      considered: [],
+      preferredVsMail: "",
+      advocateControl: "offer_dismiss",
+      marksPricingUpcoming: true,
+    });
+    expect(s.recommendation).toBeNull();
+    expect(s.diagnostics.nba.some((r) => r.stop === "unconfirmed_fact")).toBe(
+      true,
+    );
+    expect(s.diagnostics.nba.some((r) => r.fact)).toBe(true);
   });
 });
