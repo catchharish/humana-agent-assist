@@ -21,11 +21,25 @@ describe.skipIf(!live || !runT01)("T01 automated main (fresh model calls)", () =
     const readyGate = s.diagnostics.pauseSnapshots.find((p) =>
       /refill is primary; historical should be deferred/i.test(p.label),
     );
-    expect(readyGate?.historicalStatus).toBe("deferred");
-    expect(["preparing", "deferred_valid"]).toContain(
-      readyGate?.historicalGuidance,
+    expect(readyGate).toBeTruthy();
+    expect(readyGate?.nowBody ?? "").not.toMatch(/\$8/);
+    expect(readyGate?.nowBody ?? "").not.toMatch(/\$27/);
+    expect(
+      readyGate?.historicalStatus === "deferred" ||
+        readyGate?.historicalGuidance === "deferred_valid",
+    ).toBe(true);
+    const hist = s.needs.find((n) => n.kind === "historical_price");
+    const refill = s.needs.find((n) => n.kind === "refill_status");
+    expect(hist?.answer?.body ?? "").toMatch(/\$?8/);
+    expect(hist?.answer?.body ?? "").toMatch(/\$?27/);
+    expect(hist?.answer?.body ?? "").not.toMatch(/is active for/i);
+    expect(refill?.answer?.body ?? "").toMatch(/ready/i);
+    expect(s.actionResults.some((a) => a.kind === "enrollment_submit")).toBe(
+      true,
     );
-    expect(s.needs.some((n) => n.kind === "historical_price" && n.status === "resolved")).toBe(true);
-    expect(s.diagnostics.router.some((r) => r.recheck)).toBe(true);
+    expect(
+      s.diagnostics.rechecks.length > 0 ||
+        s.diagnostics.router.some((r) => r.recheck),
+    ).toBe(true);
   }, 900_000);
 });

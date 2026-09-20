@@ -1,0 +1,253 @@
+{
+  "sessionId": "7d930532-cbe6-490d-a710-f40f7fb7ffe2",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 44,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Partial answer",
+    "body": "The cause is not confirmed.",
+    "sourceLabel": "Claims"
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Partial answer",
+    "body": "The cause is not confirmed.",
+    "sourceLabel": "Claims",
+    "liveSteps": [
+      "Searching knowledge…",
+      "Checking claims…",
+      "Checking pharmacy network…",
+      "Checking pharmacy network…",
+      "Reading plan rules…"
+    ],
+    "earlyFacts": [
+      {
+        "text": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid)",
+        "source": "Claims"
+      },
+      {
+        "text": "metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid)",
+        "source": "Claims"
+      },
+      {
+        "text": "Lakeview Pharmacy on 2026-09-16: standard_retail",
+        "source": "Plan rules"
+      }
+    ],
+    "statements": [
+      {
+        "text": "Your August 18 metformin fill was a 30-day supply at Oak Street Pharmacy with an $8 preferred-retail cost-share, while your September 16 fill was the same 30-day supply at Lakeview Pharmacy with a $27 standard-retail cost-share.",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "For this plan and period, a matched 30-day supply of metformin 500 mg has an $8 preferred-retail cost-share and a $27 standard-retail cost-share under the recorded conditions.",
+        "sourceId": "DEMO-POLICY-COST-v1",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "Lakeview Pharmacy was classified as standard retail on September 16, the date of the $27 fill.",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification",
+        "highlight": "27.00",
+        "lookedFor": [
+          "27.00",
+          "September 16",
+          "Lakeview Pharmacy"
+        ],
+        "found": [
+          "September 16",
+          "Lakeview Pharmacy"
+        ]
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ],
+    "canRetry": false,
+    "retryCause": null
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789867749567,
+      "tPaint": 1789867749578,
+      "paintMs": 11,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789867749631,
+      "tPaint": 1789867749644,
+      "paintMs": 13,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789867749696,
+      "tPaint": 1789867749708,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789867749767,
+      "tPaint": 1789867749879,
+      "paintMs": 112,
+      "measured": true,
+      "excludedPauseMs": 17
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789867749950,
+      "tPaint": 1789867755933,
+      "paintMs": 5983,
+      "measured": true,
+      "excludedPauseMs": 17
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789867756000,
+      "tPaint": 1789867756009,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 17
+    }
+  ],
+  "needPaths": []
+}

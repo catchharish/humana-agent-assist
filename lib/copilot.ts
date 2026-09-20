@@ -1,7 +1,7 @@
 import { invalidateSessionTokens, normalizeScopeKey } from "@/lib/enrollmentToken";
 import { interpretUtterance, finalCompatibleWithPartial, type Interpretation } from "@/lib/interpret";
 import { terraComplete, parseJsonObject } from "@/lib/openai";
-import { runAnswerLoop } from "@/lib/answerLoop";
+import { runAnswerLoop, retrievedFingerprint } from "@/lib/answerLoop";
 import { supportCheck } from "@/lib/supportCheck";
 import { proposeNba, logNbaAdvocate } from "@/lib/nba";
 import { fetchMemberQuotes } from "@/lib/quotesFetch";
@@ -17,7 +17,9 @@ import {
 } from "@/lib/copy";
 import { isExactReading, isWordingAttempt, stitchedReading, wordDiff } from "@/lib/exactness";
 import {
+  beginAnswerLoop,
   getNeed,
+  recordActionResult,
   pushRouterTrace,
   pushTriggerTrace,
   requiredPricingOnNow,
@@ -34,7 +36,7 @@ import {
   matchesAny,
   namedMedicationsInText,
 } from "@/lib/utteranceRules";
-import type { SessionState } from "@/lib/types";
+import type { NeedKind, SessionState } from "@/lib/types";
 import { classifyLunaTrigger, classifyPricingTrigger, closingAttemptCues } from "@/lib/triggers";
 
 const historicalJobs = new Map<string, string>();
@@ -64,6 +66,134 @@ function answerLoopBase(session: SessionState, origin: string, question: string)
     overlay: session.overlay,
     comparisonConsentYes: session.consent.comparison === "absolute_yes",
   };
+}
+
+async function runMemberQuestionLoop(
+  session: SessionState,
+  origin: string,
+  question: string,
+  needKind?: NeedKind,
+  sourceUtteranceId?: string,
+) {
+  if (!question.trim()) return;
+  const owned = sourceUtteranceId
+    ? session.needs.find((n) => n.sourceUtteranceId === sourceUtteranceId)
+    : undefined;
+  const kind = owned?.kind ?? needKind;
+  try {
+    if (kind && !getNeed(session, kind)?.queryText) {
+      upsertNeed(session, kind, {
+        queryText: question,
+        sourceUtteranceId: sourceUtteranceId ?? getNeed(session, kind)?.sourceUtteranceId,
+      });
+    }
+    const generation = beginAnswerLoop(
+      session,
+      question,
+      kind,
+      sourceUtteranceId,
+    );
+    await runAnswerLoop({
+      ...answerLoopBase(session, origin, question),
+      generation,
+      paintNow: true,
+      needKind: kind,
+      sourceUtteranceId,
+    });
+  } catch (err) {
+    appendJsonl(session.sessionId, {
+      kind: "answer_loop_error",
+      need: kind ?? "member_question",
+      error: String(err),
+    });
+  }
+}
+
+export async function resumeParkedNeed(
+  session: SessionState,
+  origin: string,
+  kind: NeedKind,
+) {
+  const need = getNeed(session, kind);
+  const queryText = need?.queryText;
+  if (!queryText) {
+    setFocus(session, kind, need?.flowStep ?? "advocate-selected focus");
+    if (need?.answer) {
+      showNow(session, {
+        title: need.answer.title,
+        body: need.answer.body,
+        sourceLabel: need.answer.sourceLabel,
+        statements: need.answer.statements,
+      }, { priority: "answer", needKind: kind });
+    }
+    return;
+  }
+  const prevFp = need?.fingerprint ?? "";
+  upsertNeed(session, kind, {
+    status: "active",
+    guidance: "preparing",
+    flowStep: "recheck dependencies → explain or preserve gap",
+  });
+  setFocus(session, kind, "recheck dependencies → explain or preserve gap");
+  try {
+    const generation = beginAnswerLoop(
+      session,
+      queryText,
+      kind,
+      need?.sourceUtteranceId,
+    );
+    const result = await runAnswerLoop({
+      ...answerLoopBase(session, origin, queryText),
+      generation,
+      paintNow: true,
+      needKind: kind,
+      routerRecheck: true,
+      sourceUtteranceId: need?.sourceUtteranceId,
+    });
+    const fp = retrievedFingerprint(result.retrieved ?? []);
+    const changed = Boolean(prevFp && prevFp !== fp);
+    session.diagnostics.rechecks.push({
+      at: new Date().toISOString(),
+      fingerprint: fp,
+      changed,
+    });
+    pushRouterTrace(session, {
+      routesUsed: result.toolsUsed,
+      latencyMs: Math.round(result.totalMs),
+      retrieved: (result.retrieved ?? []).map((s) => ({
+        id: s.id,
+        sourceSystem: s.sourceTag,
+      })),
+      rejected: [],
+      recheck: true,
+    });
+    appendJsonl(session.sessionId, {
+      kind: "answer_recheck",
+      needKind: kind,
+      previousFingerprint: prevFp,
+      fingerprint: fp,
+      changed,
+    });
+  } catch (err) {
+    appendJsonl(session.sessionId, {
+      kind: "answer_loop_error",
+      need: kind,
+      error: String(err),
+    });
+  }
+}
+
+export async function promoteHistorical(
+  session: SessionState,
+  origin: string,
+) {
+  await resumeParkedNeed(session, origin, "historical_price");
+}
+
+export async function retryLastAnswer(session: SessionState, origin: string) {
+  const q = session.lastAnswerQuestion;
+  if (!q) return;
+  await runMemberQuestionLoop(session, origin, q);
 }
 
 async function paintLoopNeed(
@@ -242,6 +372,36 @@ function lastAdvocateIsCurrentReadback(session: SessionState): boolean {
     isExactReading(last.text, session.enrollment.readback) ||
     isWordingAttempt(last.text, session.enrollment.readback, 0.7)
   );
+}
+
+function waitingNeedMatchingUtterance(
+  session: SessionState,
+  text: string,
+): NeedKind | undefined {
+  const t = text.toLowerCase();
+  const wordCount = t.split(/\s+/).filter(Boolean).length;
+  if (wordCount > 10) return undefined;
+  const returnCue =
+    /\b(so,? the|what about (that|those)|those amounts|that price|back to (that|it|the))\b/.test(
+      t,
+    );
+  for (const n of session.needs) {
+    if (n.status !== "deferred" && n.guidance !== "deferred_valid") continue;
+    if (!n.queryText) continue;
+    const vocab = n.queryText
+      .toLowerCase()
+      .split(/[^a-z]+/)
+      .filter((w) => w.length > 4);
+    const named = namedMedicationsInText(text, [
+      ...sessionQuoteEntities(session).drugs,
+      ...vocab,
+    ]);
+    const mentionsParked = named.some((d) =>
+      n.queryText!.toLowerCase().includes(d.toLowerCase()),
+    );
+    if (returnCue || mentionsParked) return n.kind;
+  }
+  return undefined;
 }
 
 function sessionQuoteEntities(session: SessionState) {
@@ -518,35 +678,6 @@ async function runHistorical(
       error: String(err),
     });
   }
-}
-
-export async function promoteHistorical(
-  session: SessionState,
-  origin: string,
-) {
-  const hist = getNeed(session, "historical_price");
-  const queryText = hist?.queryText;
-  if (!queryText) {
-    showNow(session, {
-      title: "Need clarification",
-      body: "A deferred historical-price need has no originating query in conversation state. Withholding rather than guessing.",
-      sourceLabel: "Governed guidance · scripting · simulated",
-    });
-    return;
-  }
-  upsertNeed(session, "historical_price", {
-    status: "active",
-    guidance: "preparing",
-  });
-  setFocus(
-    session,
-    "historical_price",
-    "recheck dependencies → explain or preserve gap",
-  );
-  await runHistorical(session, origin, queryText, {
-    injectedDelayMs: 0,
-    recheck: true,
-  });
 }
 
 function historicalCauseFromPrefetch(session: SessionState) {
@@ -910,32 +1041,9 @@ export async function loadFast90(
   origin: string,
   updateFocus = true,
 ) {
+  void origin;
   const pre = session.prefetch?.fast90;
-  let art = pre ?? null;
-  if (!art) {
-    try {
-      const result = await runAnswerLoop({
-        ...answerLoopBase(
-          session,
-          origin,
-          "What is the 90-day CenterWell option, and does enrollment change today's retail pickup?",
-        ),
-        paintNow: false,
-      });
-      art = {
-        articleId: "DEMO-FAST90-v1",
-        body: result.answer,
-        lineageSourceId: "DEMO-SERVICE-v1",
-        version: "v1",
-      };
-    } catch (err) {
-      appendJsonl(session.sessionId, {
-        kind: "answer_loop_error",
-        need: "service_education",
-        error: String(err),
-      });
-    }
-  }
+  const art = pre ?? null;
   if (art) {
     pushRouterTrace(session, {
       routesUsed: ["knowledge_search"],
@@ -1074,16 +1182,29 @@ async function draftWrapStable(session: SessionState) {
 Rules: use only Evidence. Do not state a transfer connection, specialist connected, or final disposition. Those have not returned. Do not invent pickup, approval, or coverage determination.
 Evidence:
 ${JSON.stringify({
-  refill: getNeed(session, "refill_status")?.answer ?? session.prefetch?.refill,
+  needs: session.needs.map((n) => ({
+    kind: n.kind,
+    question: n.queryText ?? null,
+    answer: n.answer
+      ? {
+          body: n.answer.body,
+          sourceLabel: n.answer.sourceLabel,
+        }
+      : null,
+  })),
+  actions: session.actionResults.map((a) => ({
+    kind: a.kind,
+    body: a.body,
+    sourceLabel: a.sourceLabel,
+  })),
   refillFresh: session.prefetch?.refillFresh,
-  historical: getNeed(session, "historical_price")?.answer ?? null,
-  education: getNeed(session, "service_education")?.answer ?? null,
   enrollment: session.enrollment,
   coverage: session.coverage,
   pricing: session.pricing,
   closing: session.closing,
   optionalWorkSuppressed: session.optionalWorkSuppressed,
-})}`,
+})}
+Each wrap sentence must come from one need's current answer or one action result, and name that source.`,
     500,
   );
   const parsed = parseJsonObject<{ wrap?: string }>(terra.text);
@@ -1093,6 +1214,8 @@ ${JSON.stringify({
     ok: terra.ok,
     ms: terra.ms,
     usage: terra.usage ?? null,
+    httpStatus: terra.httpStatus,
+    error: terra.error,
   });
   session.wrapStable =
     parsed?.wrap ??
@@ -1413,13 +1536,21 @@ export async function executeTransfer(session: SessionState, origin: string) {
       "Wrap draft unavailable (timeout). Labeled manual template: record completed work from the session evidence; do not invent a connection.";
   }
   fillWrapOutcome(session);
+  const connBody = `${session.transfer.transferId ?? "unassigned"}: ${status}. ${
+    session.coverage
+      ? `${session.coverage.caseId} remains ${session.coverage.status}`
+      : "No coverage case is on the session"
+  }. Connection is not a coverage determination.`;
+  recordActionResult(session, {
+    kind: "transfer_connect",
+    title: "Connection result",
+    body: connBody,
+    sourceLabel: "System record · telephony · simulated",
+    at: new Date().toISOString(),
+  });
   showNow(session, {
     title: "Connection result",
-    body: `${session.transfer.transferId ?? "unassigned"}: ${status}. ${
-      session.coverage
-        ? `${session.coverage.caseId} remains ${session.coverage.status}`
-        : "No coverage case is on the session"
-    }. Connection is not a coverage determination.`,
+    body: connBody,
     sourceLabel: "System record · telephony · simulated",
   });
   return { ok: true as const };
@@ -1607,6 +1738,8 @@ export async function applyAdvocateObligations(
           classification: luna.classification,
           fired: luna.fired,
           hedgeMs: "hedgeMs" in luna ? luna.hedgeMs : undefined,
+          httpStatus: "httpStatus" in luna ? luna.httpStatus : undefined,
+          error: "error" in luna ? luna.error : undefined,
           saidAt,
           offsetMs: stamped.offsetMs,
         });
@@ -1689,48 +1822,17 @@ async function applyInterpretation(
       sourceUtteranceId: line.id,
     });
     focus("refill_status", "verify → check existing request");
-    try {
-    const result = await runAnswerLoop({
-      ...answerLoopBase(session, origin, line.text),
-      paintNow: true,
-    });
-    paintLoopNeed(
-      session,
-      "refill_status",
-      "Existing refill request",
-      result,
-      "verify → check existing request",
-    );
-    upsertNeed(session, "refill_status", {
-      status: "active",
-      guidance: "ready",
-    });
-    showNow(
-      session,
-      {
-        title: "Existing refill request",
-        body: result.answer,
-        sourceLabel: result.sources.join(" · ") || "System record · pharmacy · simulated",
-      },
-      { priority: "answer", needKind: "refill_status" },
-    );
-    } catch (err) {
-      appendJsonl(session.sessionId, {
-        kind: "answer_loop_error",
-        need: "refill_status",
-        error: String(err),
-      });
-    }
   }
 
   if (interp.historicalAsked && line.speaker === "member") {
+    const prior = getNeed(session, "historical_price");
     const histPatch: Parameters<typeof upsertNeed>[2] = {
-      status: "requested",
-      guidance: "preparing",
+      status: prior?.answer ? prior.status : "requested",
+      guidance: prior?.answer ? prior.guidance : "preparing",
       flowStep: "identify matching purchases → retrieve applied policy/evidence",
-      sourceUtteranceId: line.id,
+      sourceUtteranceId: prior?.sourceUtteranceId ?? line.id,
     };
-    if (line.speaker === "member") histPatch.queryText = line.text;
+    if (!prior?.queryText) histPatch.queryText = line.text;
     upsertNeed(session, "historical_price", histPatch);
     if (interp.refillCheck === "none" && !interp.returnToHistorical) {
       focus(
@@ -1738,20 +1840,11 @@ async function applyInterpretation(
         "identify matching purchases → retrieve applied policy/evidence",
       );
     }
-    const q = getNeed(session, "historical_price")?.queryText ?? (line.speaker === "member" ? line.text : "");
-    const jobKey = `${session.sessionId}:historical:${q}`;
-    if (q && historicalJobs.get(jobKey) !== q) {
-      historicalJobs.set(jobKey, q);
-      void runHistorical(session, origin, q, {
-        injectedDelayMs: session.injectedDelayMs,
-        recheck: false,
-      });
-    }
   }
 
   if (interp.refillCheck === "current_readiness" && line.speaker === "member") {
     const hist = getNeed(session, "historical_price");
-    if (hist && hist.status !== "resolved") {
+    if (hist) {
       upsertNeed(session, "historical_price", {
         status: "deferred",
         guidance:
@@ -1759,45 +1852,13 @@ async function applyInterpretation(
             ? "deferred_valid"
             : "preparing",
         flowStep:
-          "identify matching purchases → retrieve applied policy/evidence → deferred (valid)",
+          "identify matching purchases → retrieve applied policy/evidence → waiting",
       });
     }
     focus(
       "refill_status",
       "check existing request → explain status (fresh)",
     );
-    try {
-    const result = await runAnswerLoop({
-      ...answerLoopBase(session, origin, line.text),
-      paintNow: true,
-    });
-    paintLoopNeed(
-      session,
-      "refill_status",
-      "Refill status (fresh read)",
-      result,
-      "explain status (fresh read)",
-    );
-    upsertNeed(session, "refill_status", {
-      status: "active",
-      guidance: "ready",
-    });
-    showNow(
-      session,
-      {
-        title: "Refill status (fresh read)",
-        body: result.answer,
-        sourceLabel: result.sources.join(" · ") || "System record · pharmacy · simulated",
-      },
-      { priority: "answer", needKind: "refill_status" },
-    );
-    } catch (err) {
-      appendJsonl(session.sessionId, {
-        kind: "answer_loop_error",
-        need: "refill_status",
-        error: String(err),
-      });
-    }
   }
 
   if (commitConsent && interp.communicatedRefillReadiness) {
@@ -1808,7 +1869,7 @@ async function applyInterpretation(
   }
 
   if (commitConsent && interp.returnToHistorical && getNeed(session, "historical_price")) {
-    await promoteHistorical(session, origin);
+    await resumeParkedNeed(session, origin, "historical_price");
   }
 
   if (interp.serviceIntroducedByAdvocate && line.speaker === "advocate") {
@@ -2052,7 +2113,16 @@ async function applyInterpretation(
       ...sessionQuoteEntities(session).drugs,
       session.coverage?.requestedMedication ?? "",
     ])[0];
-    await loadCoverage(session, origin, isNewest, line.id, drug);
+    upsertNeed(session, "coverage_status", {
+      status: "requested",
+      guidance: "preparing",
+      flowStep: "check case → recommend destination",
+      sourceUtteranceId: line.id,
+      queryText: drug || line.text,
+    });
+    if (isNewest) {
+      setFocus(session, "coverage_status", "check case → recommend destination");
+    }
   }
 
   if (interp.advocateOfferedTransfer && session.coverage) {
@@ -2080,49 +2150,6 @@ async function applyInterpretation(
       ),
       { priority: "answer", needKind: "unsupported_work" },
     );
-  }
-
-  if (
-    memberConsentLine(line) &&
-    (/\?/.test(line.text) ||
-      /^(how|what|why|when|can you|could you|is my)\b/i.test(line.text.trim()))
-  ) {
-    const servicing =
-      interp.refillCheck !== "none" ||
-      interp.historicalAsked ||
-      interp.returnToHistorical ||
-      interp.retailHesitation ||
-      interp.firmRefusal ||
-      interp.withdrawEnrollment ||
-      interp.memberAgreesTransfer ||
-      interp.ninetyDayAsked ||
-      interp.coverageAsked ||
-      Boolean(interp.quotePharmacy) ||
-      interp.electionMetforminOnly ||
-      interp.comparisonConsent !== "none" ||
-      interp.enrollmentConsent !== "none";
-    const covered = session.needs.some((n) => n.sourceUtteranceId === line.id);
-    if (!servicing && !covered && !interp.smallTalkOnly) {
-      try {
-      const result = await runAnswerLoop({
-        ...answerLoopBase(session, origin, line.text),
-        paintNow: true,
-      });
-      upsertNeed(session, "unrecognized_request", {
-        status: result.supportPartial ? "unresolved_gap" : "resolved",
-        guidance: "ready",
-        flowStep: "answer loop (no mapped need flag)",
-        queryText: line.text,
-        sourceUtteranceId: line.id,
-      });
-      } catch (err) {
-        appendJsonl(session.sessionId, {
-          kind: "answer_loop_error",
-          need: "unrecognized_request",
-          error: String(err),
-        });
-      }
-    }
   }
 
   if (commitConsent) await maybeCompleteServicing(session);
@@ -2305,30 +2332,6 @@ export async function applyGovernedUtteranceRules(
     markServiceDiscussed(session);
     await loadFast90(session, origin);
     recordNeedPath(session, line.id, "service_education", "code_rule");
-  }
-  if (
-    line.speaker === "member" &&
-    (line.stability === "final" || line.stability === "corrected") &&
-    !isNinetyDayQuestion(rules, text)
-  ) {
-    const hist = getNeed(session, "historical_price");
-    const deferred =
-      hist &&
-      (hist.status === "deferred" || hist.guidance === "deferred_valid");
-    const q = (hist?.queryText ?? "").toLowerCase();
-    const t = text.toLowerCase();
-    const named = namedMedicationsInText(text, [
-      ...sessionQuoteEntities(session).drugs,
-      ...q.split(/[^a-z]+/).filter((w) => w.length > 4),
-    ]);
-    const returnCue =
-      /\b(so,? the|what about (that|those)|those amounts|that price|the metformin|the atorvastatin)\b/.test(
-        t,
-      ) || named.some((d) => q.includes(d.toLowerCase()));
-    if (deferred && returnCue && q) {
-      await promoteHistorical(session, origin);
-      recordNeedPath(session, line.id, "historical_price", "code_rule");
-    }
   }
   if (
     line.speaker === "advocate" &&
@@ -2570,6 +2573,8 @@ export async function processTranscriptEvent(
         eventId: line.id,
         ms: interp.ms,
         ok: interp.ok,
+        httpStatus: interp.httpStatus,
+        error: interp.error,
         n90: interp.ninetyDayAsked,
         cc: interp.comparisonConsent,
         ha: interp.historicalAsked,
@@ -2584,33 +2589,16 @@ export async function processTranscriptEvent(
         ...interp,
         raw: interp.raw.slice(0, 500),
       };
-      if (!interp.ok) {
-        if (line.stability !== "partial" && line.speaker === "member") {
-          const looksPastCharge =
-            /(\$|\bdollars?\b|\bpaid\b|\bcharged\b)/i.test(line.text) &&
-            /\b(last month|yesterday|ago|last fill|past)\b/i.test(line.text);
-          await applyInterpretation(
-            session,
-            origin,
-            line,
-            {
-              ...interp,
-              historicalAsked: interp.historicalAsked || looksPastCharge,
-            },
-            true,
-            { seq, consentAnchor },
-          );
-          publishSession(session);
-        } else if (line.stability !== "partial") {
-          showNow(session, {
-            title: "Interpretation unavailable",
-            body: "Fast-tier interpretation did not return. No member conclusion was invented.",
-            sourceLabel: "Governed guidance · scripting · simulated",
-          });
-          publishSession(session);
-        }
-        return;
-      }
+      session.modelHealth = {
+        ...session.modelHealth,
+        luna: {
+          ok: interp.ok,
+          status: interp.httpStatus ?? 0,
+          error: interp.error,
+          ms: interp.ms,
+          at: new Date().toISOString(),
+        },
+      };
       if (line.stability === "partial") return;
       await applyInterpretation(
         session,
@@ -2620,6 +2608,28 @@ export async function processTranscriptEvent(
         line.stability === "final" || line.stability === "corrected",
         { seq, consentAnchor },
       );
+      if (
+        line.speaker === "member" &&
+        (line.stability === "final" || line.stability === "corrected")
+      ) {
+        const owned = session.needs.find((n) => n.sourceUtteranceId === line.id);
+        if (interp.returnToHistorical) {
+          // resumeParkedNeed already ran from interpretation
+        } else {
+          const waiting = waitingNeedMatchingUtterance(session, line.text);
+          if (waiting) {
+            await resumeParkedNeed(session, origin, waiting);
+          } else {
+            await runMemberQuestionLoop(
+              session,
+              origin,
+              line.text,
+              owned?.kind,
+              line.id,
+            );
+          }
+        }
+      }
       publishSession(session);
     } finally {
       if (line.speaker !== "advocate") markApplied();

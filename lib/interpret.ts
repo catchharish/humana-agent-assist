@@ -30,6 +30,8 @@ export type Interpretation = {
   ttftMs: number | null;
   usage: { input_tokens: number; output_tokens: number; cached_tokens: number } | null;
   ok: boolean;
+  httpStatus: number;
+  error: string | null;
 };
 
 const CALL = {
@@ -256,6 +258,8 @@ utt:${JSON.stringify(utterance.text)}`;
       ttftMs: luna.ttftMs ?? null,
       usage: luna.usage ?? null,
       ok: false,
+      httpStatus: luna.httpStatus,
+      error: luna.error,
     };
   }
   const qpRaw = String(csv.qp ?? "-");
@@ -368,6 +372,8 @@ utt:${JSON.stringify(utterance.text)}`;
     ttftMs: luna.ttftMs ?? null,
     usage: luna.usage ?? null,
     ok: luna.ok,
+    httpStatus: luna.httpStatus,
+    error: luna.error,
   };
 }
 

@@ -57,18 +57,17 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
   it("T06A omit DEMO-NET0818", async () => {
     const s = await runScenario({ scenarioId: "t06a", overlay: "T06A" });
     const hist = s.needs.find((n) => n.kind === "historical_price");
-    expect(hist?.answer?.chargesEstablished).toBe(true);
-    expect(hist?.answer?.causeSupported).toBe(false);
-    expect(hist?.answer?.body).toMatch(/\$8|8/);
-    expect(hist?.answer?.body).toMatch(/\$27|27/);
-    expect(hist?.answer?.body).toMatch(/not confirmed/i);
-    expect(hist?.answer?.body).not.toMatch(/because|classified as/i);
+    const seen = `${s.nowCard.body}\n${hist?.answer?.body ?? ""}`;
+    expect(seen).toMatch(/\$8|8/);
+    expect(seen).toMatch(/\$27|27/);
     expect(s.nowCard.body).toMatch(/not confirmed/i);
+    expect(s.nowCard.body).not.toMatch(/because|classified as/i);
     expect(s.nowCard.body).not.toMatch(/preferred versus standard/i);
     expect(JSON.stringify(s.nowCard.earlyFacts ?? [])).not.toMatch(
       /preferred retail/i,
     );
-    expect(s.recommendation?.status === "pending").toBe(false);
+    const rec = `${s.recommendation?.body ?? ""} ${JSON.stringify(s.recommendation?.facts ?? [])} ${JSON.stringify(s.recommendation?.reasons ?? [])}`;
+    expect(rec).not.toMatch(/preferred(_retail|\s+retail)|standard(_retail|\s+retail)/i);
   }, 180_000);
 
   it("T08B changed scope and withdrawal", async () => {

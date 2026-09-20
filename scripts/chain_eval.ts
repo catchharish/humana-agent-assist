@@ -234,6 +234,7 @@ async function main() {
   const file = path.join(process.cwd(), "runs", `chain_eval_${Date.now()}.json`);
   writeFileSync(file, JSON.stringify(out, null, 2));
   console.log(JSON.stringify({ correct, of: rows.length, over8, broke, recommendGraph, file }, null, 2));
+  if (correct !== rows.length) process.exit(1);
 }
 
 main().catch((err) => {

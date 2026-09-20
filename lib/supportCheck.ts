@@ -2,24 +2,135 @@
 
 import type { CitedStatement, RetrievedSource } from "@/lib/citations";
 
-const MONEY = /\$\d+(?:\.\d{2})?|\b\d+\.\d{2}\b/g;
 const ISO_DATE = /\d{4}-\d{2}-\d{2}/g;
 const IDISH = /\bDEMO-[A-Z0-9-]+\b/g;
 const STATUS =
-  /\b(READY_FOR_PICKUP|PENDING_REVIEW|invalidated)\b/gi;
+  /\b(READY_FOR_PICKUP|PENDING_REVIEW|invalidated|PAID)\b/gi;
+const MONTHS: Record<string, string> = {
+  january: "01",
+  february: "02",
+  march: "03",
+  april: "04",
+  may: "05",
+  june: "06",
+  july: "07",
+  august: "08",
+  september: "09",
+  october: "10",
+  november: "11",
+  december: "12",
+};
+const NAME_STOP = new Set([
+  "a",
+  "an",
+  "and",
+  "at",
+  "for",
+  "from",
+  "last",
+  "mail",
+  "member",
+  "my",
+  "next",
+  "of",
+  "or",
+  "paid",
+  "preferred",
+  "retail",
+  "standard",
+  "the",
+  "this",
+  "that",
+  "these",
+  "those",
+  "your",
+  ...Object.keys(MONTHS),
+]);
 
-function atoms(text: string): string[] {
+function moneyKey(raw: string): string | null {
+  const n = Number(raw.replace(/[$,]/g, ""));
+  if (!Number.isFinite(n)) return null;
+  return n.toFixed(2);
+}
+
+function expandAtom(atom: string): string[] {
+  const out = new Set<string>([atom, atom.toLowerCase()]);
+  const mk = moneyKey(atom.replace(/^\$/, ""));
+  if (mk && /^\d/.test(atom.replace(/^\$/, ""))) {
+    const n = Number(mk);
+    out.add(mk);
+    out.add(String(n));
+    out.add(`$${mk}`);
+    out.add(`$${n}`);
+  }
+  const iso = atom.match(/^\d{4}-\d{2}-\d{2}$/);
+  if (iso) {
+    const [y, m, d] = atom.split("-");
+    const monthName = Object.keys(MONTHS).find((k) => MONTHS[k] === m);
+    if (monthName) {
+      out.add(`${monthName} ${Number(d)}`);
+      out.add(`${monthName} ${d}`);
+      out.add(`${monthName} ${Number(d)}, ${y}`);
+    }
+  }
+  const named = /^(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:,?\s*(\d{4}))?$/i.exec(
+    atom,
+  );
+  if (named) {
+    const mm = MONTHS[named[1].toLowerCase()];
+    const dd = named[2].padStart(2, "0");
+    if (named[3]) out.add(`${named[3]}-${mm}-${dd}`);
+    else {
+      out.add(`-${mm}-${dd}`);
+    }
+  }
+  const name = atom.toLowerCase().replace(/\s+pharmacy$/, "").trim();
+  if (name) out.add(name);
+  return [...out];
+}
+
+function atomInHay(atom: string, sourceText: string): boolean {
+  const h = sourceText.toLowerCase();
+  return expandAtom(atom).some((form) => {
+    if (form.startsWith("-") && form.length === 6) {
+      return h.includes(form.slice(1)) || h.includes(form);
+    }
+    return h.includes(form.toLowerCase());
+  });
+}
+
+export function factAtoms(text: string): string[] {
   const found = new Set<string>();
-  for (const m of text.match(MONEY) ?? []) {
-    found.add(m.replace(/^\$/, ""));
+  for (const m of text.match(/\$\d+(?:\.\d{1,2})?|\b\d+\.\d{2}\b/g) ?? []) {
+    const k = moneyKey(m);
+    if (k) found.add(k);
   }
   for (const m of text.match(ISO_DATE) ?? []) found.add(m);
+  const monthHit =
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:,?\s*(\d{4}))?\b/gi;
+  let mh: RegExpExecArray | null;
+  while ((mh = monthHit.exec(text))) {
+    found.add(
+      mh[3]
+        ? `${mh[3]}-${MONTHS[mh[1].toLowerCase()]}-${mh[2].padStart(2, "0")}`
+        : `${mh[1]} ${mh[2]}`,
+    );
+  }
   for (const m of text.match(IDISH) ?? []) found.add(m);
   for (const m of text.match(STATUS) ?? []) found.add(m);
   for (const n of text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) ?? []) {
-    found.add(n);
+    const words = n.toLowerCase().split(/\s+/);
+    if (words.every((w) => NAME_STOP.has(w))) continue;
+    found.add(n.replace(/\s+Pharmacy$/i, " Pharmacy"));
   }
   return [...found];
+}
+
+export function networkLabels(text: string): string[] {
+  const out: string[] = [];
+  if (/\bpreferred(_retail|\s+retail)\b/i.test(text)) out.push("preferred_retail");
+  if (/\bstandard(_retail|\s+retail)\b/i.test(text)) out.push("standard_retail");
+  return out;
 }
 
 function hay(source: RetrievedSource): string {
@@ -53,8 +164,9 @@ function verifyOne(
 ): CitedStatement {
   const source = findSource(st.sourceId, retrieved);
   if (!source) {
+    const looked = factAtoms(st.text);
     const fallback = retrieved.find((s) =>
-      atoms(st.text).every((a) => hay(s).includes(a.toLowerCase())),
+      looked.every((a) => atomInHay(a, s.text)),
     );
     if (!st.sourceId && fallback && !needsClassification(st.text)) {
       return confirm(st.text, fallback);
@@ -89,9 +201,9 @@ function verifyOne(
       note: "network_tier_without_dated_classification",
     };
   }
-  const missing = atoms(st.text).filter(
-    (a) => !hay(source).includes(a.toLowerCase()),
-  );
+  const looked = factAtoms(st.text);
+  const missing = looked.filter((a) => !atomInHay(a, source.text));
+  const found = looked.filter((a) => atomInHay(a, source.text));
   if (missing.length) {
     return {
       text: st.text,
@@ -100,6 +212,8 @@ function verifyOne(
       confirmed: false,
       note: `value_not_in_source:${missing.join(",")}`,
       highlight: missing[0],
+      lookedFor: looked,
+      found,
     };
   }
   return confirm(st.text, source);
@@ -159,13 +273,15 @@ function unmatchedFillClassifications(retrieved: RetrievedSource[]): boolean {
 }
 
 function confirm(text: string, source: RetrievedSource): CitedStatement {
-  const highlight = atoms(text)[0] ?? text.slice(0, 24);
+  const looked = factAtoms(text);
   return {
     text,
     sourceId: source.id,
     sourceTag: source.sourceTag,
     confirmed: true,
-    highlight,
+    highlight: looked[0] ?? text.slice(0, 24),
+    lookedFor: looked,
+    found: looked.filter((a) => atomInHay(a, source.text)),
   };
 }
 
@@ -261,13 +377,19 @@ export function unconfirmedTokens(statements: CitedStatement[]): string[] {
     (x) => !x.confirmed && x.note !== "cause_not_confirmed",
   )) {
     if (s.note === "network_tier_without_dated_classification") {
-      if (/\bpreferred\b/i.test(s.text)) toks.add("preferred");
-      if (/\bstandard\b/i.test(s.text)) toks.add("standard");
+      for (const lab of networkLabels(s.text).length
+        ? networkLabels(s.text)
+        : [
+            ...(/\bpreferred\b/i.test(s.text) ? ["preferred_retail"] : []),
+            ...(/\bstandard\b/i.test(s.text) ? ["standard_retail"] : []),
+          ]) {
+        toks.add(lab);
+      }
       continue;
     }
     const fromNote = s.note?.startsWith("value_not_in_source:")
       ? s.note.slice("value_not_in_source:".length).split(",")
-      : atoms(s.text);
+      : factAtoms(s.text);
     for (const a of fromNote) toks.add(a.toLowerCase());
   }
   return [...toks];
@@ -276,7 +398,17 @@ export function unconfirmedTokens(statements: CitedStatement[]): string[] {
 export function confirmedTokens(statements: CitedStatement[]): string[] {
   const toks = new Set<string>();
   for (const s of statements.filter((x) => x.confirmed)) {
-    for (const a of atoms(s.text)) toks.add(a.toLowerCase());
+    for (const a of factAtoms(s.text)) toks.add(a.toLowerCase());
+    for (const lab of networkLabels(s.text)) toks.add(lab);
+  }
+  return [...toks];
+}
+
+export function draftFactTokens(texts: string[]): string[] {
+  const toks = new Set<string>();
+  for (const t of texts) {
+    for (const a of factAtoms(t)) toks.add(a.toLowerCase());
+    for (const lab of networkLabels(t)) toks.add(lab);
   }
   return [...toks];
 }

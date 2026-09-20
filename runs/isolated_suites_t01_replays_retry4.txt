@@ -1,0 +1,172 @@
+started 2026-09-20T02:26:02Z
+
+===== T01 run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 126272ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 126272ms
+     → expected 'DEMO-ENR001 is active for metformin. …' to match /\$?8/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+AssertionError: expected 'DEMO-ENR001 is active for metformin. …' to match /\$?8/
+
+- Expected: 
+/\$?8/
+
++ Received: 
+"DEMO-ENR001 is active for metformin. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill."
+
+ ❯ tests/t01_main.test.ts:32:38
+     30|     ).toBe(true);
+     31|     const hist = s.needs.find((n) => n.kind === "historical_price");
+     32|     expect(hist?.answer?.body ?? "").toMatch(/\$?8/);
+       |                                      ^
+     33|     expect(hist?.answer?.body ?? "").toMatch(/\$?27/);
+     34|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:26:03
+   Duration  126.46s (transform 31ms, setup 0ms, collect 64ms, tests 126.27s, environment 0ms, prepare 33ms)
+
+T01 run 1 FAIL exit=1
+
+===== T01 run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 121387ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 121386ms
+     → expected 'DEMO-ENR001 is active for metformin. …' to match /\$?8/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+AssertionError: expected 'DEMO-ENR001 is active for metformin. …' to match /\$?8/
+
+- Expected: 
+/\$?8/
+
++ Received: 
+"DEMO-ENR001 is active for metformin. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill."
+
+ ❯ tests/t01_main.test.ts:32:38
+     30|     ).toBe(true);
+     31|     const hist = s.needs.find((n) => n.kind === "historical_price");
+     32|     expect(hist?.answer?.body ?? "").toMatch(/\$?8/);
+       |                                      ^
+     33|     expect(hist?.answer?.body ?? "").toMatch(/\$?27/);
+     34|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:28:10
+   Duration  123.11s (transform 28ms, setup 0ms, collect 1.60s, tests 121.39s, environment 0ms, prepare 33ms)
+
+T01 run 2 FAIL exit=1
+
+===== T01 run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 110315ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 110314ms
+     → expected 'DEMO-ENR001 is active for metformin. …' to match /\$?8/
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+AssertionError: expected 'DEMO-ENR001 is active for metformin. …' to match /\$?8/
+
+- Expected: 
+/\$?8/
+
++ Received: 
+"DEMO-ENR001 is active for metformin. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill."
+
+ ❯ tests/t01_main.test.ts:32:38
+     30|     ).toBe(true);
+     31|     const hist = s.needs.find((n) => n.kind === "historical_price");
+     32|     expect(hist?.answer?.body ?? "").toMatch(/\$?8/);
+       |                                      ^
+     33|     expect(hist?.answer?.body ?? "").toMatch(/\$?27/);
+     34|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:30:14
+   Duration  110.64s (transform 28ms, setup 0ms, collect 197ms, tests 110.31s, environment 0ms, prepare 34ms)
+
+T01 run 3 FAIL exit=1
+T01 PASS_COUNT 0/3
+
+===== REPLAYS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/replays.test.ts (6 tests) 66919ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  13168ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5532ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3266ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17428ms
+   ✓ §19.3 replays (live app) > T06A omit DEMO-NET0818  5368ms
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  22156ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  21:32:05
+   Duration  67.26s (transform 32ms, setup 0ms, collect 213ms, tests 66.92s, environment 0ms, prepare 35ms)
+
+REPLAYS run 1 PASS
+
+===== REPLAYS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/replays.test.ts (6 tests) 65992ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  14752ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  4899ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3624ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17360ms
+   ✓ §19.3 replays (live app) > T06A omit DEMO-NET0818  4872ms
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  20484ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  21:33:13
+   Duration  66.18s (transform 31ms, setup 0ms, collect 46ms, tests 65.99s, environment 0ms, prepare 38ms)
+
+REPLAYS run 2 PASS
+
+===== REPLAYS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/replays.test.ts (6 tests) 59135ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  9139ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5036ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3165ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17114ms
+   ✓ §19.3 replays (live app) > T06A omit DEMO-NET0818  4951ms
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  19728ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  21:34:20
+   Duration  59.31s (transform 35ms, setup 0ms, collect 48ms, tests 59.14s, environment 0ms, prepare 37ms)
+
+REPLAYS run 3 PASS
+REPLAYS PASS_COUNT 3/3
+finished 2026-09-20T02:35:19Z

@@ -1,0 +1,226 @@
+started 2026-09-20T02:06:38Z
+
+===== T01 run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 115603ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 115603ms
+     → waitUntil timed out after 12000ms waiting for coverage (session 3c93d2ec-af47-4150-9e36-9a6c55b8b3c8)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+Error: waitUntil timed out after 12000ms waiting for coverage (session 3c93d2ec-af47-4150-9e36-9a6c55b8b3c8)
+ ❯ waitUntil tests/driver.ts:388:11
+    386|   await refresh(session);
+    387|   if (!pred(session)) {
+    388|     throw new Error(
+       |           ^
+    389|       `waitUntil timed out after ${ms}ms waiting for ${label} (session…
+    390|     );
+ ❯ runScenario tests/driver.ts:199:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:06:39
+   Duration  115.78s (transform 34ms, setup 0ms, collect 44ms, tests 115.60s, environment 0ms, prepare 35ms)
+
+T01 run 1 FAIL exit=1
+
+===== T01 run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 120894ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 120894ms
+     → waitUntil timed out after 12000ms waiting for coverage (session 710c92c1-c6d4-4f89-9c25-fff25f4df483)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+Error: waitUntil timed out after 12000ms waiting for coverage (session 710c92c1-c6d4-4f89-9c25-fff25f4df483)
+ ❯ waitUntil tests/driver.ts:388:11
+    386|   await refresh(session);
+    387|   if (!pred(session)) {
+    388|     throw new Error(
+       |           ^
+    389|       `waitUntil timed out after ${ms}ms waiting for ${label} (session…
+    390|     );
+ ❯ runScenario tests/driver.ts:199:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:08:35
+   Duration  122.28s (transform 29ms, setup 0ms, collect 1.26s, tests 120.89s, environment 0ms, prepare 33ms)
+
+T01 run 2 FAIL exit=1
+
+===== T01 run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 113305ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 113304ms
+     → waitUntil timed out after 12000ms waiting for coverage (session ad0417b3-f85e-4fed-8ca2-a1f3df02253f)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+Error: waitUntil timed out after 12000ms waiting for coverage (session ad0417b3-f85e-4fed-8ca2-a1f3df02253f)
+ ❯ waitUntil tests/driver.ts:388:11
+    386|   await refresh(session);
+    387|   if (!pred(session)) {
+    388|     throw new Error(
+       |           ^
+    389|       `waitUntil timed out after ${ms}ms waiting for ${label} (session…
+    390|     );
+ ❯ runScenario tests/driver.ts:199:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:10:38
+   Duration  114.32s (transform 30ms, setup 0ms, collect 892ms, tests 113.31s, environment 0ms, prepare 33ms)
+
+T01 run 3 FAIL exit=1
+T01 PASS_COUNT 0/3
+
+===== REPLAYS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/replays.test.ts (6 tests | 1 failed) 70175ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  13281ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5703ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3909ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17220ms
+   × §19.3 replays (live app) > T06A omit DEMO-NET0818 5184ms
+     → expected true to be false // Object.is equality
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  24876ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T06A omit DEMO-NET0818
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/replays.test.ts:69:52
+     67|       /preferred retail/i,
+     68|     );
+     69|     expect(s.recommendation?.status === "pending").toBe(false);
+       |                                                    ^
+     70|   }, 180_000);
+     71| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  21:12:33
+   Duration  70.49s (transform 31ms, setup 0ms, collect 181ms, tests 70.17s, environment 0ms, prepare 37ms)
+
+REPLAYS run 1 FAIL exit=1
+
+===== REPLAYS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/replays.test.ts (6 tests | 1 failed) 62203ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  9872ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  6827ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3583ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17512ms
+   × §19.3 replays (live app) > T06A omit DEMO-NET0818 5381ms
+     → expected true to be false // Object.is equality
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  19024ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T06A omit DEMO-NET0818
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/replays.test.ts:69:52
+     67|       /preferred retail/i,
+     68|     );
+     69|     expect(s.recommendation?.status === "pending").toBe(false);
+       |                                                    ^
+     70|   }, 180_000);
+     71| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  21:13:44
+   Duration  62.38s (transform 33ms, setup 0ms, collect 51ms, tests 62.20s, environment 0ms, prepare 34ms)
+
+REPLAYS run 2 FAIL exit=1
+
+===== REPLAYS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/replays.test.ts (6 tests | 1 failed) 62320ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  10489ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5388ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3042ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17739ms
+   × §19.3 replays (live app) > T06A omit DEMO-NET0818 6148ms
+     → expected true to be false // Object.is equality
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  19513ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T06A omit DEMO-NET0818
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/replays.test.ts:69:52
+     67|       /preferred retail/i,
+     68|     );
+     69|     expect(s.recommendation?.status === "pending").toBe(false);
+       |                                                    ^
+     70|   }, 180_000);
+     71| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  21:14:47
+   Duration  62.49s (transform 32ms, setup 0ms, collect 52ms, tests 62.32s, environment 0ms, prepare 32ms)
+
+REPLAYS run 3 FAIL exit=1
+REPLAYS PASS_COUNT 0/3
+finished 2026-09-20T02:15:50Z

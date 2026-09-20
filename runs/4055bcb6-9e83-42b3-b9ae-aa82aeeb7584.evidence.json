@@ -1,0 +1,371 @@
+{
+  "sessionId": "4055bcb6-9e83-42b3-b9ae-aa82aeeb7584",
+  "scenarioId": "t06a",
+  "overlay": "T06A",
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 60,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": {
+    "title": "Partial answer",
+    "body": "On 2026-08-18, you paid $8.00 for 60 metformin 500 mg tablets, a 30-day supply, at Oak Street Pharmacy. On 2026-09-16, you paid $27.00 for 60 metformin 500 mg tablets, a 30-day supply, at Lakeview Pharmacy. The cause is not confirmed. The cause is not confirmed.",
+    "sourceLabel": "Claims",
+    "statements": [
+      {
+        "text": "On 2026-08-18, you paid $8.00 for 60 metformin 500 mg tablets, a 30-day supply, at Oak Street Pharmacy.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "8.00",
+        "lookedFor": [
+          "8.00",
+          "2026-08-18",
+          "paid",
+          "Oak Street Pharmacy"
+        ],
+        "found": [
+          "8.00",
+          "2026-08-18",
+          "paid",
+          "Oak Street Pharmacy"
+        ]
+      },
+      {
+        "text": "On 2026-09-16, you paid $27.00 for 60 metformin 500 mg tablets, a 30-day supply, at Lakeview Pharmacy.",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "27.00",
+        "lookedFor": [
+          "27.00",
+          "2026-09-16",
+          "paid",
+          "Lakeview Pharmacy"
+        ],
+        "found": [
+          "27.00",
+          "2026-09-16",
+          "paid",
+          "Lakeview Pharmacy"
+        ]
+      },
+      {
+        "text": "For this plan and period, a matched 30-day metformin 500 mg supply is $8 at preferred retail and $27 at standard retail under the recorded conditions.",
+        "sourceId": "DEMO-POLICY-COST-v1",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "Lakeview Pharmacy was classified as standard retail on 2026-09-16.",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "highlight": "2026-09-16",
+        "lookedFor": [
+          "2026-09-16",
+          "Lakeview Pharmacy"
+        ],
+        "found": [
+          "2026-09-16",
+          "Lakeview Pharmacy"
+        ],
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "The cause is not confirm",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ]
+  },
+  "fast90": null,
+  "nowCard": {
+    "title": "Partial answer",
+    "body": "On 2026-08-18, you paid $8.00 for 60 metformin 500 mg tablets, a 30-day supply, at Oak Street Pharmacy. On 2026-09-16, you paid $27.00 for 60 metformin 500 mg tablets, a 30-day supply, at Lakeview Pharmacy. The cause is not confirmed. The cause is not confirmed.",
+    "sourceLabel": "Claims",
+    "liveSteps": [
+      "Searching knowledge…",
+      "Checking claims…",
+      "Checking pharmacy network…",
+      "Checking pharmacy network…",
+      "Reading plan rules…"
+    ],
+    "earlyFacts": [
+      {
+        "text": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid)",
+        "source": "Claims"
+      },
+      {
+        "text": "metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid)",
+        "source": "Claims"
+      },
+      {
+        "text": "Lakeview Pharmacy on 2026-09-16: standard_retail",
+        "source": "Plan rules"
+      }
+    ],
+    "statements": [
+      {
+        "text": "On 2026-08-18, you paid $8.00 for 60 metformin 500 mg tablets, a 30-day supply, at Oak Street Pharmacy.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "8.00",
+        "lookedFor": [
+          "8.00",
+          "2026-08-18",
+          "paid",
+          "Oak Street Pharmacy"
+        ],
+        "found": [
+          "8.00",
+          "2026-08-18",
+          "paid",
+          "Oak Street Pharmacy"
+        ]
+      },
+      {
+        "text": "On 2026-09-16, you paid $27.00 for 60 metformin 500 mg tablets, a 30-day supply, at Lakeview Pharmacy.",
+        "sourceId": "DEMO-C0916",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "27.00",
+        "lookedFor": [
+          "27.00",
+          "2026-09-16",
+          "paid",
+          "Lakeview Pharmacy"
+        ],
+        "found": [
+          "27.00",
+          "2026-09-16",
+          "paid",
+          "Lakeview Pharmacy"
+        ]
+      },
+      {
+        "text": "For this plan and period, a matched 30-day metformin 500 mg supply is $8 at preferred retail and $27 at standard retail under the recorded conditions.",
+        "sourceId": "DEMO-POLICY-COST-v1",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "Lakeview Pharmacy was classified as standard retail on 2026-09-16.",
+        "sourceId": "DEMO-NET0916",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "highlight": "2026-09-16",
+        "lookedFor": [
+          "2026-09-16",
+          "Lakeview Pharmacy"
+        ],
+        "found": [
+          "2026-09-16",
+          "Lakeview Pharmacy"
+        ],
+        "note": "network_tier_without_dated_classification"
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "DEMO-C0818",
+        "sourceTag": "Claims",
+        "confirmed": true,
+        "highlight": "The cause is not confirm",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "The cause is not confirmed.",
+        "sourceId": "",
+        "sourceTag": "Not confirmed",
+        "confirmed": false,
+        "note": "cause_not_confirmed"
+      }
+    ],
+    "canRetry": false,
+    "retryCause": null
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789871093364,
+      "tPaint": 1789871093376,
+      "paintMs": 12,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789871093436,
+      "tPaint": 1789871093449,
+      "paintMs": 13,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789871093510,
+      "tPaint": 1789871093517,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789871093577,
+      "tPaint": 1789871093689,
+      "paintMs": 112,
+      "measured": true,
+      "excludedPauseMs": 18
+    },
+    {
+      "eventId": "e-hist-final",
+      "kind": "transcript",
+      "tEvent": 1789871093771,
+      "tPaint": 1789871098717,
+      "paintMs": 4946,
+      "measured": true,
+      "excludedPauseMs": 18
+    },
+    {
+      "eventId": "e-pause-t06a",
+      "kind": "pause_gate",
+      "tEvent": 1789871098783,
+      "tPaint": 1789871098802,
+      "paintMs": 19,
+      "measured": true,
+      "excludedPauseMs": 18
+    }
+  ],
+  "needPaths": []
+}

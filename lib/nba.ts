@@ -8,7 +8,7 @@ import type { SessionState } from "@/lib/types";
 import type { CitedStatement } from "@/lib/citations";
 import {
   confirmedTokens,
-  unconfirmedTokens,
+  draftFactTokens,
 } from "@/lib/supportCheck";
 
 export type NbaStop =
@@ -103,14 +103,12 @@ export function nbaHardStop(
   }
   if (draft && draft.action !== "none") {
     const statements = sessionStatements(session);
-    const unconf = unconfirmedTokens(statements);
     const conf = new Set(confirmedTokens(statements));
-    const blob = [draft.body, ...(draft.reasons ?? []), ...(draft.facts ?? [])]
-      .join(" ")
-      .toLowerCase();
-    const hit = unconf.find(
-      (tok) => tok.length > 3 && !conf.has(tok) && blob.includes(tok),
-    );
+    const used = draftFactTokens([
+      ...(draft.reasons ?? []),
+      ...(draft.facts ?? []),
+    ]);
+    const hit = used.find((tok) => !conf.has(tok));
     if (hit) {
       return {
         stop: "unconfirmed_fact",
@@ -181,7 +179,8 @@ action must be one of: ${uniqueIds.join(", ")}
 considered must list every other action you thought about and why you rejected it.
 preferredVsMail: if this member has a preferred-retail vs standard-retail gap AND a mail-order comparison could also apply, say which you chose and why. Otherwise "".
 Do not copy another member's amounts.
-Each reasons item must name the member fact it rests on. Do not use a fact the support list marks as not confirmed.
+Each reasons item must name the member fact it rests on.
+A suggestion's reasons and facts may use only facts listed under confirmedThisCall (support check confirmed this call). Do not use dropped facts or any other record. Conversation without those values is allowed.
 
 Playbooks:
 ${playbooks.map((p) => `${p.id}: ${p.text}`).join("\n")}

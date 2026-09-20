@@ -21,6 +21,8 @@ export type CitedStatement = {
   confirmed: boolean;
   note?: string;
   highlight?: string;
+  lookedFor?: string[];
+  found?: string[];
 };
 
 export function tagForSystem(sourceSystem: string): string {

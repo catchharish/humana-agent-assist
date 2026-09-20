@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { appendJsonl } from "@/lib/log";
-import { getSession, publicState } from "@/lib/session";
+import { getSession, publicState, recordActionResult } from "@/lib/session";
 
 export async function POST(request: Request) {
   const origin = new URL(request.url).origin;
@@ -91,13 +91,21 @@ export async function POST(request: Request) {
   session.enrollment.resultId = returnedId;
   session.enrollment.returnedScope = returned;
   session.enrollment.scopeOk = scopeOk;
+  const resultBody = scopeOk
+    ? `${session.enrollment.resultId} is active for ${scope.join(", ")}. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill.`
+    : `Returned scope ${returned.join(", ") || "empty"} does not match the confirmed request ${scope.join(", ")}. Not a success.`;
   session.nowCard = {
     title: scopeOk ? "Enrollment result" : "Enrollment scope mismatch",
-    body: scopeOk
-      ? `${session.enrollment.resultId} is active for ${scope.join(", ")}. Today's recorded refill and plan membership are unchanged. This is not an order or automatic refill.`
-      : `Returned scope ${returned.join(", ") || "empty"} does not match the confirmed request ${scope.join(", ")}. Not a success.`,
+    body: resultBody,
     sourceLabel: "System record · pharmacy · simulated",
   };
+  recordActionResult(session, {
+    kind: "enrollment_submit",
+    title: session.nowCard.title,
+    body: resultBody,
+    sourceLabel: "System record · pharmacy · simulated",
+    at: new Date().toISOString(),
+  });
   if (!scopeOk) {
     session.recommendation = {
       kind: "lead_review",

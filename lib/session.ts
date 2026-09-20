@@ -1,9 +1,11 @@
 import { isExactReading, isWordingAttempt, stitchedReading } from "@/lib/exactness";
 import { appendJsonl } from "@/lib/log";
 import type {
+  ActionResult,
   AuthResult,
   DisclosureRequirement,
   MemberBrief,
+  NeedAnswer,
   NeedKind,
   NeedRecord,
   RouterTrace,
@@ -26,15 +28,104 @@ export function getSession(id: string): SessionState | undefined {
   return sessions.get(id);
 }
 
+const NEED_KINDS: NeedKind[] = [
+  "refill_status",
+  "historical_price",
+  "prospective_comparison",
+  "service_education",
+  "service_election",
+  "coverage_status",
+  "unrecognized_request",
+  "unsupported_work",
+];
+
+export function parseNeedKind(raw: string | undefined | null): NeedKind | undefined {
+  if (!raw) return undefined;
+  const k = raw.trim().replace(/\s+/g, "_") as NeedKind;
+  return NEED_KINDS.includes(k) ? k : undefined;
+}
+
+function parkCardOnNeed(session: SessionState, kind: NeedKind) {
+  if (session.nowCardOrigin !== "answer") return;
+  if (session.nowCardNeedKind && session.nowCardNeedKind !== kind) return;
+  const card = session.nowCard;
+  if (!card.body && !card.title) return;
+  recordNeedAnswer(session, kind, {
+    title: card.title,
+    body: card.body,
+    sourceLabel: card.sourceLabel,
+    statements: card.statements,
+  }, { status: "deferred", guidance: card.body ? "deferred_valid" : "preparing" });
+  appendJsonl(session.sessionId, {
+    kind: "answer_parked",
+    needKind: kind,
+    nowTitle: card.title,
+    waiting: true,
+  });
+}
+
+export function recordNeedAnswer(
+  session: SessionState,
+  kind: NeedKind,
+  answer: NeedAnswer,
+  extra?: Partial<NeedRecord>,
+) {
+  const existing = getNeed(session, kind);
+  const prev = existing?.answer;
+  const history = [...(existing?.answerHistory ?? [])];
+  if (prev && (prev.body !== answer.body || prev.title !== answer.title)) {
+    history.push({ ...prev, at: prev.at ?? new Date().toISOString() });
+  }
+  const stamped = { ...answer, at: answer.at ?? new Date().toISOString() };
+  upsertNeed(session, kind, {
+    ...extra,
+    answer: stamped,
+    answerHistory: history.slice(-8),
+  });
+}
+
+export function recordActionResult(session: SessionState, rec: ActionResult) {
+  session.actionResults = [...session.actionResults, rec].slice(-12);
+  session.nowCardOrigin = "action";
+  session.nowCardNeedKind = null;
+  appendJsonl(session.sessionId, { kind: "action_result", ...rec });
+}
+
 export function beginAnswerLoop(
   session: SessionState,
   question: string,
+  needKind?: NeedKind,
+  sourceUtteranceId?: string,
 ): number {
+  const prevKind =
+    session.answerLoopAnchor?.needKind ??
+    session.nowCardNeedKind ??
+    undefined;
+  if (
+    prevKind &&
+    needKind &&
+    prevKind !== needKind &&
+    session.nowCardOrigin === "answer"
+  ) {
+    parkCardOnNeed(session, prevKind);
+    session.nowCard = {
+      title: "Working on it",
+      body: question,
+      sourceLabel: "Copilot",
+      waitingForFocus: false,
+      liveSteps: [],
+      earlyFacts: [],
+    };
+    session.nowCardNeedKind = needKind;
+    session.nowCardOrigin = "answer";
+  }
   const generation = session.answerLoopGeneration + 1;
   session.answerLoopGeneration = generation;
   session.answerLoopAnchor = {
     generation,
     question,
+    needKind,
+    sourceUtteranceId,
     enrollmentConsent: session.consent.enrollment,
     enrollmentScopeKey: session.enrollment.medications.join("|"),
   };
@@ -120,6 +211,8 @@ export function createSession(init: {
     utteranceRules: init.utteranceRules ?? null,
     transcript: [],
     needs: [],
+    actionResults: [],
+    nowCardOrigin: "system",
     nowCard: {
       title: "Opening",
       body: "Recorded-line greeting is due. Exact wording is on the obligation rail. No member record until the caller is verified.",
@@ -180,6 +273,9 @@ export function createSession(init: {
     lunaSeq: 0,
     lastInterpretation: null,
     lastAppliedEventId: null,
+    lastAnswerQuestion: null,
+    nowCardNeedKind: null,
+    modelHealth: { luna: null, terra: null },
     answerLoopGeneration: 0,
     answerLoopAnchor: null,
     pendingNba: null,
@@ -216,19 +312,26 @@ export function recordWarmup(
   const session = sessions.get(sessionId);
   if (!session) return;
   session.warmup = warmup;
-  session.diagnostics.warmup = `luna warmup ${warmup.ok ? "ok" : "fail"} ${Math.round(warmup.ms)}ms (async, after connect)`;
+  session.diagnostics.warmup = `luna warmup ${warmup.ok ? "ok" : "fail"} ${Math.round(warmup.ms)}ms status=${warmup.httpStatus ?? "?"} (async, after connect)`;
   appendJsonl(sessionId, { kind: "luna_warmup", ...warmup });
 }
 
 export function recordEmbeddings(
   sessionId: string,
-  info: { ready: boolean; count: number; model: string },
+  info: {
+    ready: boolean;
+    count: number;
+    model: string;
+    httpStatus?: number;
+    error?: string | null;
+    ms?: number;
+  },
 ) {
   const session = sessions.get(sessionId);
   if (!session) return;
   session.diagnostics.embeddings = info.ready
     ? `docs embedded once at startup: ${info.count} (${info.model})`
-    : `doc embeddings not ready (${info.model})`;
+    : `doc embeddings not ready (${info.model}) status=${info.httpStatus ?? "?"} ${info.error ?? ""}`.trim();
   appendJsonl(sessionId, { kind: "document_embeddings", ...info });
 }
 
@@ -349,6 +452,7 @@ export function beginPause(session: SessionState, label: string) {
   session.diagnostics.pauseSnapshots.push({
     label,
     nowTitle: session.nowCard.title,
+    nowBody: session.nowCard.body,
     historicalGuidance: hist?.guidance ?? null,
     historicalStatus: hist?.status ?? null,
   });
@@ -358,6 +462,7 @@ export function beginPause(session: SessionState, label: string) {
     tEvent: session.pauseStartedAt,
     excludedFromMachineTime: true,
     nowTitle: session.nowCard.title,
+    nowBody: session.nowCard.body,
   });
 }
 
@@ -510,46 +615,47 @@ export function showNow(
     priority < NOW_PRIORITY.due_now
   ) {
     if (kind) {
-      upsertNeed(session, kind, {
-        answer: {
-          title: card.title,
-          body: card.body,
-          sourceLabel: card.sourceLabel,
-        },
+      recordNeedAnswer(session, kind, {
+        title: card.title,
+        body: card.body,
+        sourceLabel: card.sourceLabel,
+        statements: card.statements,
       });
     }
     return;
   }
   if (requiredPricingOnNow(session) && isPricingWordingCard(card, opts)) {
     session.nowCard = card;
+    session.nowCardOrigin = "system";
+    session.nowCardNeedKind = null;
     session.nowPriority = NOW_PRIORITY.due_now;
     return;
   }
   const block = blockingNowPriority(session);
   session.nowPriority = block;
   if (kind && !focusMatches(session.currentNeed, kind) && priority <= NOW_PRIORITY.answer) {
-    upsertNeed(session, kind, {
-      answer: {
-        title: card.title,
-        body: card.body,
-        sourceLabel: card.sourceLabel,
-      },
+    recordNeedAnswer(session, kind, {
+      title: card.title,
+      body: card.body,
+      sourceLabel: card.sourceLabel,
+      statements: card.statements,
     });
     return;
   }
   if (priority < block && block >= NOW_PRIORITY.due_now) {
     if (kind) {
-      upsertNeed(session, kind, {
-        answer: {
-          title: card.title,
-          body: card.body,
-          sourceLabel: card.sourceLabel,
-        },
+      recordNeedAnswer(session, kind, {
+        title: card.title,
+        body: card.body,
+        sourceLabel: card.sourceLabel,
+        statements: card.statements,
       });
     }
     return;
   }
   session.nowCard = card;
+  session.nowCardNeedKind = kind ?? null;
+  session.nowCardOrigin = kind ? "answer" : "system";
   session.nowPriority = Math.max(priority, block);
 }
 

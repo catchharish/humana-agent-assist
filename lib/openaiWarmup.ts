@@ -1,37 +1,26 @@
-import { readFileSync } from "fs";
 import http from "http";
 import https from "https";
-import path from "path";
+import {
+  extractOpenAiError,
+  FAST_MODEL,
+  logOpenAiHttp,
+  openAiHeaderBag,
+  readOpenAiKey,
+} from "@/lib/openai";
 
 const agent = new https.Agent({ keepAlive: true, maxSockets: 4 });
-
-function readKey(): string {
-  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
-  try {
-    const raw = readFileSync(path.join(process.cwd(), ".env"), "utf8");
-    for (const line of raw.split("\n")) {
-      if (line.startsWith("OPENAI_API_KEY=")) {
-        return line
-          .slice("OPENAI_API_KEY=".length)
-          .trim()
-          .replace(/^["']|["']$/g, "");
-      }
-    }
-  } catch {
-    /* no file */
-  }
-  return "";
-}
 
 export async function warmupLuna(): Promise<{
   ok: boolean;
   ms: number;
   model: string;
+  httpStatus: number;
+  error: string | null;
 }> {
-  const key = readKey();
-  const model = process.env.OPENAI_FAST_MODEL || "gpt-5.6-luna";
+  const key = readOpenAiKey();
+  const model = FAST_MODEL;
   if (!key) {
-    return { ok: false, ms: 0, model };
+    return { ok: false, ms: 0, model, httpStatus: 0, error: "missing_api_key" };
   }
   const payload = JSON.stringify({
     model,
@@ -55,18 +44,53 @@ export async function warmupLuna(): Promise<{
         },
       },
       (res: http.IncomingMessage) => {
-        res.resume();
+        const headers = openAiHeaderBag(res);
+        const chunks: Buffer[] = [];
+        res.on("data", (c) => chunks.push(c as Buffer));
         res.on("end", () => {
-          resolve({
-            ok: (res.statusCode ?? 500) < 400,
-            ms: performance.now() - t0,
+          const raw = Buffer.concat(chunks).toString("utf8");
+          let json: unknown = {};
+          try {
+            json = JSON.parse(raw);
+          } catch {
+            json = { raw };
+          }
+          const status = res.statusCode ?? 500;
+          const error = status >= 400 ? extractOpenAiError(json) : null;
+          const ms = performance.now() - t0;
+          logOpenAiHttp({
+            kind: "luna_warmup",
             model,
+            path: "/v1/responses",
+            status,
+            ms,
+            error,
+            headers,
+            ok: status < 400,
+          });
+          resolve({
+            ok: status < 400,
+            ms,
+            model,
+            httpStatus: status,
+            error,
           });
         });
       },
     );
-    req.on("error", () => {
-      resolve({ ok: false, ms: performance.now() - t0, model });
+    req.on("error", (err) => {
+      const ms = performance.now() - t0;
+      logOpenAiHttp({
+        kind: "luna_warmup",
+        model,
+        path: "/v1/responses",
+        status: 0,
+        ms,
+        error: String(err),
+        headers: null,
+        ok: false,
+      });
+      resolve({ ok: false, ms, model, httpStatus: 0, error: String(err) });
     });
     req.write(payload);
     req.end();

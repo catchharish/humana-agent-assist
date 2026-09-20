@@ -1,0 +1,252 @@
+started 2026-09-20T02:54:59Z
+ORIGIN=http://127.0.0.1:3000
+COMMAND   PID           USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    87724 harishkrishnan   16u  IPv6 0x799d4af33704a8ea      0t0  TCP *:3000 (LISTEN)
+
+===== T01 run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 107979ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 107978ms
+     → Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+ ❯ json tests/driver.ts:25:17
+     23|     },
+     24|   });
+     25|   const body = (await resp.json()) as {
+       |                 ^
+     26|     session?: SessionState;
+     27|     token?: string;
+ ❯ act tests/driver.ts:108:15
+ ❯ runScenario tests/driver.ts:204:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:54:59
+   Duration  108.18s (transform 31ms, setup 0ms, collect 70ms, tests 107.98s, environment 0ms, prepare 34ms)
+
+T01 run 1 FAIL exit=1
+
+===== T01 run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/t01_main.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  21:56:48
+   Duration  324ms (transform 35ms, setup 0ms, collect 204ms, tests 0ms, environment 0ms, prepare 34ms)
+
+T01 run 2 PASS
+
+===== T01 run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/t01_main.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  21:56:49
+   Duration  172ms (transform 33ms, setup 0ms, collect 52ms, tests 0ms, environment 0ms, prepare 32ms)
+
+T01 run 3 PASS
+T01 PASS_COUNT 2/3
+
+===== REPLAYS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/replays.test.ts (6 tests | 6 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  6 skipped (6)
+   Start at  21:56:49
+   Duration  181ms (transform 34ms, setup 0ms, collect 51ms, tests 0ms, environment 0ms, prepare 38ms)
+
+REPLAYS run 1 PASS
+
+===== REPLAYS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/replays.test.ts (6 tests | 6 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  6 skipped (6)
+   Start at  21:56:50
+   Duration  205ms (transform 33ms, setup 0ms, collect 70ms, tests 0ms, environment 0ms, prepare 31ms)
+
+REPLAYS run 2 PASS
+
+===== REPLAYS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/replays.test.ts (6 tests | 6 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  6 skipped (6)
+   Start at  21:56:51
+   Duration  176ms (transform 31ms, setup 0ms, collect 47ms, tests 0ms, environment 0ms, prepare 33ms)
+
+REPLAYS run 3 PASS
+REPLAYS PASS_COUNT 3/3
+
+===== CHAIN run 1 =====
+c01_harry_827 missing $8;missing $27;missing preferred/standard 3303.516292
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 6235.190625000001
+c03_harry_preferred_rule missing preferred/standard 4003.6422920000005
+c04_harry_mail_vs_today ok 3017.5620839999992
+c05_m002_lisinopril missing lisinopril 2284.986417
+c06_m004_other_plan missing 12 2803.9646250000005
+c07_harry_case_chain missing case id;missing pending 2593.071917000001
+c08_m003_ozempic_case missing Ozempic;missing pending 2340.9347500000003
+c09_m005_mail_and_cases missing CenterWell/preferred 2783.127875000002
+c10_harry_quotes_after_consent did not call getQuotes 3120.3359579999997
+{
+  "correct": 1,
+  "of": 10,
+  "over8": 0,
+  "broke": 9,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789873044695.json"
+}
+chain_grader 1 / 10 runs/chain_eval_1789873044695.json
+CHAIN run 1 FAIL exit=1
+
+===== CHAIN run 2 =====
+c01_harry_827 missing $8;missing $27;missing preferred/standard 4099.686334
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 2740.285167
+c03_harry_preferred_rule missing preferred/standard 4149.935291999999
+c04_harry_mail_vs_today missing enrollment/pickup 3099.7687920000008
+c05_m002_lisinopril missing lisinopril 2328.8162079999984
+c06_m004_other_plan missing 12 3992.6066249999967
+c07_harry_case_chain missing case id;missing pending 4963.3033749999995
+c08_m003_ozempic_case missing Ozempic;missing pending 2299.799500000001
+c09_m005_mail_and_cases missing CenterWell/preferred 3009.331083000001
+c10_harry_quotes_after_consent did not call getQuotes;no amount in answer 2462.5601250000036
+{
+  "correct": 0,
+  "of": 10,
+  "over8": 0,
+  "broke": 10,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789873078928.json"
+}
+chain_grader 0 / 10 runs/chain_eval_1789873078928.json
+CHAIN run 2 FAIL exit=1
+
+===== CHAIN run 3 =====
+c01_harry_827 missing $8;missing $27;missing preferred/standard 3039.187125
+c02_harry_five_step missing Jardiance;missing pending 2871.75425
+c03_harry_preferred_rule missing preferred/standard 3508.4357499999996
+c04_harry_mail_vs_today ok 3382.3989579999998
+c05_m002_lisinopril missing lisinopril 2497.734875
+c06_m004_other_plan missing 12 2991.1198750000003
+c07_harry_case_chain missing case id;missing pending 2365.650791
+c08_m003_ozempic_case missing Ozempic;missing pending 2869.8017500000024
+c09_m005_mail_and_cases missing CenterWell/preferred 2876.37025
+c10_harry_quotes_after_consent did not call getQuotes;no amount in answer 2530.8671670000003
+{
+  "correct": 1,
+  "of": 10,
+  "over8": 0,
+  "broke": 9,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789873108780.json"
+}
+chain_grader 1 / 10 runs/chain_eval_1789873108780.json
+CHAIN run 3 FAIL exit=1
+CHAIN PASS_COUNT 0/3
+
+===== NOT_CANNED run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/not_canned.test.ts (3 tests | 3 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  3 skipped (3)
+   Start at  21:58:29
+   Duration  167ms (transform 34ms, setup 0ms, collect 47ms, tests 0ms, environment 0ms, prepare 33ms)
+
+NOT_CANNED run 1 PASS
+
+===== NOT_CANNED run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/not_canned.test.ts (3 tests | 3 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  3 skipped (3)
+   Start at  21:58:30
+   Duration  185ms (transform 29ms, setup 0ms, collect 71ms, tests 0ms, environment 0ms, prepare 30ms)
+
+NOT_CANNED run 2 PASS
+
+===== NOT_CANNED run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/not_canned.test.ts (3 tests | 3 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  3 skipped (3)
+   Start at  21:58:30
+   Duration  165ms (transform 30ms, setup 0ms, collect 47ms, tests 0ms, environment 0ms, prepare 30ms)
+
+NOT_CANNED run 3 PASS
+NOT_CANNED PASS_COUNT 3/3
+
+===== NBA_MEMBERS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/nba_members.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  21:58:31
+   Duration  159ms (transform 30ms, setup 0ms, collect 47ms, tests 0ms, environment 0ms, prepare 30ms)
+
+NBA_MEMBERS run 1 PASS
+
+===== NBA_MEMBERS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/nba_members.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  21:58:31
+   Duration  163ms (transform 30ms, setup 0ms, collect 49ms, tests 0ms, environment 0ms, prepare 31ms)
+
+NBA_MEMBERS run 2 PASS
+
+===== NBA_MEMBERS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/nba_members.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  21:58:32
+   Duration  177ms (transform 29ms, setup 0ms, collect 65ms, tests 0ms, environment 0ms, prepare 29ms)
+
+NBA_MEMBERS run 3 PASS
+NBA_MEMBERS PASS_COUNT 3/3
+finished 2026-09-20T02:58:32Z

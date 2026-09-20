@@ -1,0 +1,176 @@
+{
+  "at": "2026-09-20T00:55:55.246Z",
+  "origin": "http://127.0.0.1:3002",
+  "correct": 5,
+  "of": 10,
+  "over8s": 0,
+  "breaks": 5,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "rows": [
+    {
+      "id": "c01_harry_827",
+      "memberId": "DEMO-M001",
+      "question": "Why was my metformin $8 last month and $27 yesterday?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 784.586083,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+    },
+    {
+      "id": "c02_harry_five_step",
+      "memberId": "DEMO-M001",
+      "question": "Confirm whether my atorvastatin refill is ready for pickup right now, not just that a request exists; give the pharmacy directory name; then check whether I have an open coverage-review case and report that case's current status and requested medication.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing atorvastatin",
+        "missing ready",
+        "missing Jardiance",
+        "missing pending"
+      ],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 595.30825,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+    },
+    {
+      "id": "c03_harry_preferred_rule",
+      "memberId": "DEMO-M001",
+      "question": "Why can the same 30-day fill cost more at a standard pharmacy than a preferred one on this plan?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 616.691583,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+    },
+    {
+      "id": "c04_harry_mail_vs_today",
+      "memberId": "DEMO-M001",
+      "question": "If I enroll in CenterWell mail, does that change today's retail atorvastatin pickup, and what happens to the existing prescription?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing enrollment/pickup"
+      ],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 664.6750419999998,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+    },
+    {
+      "id": "c05_m002_lisinopril",
+      "memberId": "DEMO-M002",
+      "question": "What did I pay for lisinopril on 2026-09-01 and which pharmacy filled it?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 685.829542,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "lisinopril on 2026-09-01 at CenterWell: $4.00 (paid)"
+    },
+    {
+      "id": "c06_m004_other_plan",
+      "memberId": "DEMO-M004",
+      "question": "Why was my metformin $12? Use my plan's cost rule, not MAPD-001.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 549.2187089999998,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-09-02 at Lakeview Pharmacy: $12.00 (paid)"
+    },
+    {
+      "id": "c07_harry_case_chain",
+      "memberId": "DEMO-M001",
+      "question": "Look up my open coverage-review cases, then report the case id, status, and requested medication from the case record itself.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing case id",
+        "missing pending"
+      ],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 688.0877079999996,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+    },
+    {
+      "id": "c08_m003_ozempic_case",
+      "memberId": "DEMO-M003",
+      "question": "Do I have an open coverage-review case? If so, what medication is requested and what is the status — do not approve it.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing Ozempic",
+        "missing pending"
+      ],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 664.5731249999999,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-20 at Oak Street Pharmacy: $8.00 (paid)"
+    },
+    {
+      "id": "c09_m005_mail_and_cases",
+      "memberId": "DEMO-M005",
+      "question": "Where was my last atorvastatin fill, what did I pay, and do I have any open coverage-review case?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 492.9025419999998,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "atorvastatin on 2026-08-15 at CenterWell: $6.00 (paid)"
+    },
+    {
+      "id": "c10_harry_quotes_after_consent",
+      "memberId": "DEMO-M001",
+      "question": "Comparison consent is already yes. What are the prospective 90-day member costs at CenterWell versus Lakeview for metformin on this member?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "did not call getQuotes"
+      ],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 578.581709,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+    }
+  ]
+}

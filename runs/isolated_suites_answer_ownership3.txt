@@ -1,0 +1,404 @@
+started 2026-09-20T02:58:59Z
+
+===== T01 run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 90703ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 90703ms
+     → Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+ ❯ json tests/driver.ts:25:17
+     23|     },
+     24|   });
+     25|   const body = (await resp.json()) as {
+       |                 ^
+     26|     session?: SessionState;
+     27|     token?: string;
+ ❯ act tests/driver.ts:108:15
+ ❯ runScenario tests/driver.ts:204:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:59:00
+   Duration  90.86s (transform 29ms, setup 0ms, collect 44ms, tests 90.70s, environment 0ms, prepare 30ms)
+
+T01 run 1 FAIL
+
+===== T01 run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/t01_main.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  22:00:31
+   Duration  333ms (transform 30ms, setup 0ms, collect 223ms, tests 0ms, environment 0ms, prepare 29ms)
+
+TREAT_SKIP_AS_FAIL
+T01 run 2 FAIL
+
+===== T01 run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/t01_main.test.ts (1 test | 1 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  1 skipped (1)
+   Start at  22:00:32
+   Duration  158ms (transform 29ms, setup 0ms, collect 46ms, tests 0ms, environment 0ms, prepare 29ms)
+
+TREAT_SKIP_AS_FAIL
+T01 run 3 FAIL
+T01 PASS_COUNT 0/3
+
+===== REPLAYS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/replays.test.ts (6 tests | 6 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  6 skipped (6)
+   Start at  22:00:33
+   Duration  167ms (transform 31ms, setup 0ms, collect 47ms, tests 0ms, environment 0ms, prepare 32ms)
+
+TREAT_SKIP_AS_FAIL
+REPLAYS run 1 FAIL
+
+===== REPLAYS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/replays.test.ts (6 tests | 6 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  6 skipped (6)
+   Start at  22:00:33
+   Duration  166ms (transform 32ms, setup 0ms, collect 48ms, tests 0ms, environment 0ms, prepare 33ms)
+
+TREAT_SKIP_AS_FAIL
+REPLAYS run 2 FAIL
+
+===== REPLAYS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ↓ tests/replays.test.ts (6 tests | 6 skipped)
+
+ Test Files  1 skipped (1)
+      Tests  6 skipped (6)
+   Start at  22:00:34
+   Duration  161ms (transform 31ms, setup 0ms, collect 47ms, tests 0ms, environment 0ms, prepare 29ms)
+
+TREAT_SKIP_AS_FAIL
+REPLAYS run 3 FAIL
+REPLAYS PASS_COUNT 0/3
+
+===== CHAIN run 1 =====
+c01_harry_827 missing $8;missing $27;missing preferred/standard 3342.454333
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 3199.866125
+c03_harry_preferred_rule missing preferred/standard 2952.1290419999996
+c04_harry_mail_vs_today ok 3108.638833000001
+c05_m002_lisinopril missing lisinopril 2445.209583
+c06_m004_other_plan missing 12 3250.325041000002
+c07_harry_case_chain missing case id;missing pending 2258.1358330000003
+c08_m003_ozempic_case missing Ozempic;missing pending 2499.8001659999973
+c09_m005_mail_and_cases missing atorvastatin;missing CenterWell/preferred 3443.1619999999966
+c10_harry_quotes_after_consent did not call getQuotes;no amount in answer 2520.070125000002
+{
+  "correct": 1,
+  "of": 10,
+  "over8": 0,
+  "broke": 9,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789873264302.json"
+}
+chain_grader 1 / 10
+CHAIN run 1 FAIL
+
+===== CHAIN run 2 =====
+c01_harry_827 missing $8;missing $27;missing preferred/standard 3463.3555410000004
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 2474.982833
+c03_harry_preferred_rule missing preferred/standard 3028.4600410000003
+c04_harry_mail_vs_today missing enrollment/pickup 2950.805083000001
+c05_m002_lisinopril missing lisinopril 3128.1519580000004
+c06_m004_other_plan missing 12 3110.9152090000007
+c07_harry_case_chain missing case id;missing pending 2237.9809590000004
+c08_m003_ozempic_case missing Ozempic;missing pending 2340.8377500000024
+c09_m005_mail_and_cases missing atorvastatin;missing CenterWell/preferred 2549.0135420000006
+c10_harry_quotes_after_consent did not call getQuotes;no amount in answer 2371.6902090000003
+{
+  "correct": 0,
+  "of": 10,
+  "over8": 0,
+  "broke": 10,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789873292650.json"
+}
+chain_grader 0 / 10
+CHAIN run 2 FAIL
+
+===== CHAIN run 3 =====
+c01_harry_827 missing $8;missing $27;missing preferred/standard 3507.93125
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 2528.97775
+c03_harry_preferred_rule missing preferred/standard 2362.6745419999997
+c04_harry_mail_vs_today missing enrollment/pickup 2984.948209
+c05_m002_lisinopril missing lisinopril 2738.504583
+c06_m004_other_plan missing 12 2672.1955419999995
+c07_harry_case_chain missing case id;missing pending 2088.462916999997
+c08_m003_ozempic_case missing Ozempic;missing pending 2214.9653340000004
+c09_m005_mail_and_cases missing atorvastatin;missing CenterWell/preferred 2904.928082999999
+c10_harry_quotes_after_consent did not call getQuotes 3494.5121670000008
+{
+  "correct": 0,
+  "of": 10,
+  "over8": 0,
+  "broke": 10,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789873320800.json"
+}
+chain_grader 0 / 10
+CHAIN run 3 FAIL
+CHAIN PASS_COUNT 0/3
+
+===== NOT_CANNED run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/not_canned.test.ts (3 tests | 1 failed) 28983ms
+   ✓ answers are not canned > same question, different members, different facts  12351ms
+   ✓ answers are not canned > same member, different questions, different answers  11323ms
+   × answers are not canned > playbook-only other_plan_cost_explain is available for M004 5309ms
+     → expected undefined to be 'other_plan_cost_explain' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > playbook-only other_plan_cost_explain is available for M004
+AssertionError: expected undefined to be 'other_plan_cost_explain' // Object.is equality
+
+- Expected: 
+"other_plan_cost_explain"
+
++ Received: 
+undefined
+
+ ❯ tests/not_canned.test.ts:91:20
+     89|       [...(s.diagnostics.nba ?? [])].reverse().find((r) => r.event ===…
+     90|         ?.action;
+     91|     expect(action).toBe("other_plan_cost_explain");
+       |                    ^
+     92|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+     93|   }, 90_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  22:02:01
+   Duration  29.25s (transform 34ms, setup 0ms, collect 145ms, tests 28.98s, environment 0ms, prepare 30ms)
+
+NOT_CANNED run 1 FAIL
+
+===== NOT_CANNED run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/not_canned.test.ts (3 tests | 1 failed) 28872ms
+   ✓ answers are not canned > same question, different members, different facts  10597ms
+   ✓ answers are not canned > same member, different questions, different answers  12619ms
+   × answers are not canned > playbook-only other_plan_cost_explain is available for M004 5656ms
+     → expected undefined to be 'other_plan_cost_explain' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > playbook-only other_plan_cost_explain is available for M004
+AssertionError: expected undefined to be 'other_plan_cost_explain' // Object.is equality
+
+- Expected: 
+"other_plan_cost_explain"
+
++ Received: 
+undefined
+
+ ❯ tests/not_canned.test.ts:91:20
+     89|       [...(s.diagnostics.nba ?? [])].reverse().find((r) => r.event ===…
+     90|         ?.action;
+     91|     expect(action).toBe("other_plan_cost_explain");
+       |                    ^
+     92|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+     93|   }, 90_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  22:02:31
+   Duration  29.03s (transform 29ms, setup 0ms, collect 43ms, tests 28.87s, environment 0ms, prepare 29ms)
+
+NOT_CANNED run 2 FAIL
+
+===== NOT_CANNED run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/not_canned.test.ts (3 tests | 1 failed) 26252ms
+   ✓ answers are not canned > same question, different members, different facts  10079ms
+   ✓ answers are not canned > same member, different questions, different answers  10544ms
+   × answers are not canned > playbook-only other_plan_cost_explain is available for M004 5627ms
+     → expected undefined to be 'other_plan_cost_explain' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > playbook-only other_plan_cost_explain is available for M004
+AssertionError: expected undefined to be 'other_plan_cost_explain' // Object.is equality
+
+- Expected: 
+"other_plan_cost_explain"
+
++ Received: 
+undefined
+
+ ❯ tests/not_canned.test.ts:91:20
+     89|       [...(s.diagnostics.nba ?? [])].reverse().find((r) => r.event ===…
+     90|         ?.action;
+     91|     expect(action).toBe("other_plan_cost_explain");
+       |                    ^
+     92|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+     93|   }, 90_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  22:03:00
+   Duration  26.41s (transform 29ms, setup 0ms, collect 43ms, tests 26.25s, environment 0ms, prepare 30ms)
+
+NOT_CANNED run 3 FAIL
+NOT_CANNED PASS_COUNT 0/3
+
+===== NBA_MEMBERS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/nba_members.test.ts (1 test | 1 failed) 21008ms
+   × NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's 21007ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:91:7
+     89|       m004.recommendation?.status === "pending" ||
+     90|         m004.diagnostics.nba.some((r) => r.event === "proposal"),
+     91|     ).toBe(true);
+       |       ^
+     92|   }, 300_000);
+     93| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  22:03:27
+   Duration  21.25s (transform 30ms, setup 0ms, collect 42ms, tests 21.01s, environment 0ms, prepare 33ms)
+
+NBA_MEMBERS run 1 FAIL
+
+===== NBA_MEMBERS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/nba_members.test.ts (1 test | 1 failed) 20676ms
+   × NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's 20676ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:91:7
+     89|       m004.recommendation?.status === "pending" ||
+     90|         m004.diagnostics.nba.some((r) => r.event === "proposal"),
+     91|     ).toBe(true);
+       |       ^
+     92|   }, 300_000);
+     93| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  22:03:49
+   Duration  20.84s (transform 29ms, setup 0ms, collect 42ms, tests 20.68s, environment 0ms, prepare 33ms)
+
+NBA_MEMBERS run 2 FAIL
+
+===== NBA_MEMBERS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/nba_members.test.ts (1 test | 1 failed) 21111ms
+   × NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's 21111ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:91:7
+     89|       m004.recommendation?.status === "pending" ||
+     90|         m004.diagnostics.nba.some((r) => r.event === "proposal"),
+     91|     ).toBe(true);
+       |       ^
+     92|   }, 300_000);
+     93| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  22:04:10
+   Duration  21.27s (transform 30ms, setup 0ms, collect 44ms, tests 21.11s, environment 0ms, prepare 29ms)
+
+NBA_MEMBERS run 3 FAIL
+NBA_MEMBERS PASS_COUNT 0/3
+finished 2026-09-20T03:04:32Z

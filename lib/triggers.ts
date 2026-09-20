@@ -234,6 +234,8 @@ async function oneTriggerCall(
   ttftMs: number | null;
   ok: boolean;
   text: string;
+  httpStatus: number;
+  error: string | null;
 }> {
   const { lunaStream } = await import("@/lib/openai");
   const hist = session.needs.some(
@@ -258,13 +260,15 @@ async function oneTriggerCall(
     ttftMs: streamed.ttftMs,
     ok: streamed.ok,
     text: streamed.text,
+    httpStatus: streamed.httpStatus,
+    error: streamed.error,
   };
 }
 
 export async function classifyLunaTrigger(
   session: SessionState,
   utterance: { speaker: string; text: string; stability: string },
-): Promise<TriggerResult & { ttftMs: number | null; hedgeMs?: number[] }> {
+): Promise<TriggerResult & { ttftMs: number | null; hedgeMs?: number[]; httpStatus?: number; error?: string | null }> {
   if (utterance.speaker !== "advocate") {
     return {
       stage: 0,
@@ -284,6 +288,8 @@ export async function classifyLunaTrigger(
   let firstText = "";
   let ttftMs: number | null = null;
   let winnerCode: TriggerCode | null = null;
+  let httpStatus: number | undefined;
+  let error: string | null | undefined;
   try {
     if (triggerHedge) {
       const p1 = runOne();
@@ -307,10 +313,15 @@ export async function classifyLunaTrigger(
       }
       firstText = parsed[0]?.text ?? legs[0]?.text ?? "";
       ttftMs = parsed[0]?.ttftMs ?? legs[0]?.ttftMs ?? null;
+      const fail = legs.find((x) => !x.ok) ?? legs[0];
+      httpStatus = fail?.httpStatus;
+      error = fail?.error;
       appendJsonl(session.sessionId, {
         kind: "luna_trigger_hedge",
         ms: hedgeMs,
         codes: legs.map((x) => x.code),
+        httpStatus: legs.map((x) => x.httpStatus),
+        error: legs.map((x) => x.error),
       });
     } else {
       const first = await runOne();
@@ -319,6 +330,8 @@ export async function classifyLunaTrigger(
       fired = first.code === "prospective_estimate";
       firstText = first.text;
       ttftMs = first.ttftMs;
+      httpStatus = first.httpStatus;
+      error = first.error;
       if (!first.code) classification = "unable_to_verify";
     }
   } catch {
@@ -333,5 +346,7 @@ export async function classifyLunaTrigger(
     reason: `luna_stream:${winnerCode ?? "empty"}:${firstText.slice(0, 80)}`,
     ttftMs,
     hedgeMs,
+    httpStatus,
+    error,
   };
 }

@@ -1,0 +1,327 @@
+{
+  "sessionId": "f2baa9a1-d2e7-43cc-823e-238de544d8d5",
+  "scenarioId": "t02a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "not_applicable",
+  "closingNote": null,
+  "closingHistory": [],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-said-ready",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 52,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 52,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": null,
+  "fast90": null,
+  "nowCard": {
+    "title": "Answer",
+    "body": "Your atorvastatin 30-day refill is ready for pickup at Lakeview Pharmacy.",
+    "sourceLabel": "Pharmacy system",
+    "liveSteps": [
+      "Searching knowledge…",
+      "Checking refill requests…",
+      "Checking refill status…"
+    ],
+    "earlyFacts": [
+      {
+        "text": "atorvastatin received at Lakeview Pharmacy",
+        "source": "Pharmacy system"
+      },
+      {
+        "text": "atorvastatin ready_for_pickup at Lakeview Pharmacy",
+        "source": "Pharmacy system"
+      }
+    ],
+    "statements": [
+      {
+        "text": "Your atorvastatin 30-day refill is ready for pickup at Lakeview Pharmacy.",
+        "sourceId": "DEMO-RF001",
+        "sourceTag": "Pharmacy system",
+        "confirmed": true,
+        "highlight": "Lakeview Pharmacy",
+        "lookedFor": [
+          "Lakeview Pharmacy"
+        ],
+        "found": [
+          "Lakeview Pharmacy"
+        ]
+      }
+    ],
+    "canRetry": false,
+    "retryCause": null
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": "COMPLETED_SERVICING",
+    "confirmed": "COMPLETED_SERVICING"
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789870424990,
+      "tPaint": 1789870425017,
+      "paintMs": 27,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789870425073,
+      "tPaint": 1789870425095,
+      "paintMs": 22,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789870425150,
+      "tPaint": 1789870425157,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789870425225,
+      "tPaint": 1789870425378,
+      "paintMs": 153,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-smalltalk",
+      "kind": "transcript",
+      "tEvent": 1789870425453,
+      "tPaint": 1789870429290,
+      "paintMs": 3837,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-ready",
+      "kind": "transcript",
+      "tEvent": 1789870429354,
+      "tPaint": 1789870434460,
+      "paintMs": 5106,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-pause-ready",
+      "kind": "pause_gate",
+      "tEvent": 1789870434523,
+      "tPaint": 1789870434540,
+      "paintMs": 17,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-said-ready",
+      "kind": "transcript",
+      "tEvent": 1789870434603,
+      "tPaint": 1789870434628,
+      "paintMs": 25,
+      "measured": true,
+      "excludedPauseMs": 48
+    },
+    {
+      "eventId": "e-pause-disp",
+      "kind": "pause_gate",
+      "tEvent": 1789870434683,
+      "tPaint": 1789870434745,
+      "paintMs": 62,
+      "measured": true,
+      "excludedPauseMs": 48
+    }
+  ],
+  "needPaths": []
+}

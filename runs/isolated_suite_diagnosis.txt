@@ -1,0 +1,462 @@
+origin=http://127.0.0.1:3002 started 2026-09-20T00:52:29Z
+=== T01 ===
+-- T01 run 1 00:52:29Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+Error: waitUntil timed out after 12000ms waiting for coverage (session 72ca0197-39c5-43c7-979d-774069fbb299)
+ ❯ waitUntil tests/driver.ts:388:11
+    386|   await refresh(session);
+    387|   if (!pred(session)) {
+    388|     throw new Error(
+       |           ^
+    389|       `waitUntil timed out after ${ms}ms waiting for ${label} (session…
+    390|     );
+ ❯ runScenario tests/driver.ts:199:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:52:30
+   Duration  41.52s (transform 34ms, setup 0ms, collect 139ms, tests 41.24s, environment 0ms, prepare 35ms)
+
+exit:
+-- T01 run 2 00:53:12Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+Error: waitUntil timed out after 12000ms waiting for coverage (session 8e3bf84d-413d-4856-8e56-44919e8f7285)
+ ❯ waitUntil tests/driver.ts:388:11
+    386|   await refresh(session);
+    387|   if (!pred(session)) {
+    388|     throw new Error(
+       |           ^
+    389|       `waitUntil timed out after ${ms}ms waiting for ${label} (session…
+    390|     );
+ ❯ runScenario tests/driver.ts:199:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:53:12
+   Duration  40.37s (transform 28ms, setup 0ms, collect 41ms, tests 40.20s, environment 0ms, prepare 36ms)
+
+exit:
+-- T01 run 3 00:53:53Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+Error: waitUntil timed out after 12000ms waiting for coverage (session 892d55d5-976e-4191-a0c3-249698a620ba)
+ ❯ waitUntil tests/driver.ts:388:11
+    386|   await refresh(session);
+    387|   if (!pred(session)) {
+    388|     throw new Error(
+       |           ^
+    389|       `waitUntil timed out after ${ms}ms waiting for ${label} (session…
+    390|     );
+ ❯ runScenario tests/driver.ts:199:7
+ ❯ tests/t01_main.test.ts:9:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:53:53
+   Duration  41.01s (transform 29ms, setup 0ms, collect 43ms, tests 40.85s, environment 0ms, prepare 35ms)
+
+exit:
+=== REPLAYS ===
+-- replays run 1 00:54:35Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+······
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  19:54:35
+   Duration  25.48s (transform 32ms, setup 0ms, collect 45ms, tests 25.31s, environment 0ms, prepare 33ms)
+
+exit:
+-- replays run 2 00:55:01Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x·····
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T02A clean servicing / silence
+AssertionError: expected 'metformin on 2026-08-18 at Oak Street…' not to match /\$8|\$27/
+
+- Expected: 
+/\$8|\$27/
+
++ Received: 
+"metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+
+ ❯ tests/replays.test.ts:17:32
+     15|     expect(s.pricing).toBe("not_applicable");
+     16|     expect(s.recommendation?.status === "pending").toBe(false);
+     17|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+       |                                ^
+     18|     expect(s.disposition.recommended).toBe("COMPLETED_SERVICING");
+     19|     expect(s.disposition.confirmed).toBe("COMPLETED_SERVICING");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  19:55:01
+   Duration  24.12s (transform 31ms, setup 0ms, collect 50ms, tests 23.94s, environment 0ms, prepare 36ms)
+
+exit:
+-- replays run 3 00:55:25Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x·····
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T02A clean servicing / silence
+AssertionError: expected 'metformin on 2026-08-18 at Oak Street…' not to match /\$8|\$27/
+
+- Expected: 
+/\$8|\$27/
+
++ Received: 
+"metformin on 2026-08-18 at Oak Street Pharmacy: $8.00 (paid) metformin on 2026-09-16 at Lakeview Pharmacy: $27.00 (paid) Oak Street Pharmacy on 2026-08-18: preferred_retail Lakeview Pharmacy on 2026-09-16: standard_retail"
+
+ ❯ tests/replays.test.ts:17:32
+     15|     expect(s.pricing).toBe("not_applicable");
+     16|     expect(s.recommendation?.status === "pending").toBe(false);
+     17|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+       |                                ^
+     18|     expect(s.disposition.recommended).toBe("COMPLETED_SERVICING");
+     19|     expect(s.disposition.confirmed).toBe("COMPLETED_SERVICING");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  19:55:26
+   Duration  21.52s (transform 33ms, setup 0ms, collect 46ms, tests 21.35s, environment 0ms, prepare 32ms)
+
+exit:
+=== CHAIN ===
+-- chain run 1 00:55:48Z
+c01_harry_827 ok 784.586083
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 595.30825
+c03_harry_preferred_rule ok 616.691583
+c04_harry_mail_vs_today missing enrollment/pickup 664.6750419999998
+c05_m002_lisinopril ok 685.829542
+c06_m004_other_plan ok 549.2187089999998
+c07_harry_case_chain missing case id;missing pending 688.0877079999996
+c08_m003_ozempic_case missing Ozempic;missing pending 664.5731249999999
+c09_m005_mail_and_cases ok 492.9025419999998
+c10_harry_quotes_after_consent did not call getQuotes 578.581709
+{
+  "correct": 5,
+  "of": 10,
+  "over8": 0,
+  "broke": 5,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789865755248.json"
+}
+-- chain run 2 00:55:55Z
+c01_harry_827 ok 775.701084
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 682.601667
+c03_harry_preferred_rule ok 606.2017919999998
+c04_harry_mail_vs_today missing enrollment/pickup 597.1189160000004
+c05_m002_lisinopril ok 544.743583
+c06_m004_other_plan ok 592.116458
+c07_harry_case_chain missing case id;missing pending 572.2424999999998
+c08_m003_ozempic_case missing Ozempic;missing pending 526.2959999999994
+c09_m005_mail_and_cases ok 596.5642090000001
+c10_harry_quotes_after_consent did not call getQuotes 577.7645419999999
+{
+  "correct": 5,
+  "of": 10,
+  "over8": 0,
+  "broke": 5,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789865762118.json"
+}
+-- chain run 3 00:56:02Z
+c01_harry_827 ok 767.33875
+c02_harry_five_step missing atorvastatin;missing ready;missing Jardiance;missing pending 623.7930419999999
+c03_harry_preferred_rule ok 609.1072079999999
+c04_harry_mail_vs_today missing enrollment/pickup 580.243125
+c05_m002_lisinopril ok 579.8179170000003
+c06_m004_other_plan ok 531.6017499999998
+c07_harry_case_chain missing case id;missing pending 643.5515840000003
+c08_m003_ozempic_case missing Ozempic;missing pending 582.8525839999993
+c09_m005_mail_and_cases ok 597.0889589999997
+c10_harry_quotes_after_consent did not call getQuotes 819.7893329999997
+{
+  "correct": 5,
+  "of": 10,
+  "over8": 0,
+  "broke": 5,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789865769254.json"
+}
+=== NOT_CANNED ===
+-- not_canned run 1 00:56:09Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+·xx
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > same member, different questions, different answers
+AssertionError: expected 'metformin on 2026-08-18 at Oak Street…' not to be 'metformin on 2026-08-18 at Oak Street…' // Object.is equality
+ ❯ tests/not_canned.test.ts:77:35
+     75|       "Is my atorvastatin refill ready for pickup right now?",
+     76|     );
+     77|     expect(hist.nowCard.body).not.toBe(refill.nowCard.body);
+       |                                   ^
+     78|     expect(hist.nowCard.body).toMatch(/8|27|preferred|standard/i);
+     79|     expect(refill.nowCard.body).toMatch(/ready|refill|atorvastatin|lak…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > playbook-only other_plan_cost_explain is available for M004
+AssertionError: expected 'none' to be 'other_plan_cost_explain' // Object.is equality
+
+Expected: "other_plan_cost_explain"
+Received: "none"
+
+ ❯ tests/not_canned.test.ts:91:20
+     89|       [...(s.diagnostics.nba ?? [])].reverse().find((r) => r.event ===…
+     90|         ?.action;
+     91|     expect(action).toBe("other_plan_cost_explain");
+       |                    ^
+     92|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+     93|   }, 90_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:56:09
+   Duration  8.41s (transform 41ms, setup 0ms, collect 61ms, tests 8.12s, environment 0ms, prepare 34ms)
+
+exit:
+-- not_canned run 2 00:56:18Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+·xx
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > same member, different questions, different answers
+AssertionError: expected 'metformin on 2026-08-18 at Oak Street…' not to be 'metformin on 2026-08-18 at Oak Street…' // Object.is equality
+ ❯ tests/not_canned.test.ts:77:35
+     75|       "Is my atorvastatin refill ready for pickup right now?",
+     76|     );
+     77|     expect(hist.nowCard.body).not.toBe(refill.nowCard.body);
+       |                                   ^
+     78|     expect(hist.nowCard.body).toMatch(/8|27|preferred|standard/i);
+     79|     expect(refill.nowCard.body).toMatch(/ready|refill|atorvastatin|lak…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > playbook-only other_plan_cost_explain is available for M004
+AssertionError: expected 'none' to be 'other_plan_cost_explain' // Object.is equality
+
+Expected: "other_plan_cost_explain"
+Received: "none"
+
+ ❯ tests/not_canned.test.ts:91:20
+     89|       [...(s.diagnostics.nba ?? [])].reverse().find((r) => r.event ===…
+     90|         ?.action;
+     91|     expect(action).toBe("other_plan_cost_explain");
+       |                    ^
+     92|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+     93|   }, 90_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:56:18
+   Duration  9.49s (transform 31ms, setup 0ms, collect 54ms, tests 9.32s, environment 0ms, prepare 34ms)
+
+exit:
+-- not_canned run 3 00:56:28Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+·xx
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > same member, different questions, different answers
+AssertionError: expected 'metformin on 2026-08-18 at Oak Street…' not to be 'metformin on 2026-08-18 at Oak Street…' // Object.is equality
+ ❯ tests/not_canned.test.ts:77:35
+     75|       "Is my atorvastatin refill ready for pickup right now?",
+     76|     );
+     77|     expect(hist.nowCard.body).not.toBe(refill.nowCard.body);
+       |                                   ^
+     78|     expect(hist.nowCard.body).toMatch(/8|27|preferred|standard/i);
+     79|     expect(refill.nowCard.body).toMatch(/ready|refill|atorvastatin|lak…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/not_canned.test.ts > answers are not canned > playbook-only other_plan_cost_explain is available for M004
+AssertionError: expected 'none' to be 'other_plan_cost_explain' // Object.is equality
+
+Expected: "other_plan_cost_explain"
+Received: "none"
+
+ ❯ tests/not_canned.test.ts:91:20
+     89|       [...(s.diagnostics.nba ?? [])].reverse().find((r) => r.event ===…
+     90|         ?.action;
+     91|     expect(action).toBe("other_plan_cost_explain");
+       |                    ^
+     92|     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
+     93|   }, 90_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  19:56:28
+   Duration  9.52s (transform 30ms, setup 0ms, collect 43ms, tests 9.36s, environment 0ms, prepare 33ms)
+
+exit:
+=== NBA_MEMBERS ===
+-- nba_members run 1 00:56:38Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:66:152
+     64|     const m004 = await memberQuestion("DEMO-M004", q);
+     65| 
+     66|     expect(harry.recommendation?.status === "pending" || harry.diagnos…
+       |                                                                                                                                                        ^
+     67|     expect(harry.nowCard.body).not.toMatch(/\$15\.00|prospective/i);
+     68| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:56:39
+   Duration  6.69s (transform 32ms, setup 0ms, collect 43ms, tests 6.53s, environment 0ms, prepare 32ms)
+
+exit:
+-- nba_members run 2 00:56:45Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:66:152
+     64|     const m004 = await memberQuestion("DEMO-M004", q);
+     65| 
+     66|     expect(harry.recommendation?.status === "pending" || harry.diagnos…
+       |                                                                                                                                                        ^
+     67|     expect(harry.nowCard.body).not.toMatch(/\$15\.00|prospective/i);
+     68| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:56:46
+   Duration  9.32s (transform 30ms, setup 0ms, collect 45ms, tests 9.15s, environment 0ms, prepare 33ms)
+
+exit:
+-- nba_members run 3 00:56:55Z
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+x
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:66:152
+     64|     const m004 = await memberQuestion("DEMO-M004", q);
+     65| 
+     66|     expect(harry.recommendation?.status === "pending" || harry.diagnos…
+       |                                                                                                                                                        ^
+     67|     expect(harry.nowCard.body).not.toMatch(/\$15\.00|prospective/i);
+     68| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  19:56:56
+   Duration  8.15s (transform 34ms, setup 0ms, collect 48ms, tests 7.97s, environment 0ms, prepare 34ms)
+
+exit:
+done 2026-09-20T00:57:04Z

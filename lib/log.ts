@@ -15,3 +15,13 @@ export function appendJsonl(sessionId: string, record: Record<string, unknown>) 
     JSON.stringify({ t: new Date().toISOString(), ...record }) + "\n",
   );
 }
+
+/** Process-wide OpenAI HTTP log (luna, terra, embeddings, warmups). No secrets. */
+export function appendOpenAiHttp(record: Record<string, unknown>) {
+  const dir = path.join(writableRoot(), "runs");
+  mkdirSync(dir, { recursive: true });
+  appendFileSync(
+    path.join(dir, "openai_http.jsonl"),
+    JSON.stringify({ t: new Date().toISOString(), ...record }) + "\n",
+  );
+}

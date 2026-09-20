@@ -1,0 +1,190 @@
+{
+  "at": "2026-09-20T03:19:19.681Z",
+  "origin": "http://127.0.0.1:3000",
+  "correct": 10,
+  "of": 10,
+  "over8s": 0,
+  "breaks": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "rows": [
+    {
+      "id": "c01_harry_827",
+      "memberId": "DEMO-M001",
+      "question": "Why was my metformin $8 last month and $27 yesterday?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getClaims",
+        "searchKnowledge",
+        "getPharmacyNetwork",
+        "getPharmacyNetwork",
+        "getCostShare"
+      ],
+      "totalMs": 3983.1053749999996,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your August 18 metformin 500 mg 30-day fill at Oak Street Pharmacy was paid at $8.00. Oak Street Pharmacy was classified as preferred retail on August 18, 2026. Your September 16 metformin 500 mg 30-day fill at Lakeview Pharmacy was paid at $27.00. Lakeview Pharmacy was classified as standard retail on September 16, 2026. For this plan and period, a matched 30-day metformin 500 mg supply is $8 at preferred retail and $27 at standard retail under the recorded conditions."
+    },
+    {
+      "id": "c02_harry_five_step",
+      "memberId": "DEMO-M001",
+      "question": "Confirm whether my atorvastatin refill is ready for pickup right now, not just that a request exists; give the pharmacy directory name; then check whether I have an open coverage-review case and report that case's current status and requested medication.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 3,
+      "toolsUsed": [
+        "getRefillRequests",
+        "getPrescriptions",
+        "getOpenCases",
+        "getPharmacy",
+        "getCoverageCase",
+        "getRefillStatus"
+      ],
+      "totalMs": 3993.938875,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your atorvastatin refill is ready for pickup at Lakeview Pharmacy. The pharmacy directory name is Lakeview Pharmacy. You have an open coverage-review case for Jardiance 10 mg tablets, and its current status is pending review."
+    },
+    {
+      "id": "c03_harry_preferred_rule",
+      "memberId": "DEMO-M001",
+      "question": "Why can the same 30-day fill cost more at a standard pharmacy than a preferred one on this plan?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1641.439624999999,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "For this plan and period, the matched 30-day metformin 500 mg supply is $8 at preferred retail and $27 at standard retail under the recorded conditions. Preferred retail and standard retail are different cost-share categories for the same days-supply when the network classification on the date of service differs. The difference is the category that applied at that pharmacy on that date, not a change to the written prescription."
+    },
+    {
+      "id": "c04_harry_mail_vs_today",
+      "memberId": "DEMO-M001",
+      "question": "If I enroll in CenterWell mail, does that change today's retail atorvastatin pickup, and what happens to the existing prescription?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getPrescriptions",
+        "searchKnowledge",
+        "getContactPreferences"
+      ],
+      "totalMs": 3590.5719169999993,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Enrollment does not itself place a fill, start automatic refills, or alter today's retail pickup, and retail remains an option. Atorvastatin 20 mg tablets is an existing prescription with a 90-day authorized supply."
+    },
+    {
+      "id": "c05_m002_lisinopril",
+      "memberId": "DEMO-M002",
+      "question": "What did I pay for lisinopril on 2026-09-01 and which pharmacy filled it?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1320.0618749999994,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "On 2026-09-01, you paid $4.00 USD for lisinopril 10 mg tablets at CenterWell."
+    },
+    {
+      "id": "c06_m004_other_plan",
+      "memberId": "DEMO-M004",
+      "question": "Why was my metformin $12? Use my plan's cost rule, not MAPD-001.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": false,
+      "rounds": 1,
+      "toolsUsed": [],
+      "totalMs": 1691.674833000001,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "A paid claim on 2026-09-02 shows metformin 500 mg tablets, quantity 60 for 30 days, at Lakeview Pharmacy with $12.00 paid by you. The cause is not confirmed."
+    },
+    {
+      "id": "c07_harry_case_chain",
+      "memberId": "DEMO-M001",
+      "question": "Look up my open coverage-review cases, then report the case id, status, and requested medication from the case record itself.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 3,
+      "toolsUsed": [
+        "getOpenCases",
+        "getCoverageCase"
+      ],
+      "totalMs": 3726.6741669999974,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Coverage-review case DEMO-CVR001 is pending_review for Jardiance 10 mg tablets."
+    },
+    {
+      "id": "c08_m003_ozempic_case",
+      "memberId": "DEMO-M003",
+      "question": "Do I have an open coverage-review case? If so, what medication is requested and what is the status — do not approve it.",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getOpenCases"
+      ],
+      "totalMs": 2366.881042000001,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "You have an open coverage-review case for Ozempic 0.25 mg, and its status is pending_review."
+    },
+    {
+      "id": "c09_m005_mail_and_cases",
+      "memberId": "DEMO-M005",
+      "question": "Where was my last atorvastatin fill, what did I pay, and do I have any open coverage-review case?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getClaims",
+        "getOpenCases"
+      ],
+      "totalMs": 2986.142,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Your last atorvastatin fill was at CenterWell on 2026-08-15, and you paid USD 6.00. You have no open coverage-review cases."
+    },
+    {
+      "id": "c10_harry_quotes_after_consent",
+      "memberId": "DEMO-M001",
+      "question": "Comparison consent is already yes. What are the prospective 90-day member costs at CenterWell versus Lakeview for metformin on this member?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getQuotes",
+        "getPrescriptions",
+        "getPharmacy"
+      ],
+      "totalMs": 3234.9445000000014,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "Lakeview Pharmacy’s prospective 90-day estimate for metformin 500 mg, quantity 180, is $60.00 as of 2026-09-17. CenterWell’s prospective 90-day metformin cost is not available from the retrieved records."
+    }
+  ]
+}

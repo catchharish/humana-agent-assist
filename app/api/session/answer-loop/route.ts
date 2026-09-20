@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runAnswerLoop } from "@/lib/answerLoop";
 import {
   beginAnswerLoop,
+  parseNeedKind,
   getSession,
   publicState,
 } from "@/lib/session";
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
   if (!question) {
     return NextResponse.json({ error: "question" }, { status: 400 });
   }
-  const generation = beginAnswerLoop(session, question);
+  const generation = beginAnswerLoop(session, question, parseNeedKind(session.currentNeed));
   const result = await runAnswerLoop({
     origin,
     memberId: session.member?.memberId ?? "DEMO-M001",
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     clockStart: performance.now(),
     generation,
     session,
+    needKind: parseNeedKind(session.currentNeed),
     identityVerified: session.identityStatus === "VALID",
     preload: false,
     preloadSearchOnly: true,

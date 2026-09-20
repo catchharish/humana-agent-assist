@@ -1,0 +1,262 @@
+started 2026-09-20T03:30:14Z
+ORIGIN=http://127.0.0.1:3000
+listeners:
+node      50376 harishkrishnan   16u  IPv6 0xe58540f25fc7ffa1      0t0  TCP *:3000 (LISTEN)
+
+===== T01 run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/t01_main.test.ts (1 test) 153132ms
+   ✓ T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence  153132ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:30:15
+   Duration  153.31s (transform 35ms, setup 0ms, collect 51ms, tests 153.13s, environment 0ms, prepare 35ms)
+
+T01 run 1 PASS
+
+===== T01 run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/t01_main.test.ts (1 test) 152552ms
+   ✓ T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence  152551ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:32:49
+   Duration  153.60s (transform 29ms, setup 0ms, collect 881ms, tests 152.55s, environment 0ms, prepare 33ms)
+
+T01 run 2 PASS
+
+===== T01 run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/t01_main.test.ts (1 test) 136414ms
+   ✓ T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence  136413ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:35:23
+   Duration  137.51s (transform 34ms, setup 0ms, collect 973ms, tests 136.41s, environment 0ms, prepare 34ms)
+
+T01 run 3 PASS
+T01 PASS_COUNT 3/3
+
+===== REPLAYS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/replays.test.ts (6 tests) 89930ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  15795ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  8479ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3105ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  16750ms
+   ✓ §19.3 replays (live app) > T06A omit DEMO-NET0818  8333ms
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  37466ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  22:37:41
+   Duration  90.28s (transform 33ms, setup 0ms, collect 228ms, tests 89.93s, environment 0ms, prepare 35ms)
+
+REPLAYS run 1 PASS
+
+===== REPLAYS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/replays.test.ts (6 tests) 80753ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  14122ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  9005ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  4055ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  15854ms
+   ✓ §19.3 replays (live app) > T06A omit DEMO-NET0818  8518ms
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  29197ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  22:39:12
+   Duration  80.93s (transform 33ms, setup 0ms, collect 48ms, tests 80.75s, environment 0ms, prepare 36ms)
+
+REPLAYS run 2 PASS
+
+===== REPLAYS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/replays.test.ts (6 tests) 76418ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  13694ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  8461ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  2844ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  16469ms
+   ✓ §19.3 replays (live app) > T06A omit DEMO-NET0818  8733ms
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  26214ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  22:40:34
+   Duration  76.58s (transform 31ms, setup 0ms, collect 44ms, tests 76.42s, environment 0ms, prepare 33ms)
+
+REPLAYS run 3 PASS
+REPLAYS PASS_COUNT 3/3
+
+===== CHAIN run 1 =====
+c01_harry_827 ok 4154.349125
+c02_harry_five_step ok 8203.689792000001
+c03_harry_preferred_rule ok 1918.6157090000015
+c04_harry_mail_vs_today ok 3369.3454999999976
+c05_m002_lisinopril ok 1188.8986250000016
+c06_m004_other_plan ok 1842.2573749999974
+c07_harry_case_chain ok 3798.0600000000013
+c08_m003_ozempic_case ok 2511.9355419999993
+c09_m005_mail_and_cases ok 2821.581791999997
+c10_harry_quotes_after_consent ok 3947.0292080000036
+{
+  "correct": 10,
+  "of": 10,
+  "over8": 1,
+  "broke": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789875745598.json"
+}
+CHAIN run 1 PASS
+
+===== CHAIN run 2 =====
+c01_harry_827 ok 2309.169792
+c02_harry_five_step ok 4214.514417
+c03_harry_preferred_rule ok 1617.0003749999996
+c04_harry_mail_vs_today ok 3339.507791
+c05_m002_lisinopril ok 1065.1164580000004
+c06_m004_other_plan ok 1646.5975000000017
+c07_harry_case_chain ok 3852.0774589999983
+c08_m003_ozempic_case ok 2391.5593750000007
+c09_m005_mail_and_cases ok 2674.856083999999
+c10_harry_quotes_after_consent ok 5417.935667000002
+{
+  "correct": 10,
+  "of": 10,
+  "over8": 0,
+  "broke": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789875774964.json"
+}
+CHAIN run 2 PASS
+
+===== CHAIN run 3 =====
+c01_harry_827 ok 2406.941667
+c02_harry_five_step ok 3717.840959
+c03_harry_preferred_rule ok 1752.3312910000004
+c04_harry_mail_vs_today ok 3339.4925829999993
+c05_m002_lisinopril ok 1119.1142920000002
+c06_m004_other_plan ok 1729.3306659999998
+c07_harry_case_chain ok 3250.496583
+c08_m003_ozempic_case ok 3682.534125000002
+c09_m005_mail_and_cases ok 3184.830167
+c10_harry_quotes_after_consent ok 3729.394458999999
+{
+  "correct": 10,
+  "of": 10,
+  "over8": 0,
+  "broke": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789875803774.json"
+}
+CHAIN run 3 PASS
+CHAIN PASS_COUNT 3/3
+
+===== NOT_CANNED run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/not_canned.test.ts (3 tests) 40558ms
+   ✓ answers are not canned > same question, different members, different facts  16570ms
+   ✓ answers are not canned > same member, different questions, different answers  15719ms
+   ✓ answers are not canned > playbook-only other_plan_cost_explain is available for M004  8267ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  22:43:24
+   Duration  40.83s (transform 33ms, setup 0ms, collect 47ms, tests 40.56s, environment 0ms, prepare 33ms)
+
+NOT_CANNED run 1 PASS
+
+===== NOT_CANNED run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/not_canned.test.ts (3 tests) 35015ms
+   ✓ answers are not canned > same question, different members, different facts  12903ms
+   ✓ answers are not canned > same member, different questions, different answers  16349ms
+   ✓ answers are not canned > playbook-only other_plan_cost_explain is available for M004  5762ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  22:44:05
+   Duration  35.18s (transform 29ms, setup 0ms, collect 44ms, tests 35.02s, environment 0ms, prepare 33ms)
+
+NOT_CANNED run 2 PASS
+
+===== NOT_CANNED run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/not_canned.test.ts (3 tests) 38102ms
+   ✓ answers are not canned > same question, different members, different facts  14215ms
+   ✓ answers are not canned > same member, different questions, different answers  16450ms
+   ✓ answers are not canned > playbook-only other_plan_cost_explain is available for M004  7435ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  22:44:41
+   Duration  38.27s (transform 30ms, setup 0ms, collect 43ms, tests 38.10s, environment 0ms, prepare 33ms)
+
+NOT_CANNED run 3 PASS
+NOT_CANNED PASS_COUNT 3/3
+
+===== NBA_MEMBERS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/nba_members.test.ts (1 test) 37682ms
+   ✓ NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's  37681ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:45:20
+   Duration  37.85s (transform 31ms, setup 0ms, collect 43ms, tests 37.68s, environment 0ms, prepare 33ms)
+
+NBA_MEMBERS run 1 PASS
+
+===== NBA_MEMBERS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/nba_members.test.ts (1 test) 38336ms
+   ✓ NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's  38335ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:45:59
+   Duration  38.51s (transform 30ms, setup 0ms, collect 44ms, tests 38.34s, environment 0ms, prepare 35ms)
+
+NBA_MEMBERS run 2 PASS
+
+===== NBA_MEMBERS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/nba_members.test.ts (1 test) 34035ms
+   ✓ NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's  34033ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:46:38
+   Duration  34.21s (transform 32ms, setup 0ms, collect 45ms, tests 34.03s, environment 0ms, prepare 34ms)
+
+NBA_MEMBERS run 3 PASS
+NBA_MEMBERS PASS_COUNT 3/3
+finished 2026-09-20T03:47:12Z

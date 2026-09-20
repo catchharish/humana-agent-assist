@@ -38,6 +38,9 @@ export async function ensureDocumentEmbeddings(origin: string): Promise<{
   ready: boolean;
   count: number;
   model: string;
+  httpStatus?: number;
+  error?: string | null;
+  ms?: number;
 }> {
   if (g.__haaDocs?.ready && g.__haaDocs.key === INDEX_KEY) {
     return {
@@ -66,7 +69,14 @@ export async function ensureDocumentEmbeddings(origin: string): Promise<{
   const embedded = await embedTexts(cands.map((c) => c.text));
   if (!embedded.ok) {
     g.__haaDocs = { key: INDEX_KEY, ready: false, items: [], model: EMBED_MODEL };
-    return { ready: false, count: 0, model: EMBED_MODEL };
+    return {
+      ready: false,
+      count: 0,
+      model: EMBED_MODEL,
+      httpStatus: embedded.httpStatus,
+      error: embedded.error,
+      ms: embedded.ms,
+    };
   }
   g.__haaDocs = {
     key: INDEX_KEY,

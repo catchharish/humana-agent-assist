@@ -68,6 +68,25 @@ export type NeedKind =
   | "unrecognized_request"
   | "unsupported_work";
 
+export type NeedAnswer = {
+  title: string;
+  body: string;
+  sourceLabel: string;
+  causeSupported?: boolean;
+  chargesEstablished?: boolean;
+  statements?: import("@/lib/citations").CitedStatement[];
+  at?: string;
+  generation?: number;
+};
+
+export type ActionResult = {
+  kind: string;
+  title: string;
+  body: string;
+  sourceLabel: string;
+  at: string;
+};
+
 export type NeedRecord = {
   kind: NeedKind;
   status: "requested" | "active" | "deferred" | "resolved" | "unresolved_gap";
@@ -76,14 +95,8 @@ export type NeedRecord = {
   fingerprint?: string;
   queryText?: string;
   sourceUtteranceId?: string;
-  answer?: {
-    title: string;
-    body: string;
-    sourceLabel: string;
-    causeSupported?: boolean;
-    chargesEstablished?: boolean;
-    statements?: import("@/lib/citations").CitedStatement[];
-  };
+  answer?: NeedAnswer;
+  answerHistory?: NeedAnswer[];
 };
 
 export type RouterTrace = {
@@ -169,6 +182,9 @@ export type SessionState = {
   utteranceRules: import("@/lib/utteranceRules").UtteranceRules | null;
   transcript: TranscriptLine[];
   needs: NeedRecord[];
+  actionResults: ActionResult[];
+  nowCardOrigin?: "answer" | "action" | "system";
+  nowCardNeedKind?: NeedKind | null;
   nowCard: {
     title: string;
     body: string;
@@ -177,6 +193,8 @@ export type SessionState = {
     liveSteps?: string[];
     earlyFacts?: { text: string; source: string }[];
     statements?: import("@/lib/citations").CitedStatement[];
+    canRetry?: boolean;
+    retryCause?: string | null;
   };
   recommendation: {
     kind: string;
@@ -273,15 +291,41 @@ export type SessionState = {
     assessment: string;
   }>;
   outcomeReady: boolean;
-  warmup: { ok: boolean; ms: number; model: string; at: string } | null;
+  warmup: {
+    ok: boolean;
+    ms: number;
+    model: string;
+    at: string;
+    httpStatus?: number;
+    error?: string | null;
+  } | null;
   lastTimings: TimingRecord[];
   lunaSeq: number;
   lastInterpretation: Record<string, unknown> | null;
   lastAppliedEventId: string | null;
+  lastAnswerQuestion: string | null;
+  modelHealth: {
+    luna: {
+      ok: boolean;
+      status: number;
+      error: string | null;
+      ms: number;
+      at: string;
+    } | null;
+    terra: {
+      ok: boolean;
+      status: number;
+      error: string | null;
+      ms: number;
+      at: string;
+    } | null;
+  };
   answerLoopGeneration: number;
   answerLoopAnchor: {
     generation: number;
     question: string;
+    needKind?: NeedKind;
+    sourceUtteranceId?: string;
     enrollmentConsent: string;
     enrollmentScopeKey: string;
   } | null;
@@ -303,6 +347,7 @@ export type SessionState = {
       pauseSnapshots: Array<{
       label: string;
       nowTitle: string;
+      nowBody: string;
       historicalGuidance: string | null;
       historicalStatus: string | null;
     }>;

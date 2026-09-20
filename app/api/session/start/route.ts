@@ -47,6 +47,8 @@ export async function POST(request: Request) {
       ms: warmup.ms,
       model: warmup.model,
       at: "call_connect_async",
+      httpStatus: warmup.httpStatus,
+      error: warmup.error,
     });
   });
   void ensureDocumentEmbeddings(origin).then((info) => {

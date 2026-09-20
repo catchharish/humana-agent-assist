@@ -499,6 +499,34 @@ export default function Page() {
           />
           Show demo details
         </label>
+        {session && (
+          <span className="sim-badge" title={session.modelHealth?.luna?.error ?? ""}>
+            Luna{" "}
+            {session.modelHealth?.luna
+              ? session.modelHealth.luna.ok
+                ? "ok"
+                : `fail ${session.modelHealth.luna.status}${
+                    session.modelHealth.luna.error
+                      ? `: ${session.modelHealth.luna.error.slice(0, 80)}`
+                      : ""
+                  }`
+              : "—"}
+          </span>
+        )}
+        {session && (
+          <span className="sim-badge" title={session.modelHealth?.terra?.error ?? ""}>
+            Terra{" "}
+            {session.modelHealth?.terra
+              ? session.modelHealth.terra.ok
+                ? "ok"
+                : `fail ${session.modelHealth.terra.status}${
+                    session.modelHealth.terra.error
+                      ? `: ${session.modelHealth.terra.error.slice(0, 80)}`
+                      : ""
+                  }`
+              : "—"}
+          </span>
+        )}
         {session?.paused && demoDetails && (
           <span className="pause-notice">
             <span className="mark">Paused</span>
@@ -652,6 +680,19 @@ export default function Page() {
           </div>
         ) : (
           nowBody && <p>{nowBody}</p>
+        )}
+        {session?.nowCard.canRetry && (
+          <div className="actions">
+            <button
+              type="button"
+              onClick={() => human("/api/session/human/retry-answer")}
+            >
+              Retry
+            </button>
+            {demoDetails && session.nowCard.retryCause ? (
+              <p className="source">{session.nowCard.retryCause}</p>
+            ) : null}
+          </div>
         )}
         {nowSource &&
           (demoDetails ? (

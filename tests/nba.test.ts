@@ -163,4 +163,32 @@ describe("NBA hard stops", () => {
     );
     expect(s.diagnostics.nba.some((r) => r.fact)).toBe(true);
   });
+  it("does not fire unconfirmed_fact on ordinary words like paid", () => {
+    const s = sessionWithPrefs({});
+    s.nowCard.statements = [
+      {
+        text: "Oak Street Pharmacy was preferred retail on 2026-08-18.",
+        sourceId: "DEMO-NET0818",
+        sourceTag: "Not confirmed",
+        confirmed: false,
+        note: "network_tier_without_dated_classification",
+      },
+    ];
+    applyNbaAfterAnswer(s, {
+      action: "optional_comparison",
+      title: "Offer",
+      body: "Member raised a cost concern on this call.",
+      reasons: ["the member already asked about cost"],
+      facts: ["the member is on this plan"],
+      playbookIds: ["DEMO-PLAYBOOK-OFFERS-v1"],
+      considered: [],
+      preferredVsMail: "",
+      advocateControl: "offer_dismiss",
+      marksPricingUpcoming: true,
+    });
+    expect(s.recommendation?.kind).toBe("optional_comparison");
+    expect(s.diagnostics.nba.some((r) => r.stop === "unconfirmed_fact")).toBe(
+      false,
+    );
+  });
 });

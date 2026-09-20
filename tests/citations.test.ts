@@ -190,4 +190,77 @@ describe("per-statement support check", () => {
     expect(r.body).not.toMatch(/The cause is not confirmed/i);
     expect(r.body).not.toMatch(/8\.00/);
   });
+
+  it("treats $8 and 8.00 as the same money", () => {
+    const r = supportCheck({
+      question: "why",
+      answer: "",
+      statements: [
+        {
+          text: "The fill was $8 at Oak Street Pharmacy.",
+          sourceId: "DEMO-C0818",
+        },
+      ],
+      retrieved: [claims],
+      toolsUsed: ["getClaims"],
+      snapshotHasPlanRule: false,
+      sources: ["DEMO-C0818"],
+    });
+    expect(r.statements[0]?.confirmed).toBe(true);
+  });
+
+  it("treats August 18 and 2026-08-18 as the same date", () => {
+    const r = supportCheck({
+      question: "why",
+      answer: "",
+      statements: [
+        {
+          text: "The August 18, 2026 fill at Oak Street was $8.00.",
+          sourceId: "DEMO-C0818",
+        },
+      ],
+      retrieved: [claims],
+      toolsUsed: ["getClaims"],
+      snapshotHasPlanRule: false,
+      sources: ["DEMO-C0818"],
+    });
+    expect(r.statements[0]?.confirmed).toBe(true);
+  });
+
+  it("treats Oak Street and Oak Street Pharmacy as the same name", () => {
+    const r = supportCheck({
+      question: "why",
+      answer: "",
+      statements: [
+        {
+          text: "The 2026-08-18 fill at Oak Street was $8.00.",
+          sourceId: "DEMO-C0818",
+        },
+      ],
+      retrieved: [claims],
+      toolsUsed: ["getClaims"],
+      snapshotHasPlanRule: false,
+      sources: ["DEMO-C0818"],
+    });
+    expect(r.statements[0]?.confirmed).toBe(true);
+  });
+
+  it("does not treat capitalised ordinary words as names to verify", () => {
+    const r = supportCheck({
+      question: "why",
+      answer: "",
+      statements: [
+        {
+          text: "Your September fill at Oak Street Pharmacy was $8.00.",
+          sourceId: "DEMO-C0818",
+        },
+      ],
+      retrieved: [claims],
+      toolsUsed: ["getClaims"],
+      snapshotHasPlanRule: false,
+      sources: ["DEMO-C0818"],
+    });
+    expect(r.statements[0]?.confirmed).toBe(true);
+    expect(r.statements[0]?.note ?? "").not.toMatch(/Your September/);
+  });
 });

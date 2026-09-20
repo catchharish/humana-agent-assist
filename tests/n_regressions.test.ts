@@ -57,6 +57,8 @@ function interp(over: Partial<Interpretation>): Interpretation {
     ttftMs: 1,
     usage: null,
     ok: true,
+    httpStatus: 200,
+    error: null,
     ...over,
   };
 }

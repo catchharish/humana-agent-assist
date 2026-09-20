@@ -72,10 +72,23 @@ describe("answer loop stale apply", () => {
       disclosures: [] as DisclosureRequirement[],
       disclosureFetch: "test",
     });
-    const g1 = beginAnswerLoop(s, "why $8 and $27");
+    const g1 = beginAnswerLoop(s, "why $8 and $27", "historical_price");
     expect(shouldApplyAnswerLoop(s, g1)).toBe(true);
-    beginAnswerLoop(s, "is my refill ready");
+    s.nowCard = {
+      title: "Answer",
+      body: "park me",
+      sourceLabel: "Claims",
+    };
+    s.nowCardNeedKind = "historical_price";
+    s.nowCardOrigin = "answer";
+    s.currentNeed = "refill status";
+    beginAnswerLoop(s, "is my refill ready", "refill_status");
     expect(shouldApplyAnswerLoop(s, g1)).toBe(false);
+    const hist = s.needs.find((n) => n.kind === "historical_price");
+    expect(hist?.status).toBe("deferred");
+    expect(hist?.guidance).toBe("deferred_valid");
+    expect(hist?.answer?.body).toBe("park me");
+    expect(s.nowCard.body).toBe("is my refill ready");
   });
 
   it("drops a late answer after enrollment consent changes", () => {

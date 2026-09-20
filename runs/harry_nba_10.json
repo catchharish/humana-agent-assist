@@ -1,0 +1,173 @@
+{
+  "at": "2026-09-20T03:30:11.242Z",
+  "rows": [
+    {
+      "sessionId": "afced8e7-3ffc-404e-8a59-b183824cd4a2",
+      "waitedMs": 11385,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 2230.870041999966,
+        "at": "2026-09-20T03:28:31.607Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "63324161-5cb5-4649-ac1f-a18979938caf",
+      "waitedMs": 8956,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 2276.239209000021,
+        "at": "2026-09-20T03:28:42.394Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "f3fd7e4d-fc01-45f7-9354-150c4b757a13",
+      "waitedMs": 12528,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 2278.529500000179,
+        "at": "2026-09-20T03:28:54.512Z"
+      },
+      "nowTitle": "Partial answer"
+    },
+    {
+      "sessionId": "1d7be722-b2ea-422a-9e80-1b435e0a9d81",
+      "waitedMs": 9004,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 2189.464707999956,
+        "at": "2026-09-20T03:29:04.253Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "f0a8269a-5dc1-466b-82ae-1cc4480a0dee",
+      "waitedMs": 10580,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 1940.7545000000391,
+        "at": "2026-09-20T03:29:14.219Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "96463881-7d10-4f3e-8c46-e9bd8afb7d00",
+      "waitedMs": 11937,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 4293.097499999916,
+        "at": "2026-09-20T03:29:27.216Z"
+      },
+      "nowTitle": "Partial answer"
+    },
+    {
+      "sessionId": "23528537-7120-414c-b323-ce1cdf517dab",
+      "waitedMs": 9723,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 1950.8892499997746,
+        "at": "2026-09-20T03:29:35.536Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "580d0f7f-7513-4aeb-9e9d-9468e0371b7c",
+      "waitedMs": 9235,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 1975.0437910000328,
+        "at": "2026-09-20T03:29:46.191Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "7d9e05c3-4e2e-45bf-8567-fccfdfcb74ea",
+      "waitedMs": 11062,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 2410.024541999912,
+        "at": "2026-09-20T03:29:56.748Z"
+      },
+      "nowTitle": "Answer"
+    },
+    {
+      "sessionId": "6bbab9bf-fedf-434a-b6fc-80ee96900eda",
+      "waitedMs": 9765,
+      "action": "optional_comparison",
+      "recStatus": "pending",
+      "stop": null,
+      "terra": {
+        "ok": true,
+        "status": 200,
+        "error": null,
+        "ms": 2298.920125000179,
+        "at": "2026-09-20T03:30:06.548Z"
+      },
+      "nowTitle": "Answer"
+    }
+  ],
+  "summary": {
+    "of": 10,
+    "withAction": 10,
+    "actions": [
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison",
+      "optional_comparison"
+    ],
+    "sameAction": "optional_comparison",
+    "sameCount": 10
+  }
+}

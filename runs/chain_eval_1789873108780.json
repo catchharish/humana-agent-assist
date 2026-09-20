@@ -1,0 +1,216 @@
+{
+  "at": "2026-09-20T02:58:28.780Z",
+  "origin": "http://127.0.0.1:3000",
+  "correct": 1,
+  "of": 10,
+  "over8s": 0,
+  "breaks": 9,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "rows": [
+    {
+      "id": "c01_harry_827",
+      "memberId": "DEMO-M001",
+      "question": "Why was my metformin $8 last month and $27 yesterday?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing $8",
+        "missing $27",
+        "missing preferred/standard"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getClaims",
+        "getPharmacyNetwork",
+        "getCostShare"
+      ],
+      "totalMs": 3039.187125,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Not confirmed from retrieved records."
+    },
+    {
+      "id": "c02_harry_five_step",
+      "memberId": "DEMO-M001",
+      "question": "Confirm whether my atorvastatin refill is ready for pickup right now, not just that a request exists; give the pharmacy directory name; then check whether I have an open coverage-review case and report that case's current status and requested medication.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing Jardiance",
+        "missing pending"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getRefillRequests",
+        "getOpenCases"
+      ],
+      "totalMs": 2871.75425,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "I cannot confirm whether the atorvastatin refill is ready for pickup because refill request information is unavailable. I cannot identify the pharmacy directory name because refill request information is unavailable. I cannot confirm whether you have an open coverage-review case or report its status and requested medication because case information is unavailable."
+    },
+    {
+      "id": "c03_harry_preferred_rule",
+      "memberId": "DEMO-M001",
+      "question": "Why can the same 30-day fill cost more at a standard pharmacy than a preferred one on this plan?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing preferred/standard"
+      ],
+      "chained": true,
+      "rounds": 3,
+      "toolsUsed": [
+        "getCostShare",
+        "getPlan"
+      ],
+      "totalMs": 3508.4357499999996,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "I do not have confirmed plan cost-share information to explain the difference."
+    },
+    {
+      "id": "c04_harry_mail_vs_today",
+      "memberId": "DEMO-M001",
+      "question": "If I enroll in CenterWell mail, does that change today's retail atorvastatin pickup, and what happens to the existing prescription?",
+      "error": null,
+      "correct": true,
+      "notes": [],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getPrescriptions",
+        "getContactPreferences",
+        "getRefillRequests",
+        "searchKnowledge"
+      ],
+      "totalMs": 3382.3989579999998,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "I do not have supported information to confirm whether CenterWell mail enrollment would affect today’s retail atorvastatin pickup or the existing prescription."
+    },
+    {
+      "id": "c05_m002_lisinopril",
+      "memberId": "DEMO-M002",
+      "question": "What did I pay for lisinopril on 2026-09-01 and which pharmacy filled it?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing lisinopril"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getClaims"
+      ],
+      "totalMs": 2497.734875,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Not confirmed from retrieved records."
+    },
+    {
+      "id": "c06_m004_other_plan",
+      "memberId": "DEMO-M004",
+      "question": "Why was my metformin $12? Use my plan's cost rule, not MAPD-001.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing 12"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getClaims",
+        "getCostShare",
+        "getPlan"
+      ],
+      "totalMs": 2991.1198750000003,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Not confirmed from retrieved records."
+    },
+    {
+      "id": "c07_harry_case_chain",
+      "memberId": "DEMO-M001",
+      "question": "Look up my open coverage-review cases, then report the case id, status, and requested medication from the case record itself.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing case id",
+        "missing pending"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getOpenCases"
+      ],
+      "totalMs": 2365.650791,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Not confirmed from retrieved records."
+    },
+    {
+      "id": "c08_m003_ozempic_case",
+      "memberId": "DEMO-M003",
+      "question": "Do I have an open coverage-review case? If so, what medication is requested and what is the status — do not approve it.",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing Ozempic",
+        "missing pending"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getOpenCases"
+      ],
+      "totalMs": 2869.8017500000024,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "I could not confirm whether you have an open coverage-review case because the case record was unavailable."
+    },
+    {
+      "id": "c09_m005_mail_and_cases",
+      "memberId": "DEMO-M005",
+      "question": "Where was my last atorvastatin fill, what did I pay, and do I have any open coverage-review case?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "missing CenterWell/preferred"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getClaims",
+        "getOpenCases"
+      ],
+      "totalMs": 2876.37025,
+      "over8s": false,
+      "supportPartial": false,
+      "answer": "I could not retrieve your atorvastatin fill information. I could not retrieve your open coverage-review case information."
+    },
+    {
+      "id": "c10_harry_quotes_after_consent",
+      "memberId": "DEMO-M001",
+      "question": "Comparison consent is already yes. What are the prospective 90-day member costs at CenterWell versus Lakeview for metformin on this member?",
+      "error": null,
+      "correct": false,
+      "notes": [
+        "did not call getQuotes",
+        "no amount in answer"
+      ],
+      "chained": true,
+      "rounds": 2,
+      "toolsUsed": [
+        "getPrescriptions",
+        "getPharmacyNetwork"
+      ],
+      "totalMs": 2530.8671670000003,
+      "over8s": false,
+      "supportPartial": true,
+      "answer": "Not confirmed from retrieved records."
+    }
+  ]
+}

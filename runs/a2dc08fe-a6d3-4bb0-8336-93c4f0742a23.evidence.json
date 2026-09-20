@@ -1,0 +1,420 @@
+{
+  "sessionId": "a2dc08fe-a6d3-4bb0-8336-93c4f0742a23",
+  "scenarioId": "t03a",
+  "overlay": null,
+  "greeting": "exact_timely",
+  "pricing": "not_applicable",
+  "pricingNote": null,
+  "closing": "exact_timely",
+  "closingNote": null,
+  "closingHistory": [
+    {
+      "text": "Your decision today has no impact on your plan membership.",
+      "stability": "final",
+      "assessment": "exact_timely"
+    }
+  ],
+  "firedTriggers": [],
+  "triggerLog": [
+    {
+      "at": "e-greet-final",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-explain",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    },
+    {
+      "at": "e-close",
+      "stage": 1,
+      "fired": false,
+      "classification": "none",
+      "latencyMs": 0,
+      "modelCall": false,
+      "reason": "stage1_silent",
+      "suppressed": false
+    }
+  ],
+  "router": [
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 0,
+      "retrieved": [
+        {
+          "id": "DEMO-FAST90-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [],
+      "ranked": [],
+      "injectedDelayMs": 0
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 52,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    },
+    {
+      "routesUsed": [
+        "knowledge_search"
+      ],
+      "latencyMs": 32,
+      "retrieved": [
+        {
+          "id": "DEMO-POLICY-COST-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-TIER-MAPD-2026",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-NETWORK-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-SERVICE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-REFILL-RULES-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-CALL-SCRIPTS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OFFERS-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OBJECTION-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-TRANSFER-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-COVERAGE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-DNC-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-NONE-v1",
+          "sourceSystem": "scripting"
+        },
+        {
+          "id": "DEMO-FAQ-PHARMACY-v1",
+          "sourceSystem": "scripting"
+        }
+      ],
+      "rejected": [
+        {
+          "id": "DEMO-POLICY-OTHER-v1",
+          "reason": "rejected: wrong plan"
+        },
+        {
+          "id": "DEMO-PLAYBOOK-OTHER-PLAN-v1",
+          "reason": "rejected: wrong plan"
+        }
+      ],
+      "injectedDelayMs": 0,
+      "recheck": false
+    }
+  ],
+  "historical": null,
+  "fast90": {
+    "title": "Answer",
+    "body": "The option supports a 90-day supply for eligible existing prescriptions, and individual medications can be selected. Enrollment does not place a fill, start automatic refills, or change today’s pickup, and retail and mixed retail-and-delivery choices remain available. Your atorvastatin 20 mg tablets prescription is authorized for a 90-day supply. Your metformin 500 mg tablets prescription is authorized for a 90-day supply.",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)",
+    "statements": [
+      {
+        "text": "The option supports a 90-day supply for eligible existing prescriptions, and individual medications can be selected.",
+        "sourceId": "DEMO-SERVICE-v1",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "The option supports a 90",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "Enrollment does not place a fill, start automatic refills, or change today’s pickup, and retail and mixed retail-and-delivery choices remain available.",
+        "sourceId": "DEMO-SERVICE-v1",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "Enrollment does not plac",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "Your atorvastatin 20 mg tablets prescription is authorized for a 90-day supply.",
+        "sourceId": "DEMO-RX001",
+        "sourceTag": "Pharmacy system",
+        "confirmed": true,
+        "highlight": "Your atorvastatin 20 mg ",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "Your metformin 500 mg tablets prescription is authorized for a 90-day supply.",
+        "sourceId": "DEMO-RX002",
+        "sourceTag": "Pharmacy system",
+        "confirmed": true,
+        "highlight": "Your metformin 500 mg ta",
+        "lookedFor": [],
+        "found": []
+      }
+    ]
+  },
+  "nowCard": {
+    "title": "Answer",
+    "body": "The option supports a 90-day supply for eligible existing prescriptions, and individual medications can be selected. Enrollment does not place a fill, start automatic refills, or change today’s pickup, and retail and mixed retail-and-delivery choices remain available. Your atorvastatin 20 mg tablets prescription is authorized for a 90-day supply. Your metformin 500 mg tablets prescription is authorized for a 90-day supply.",
+    "sourceLabel": "Plan rules (snapshot cost-share for this plan)",
+    "liveSteps": [
+      "Searching knowledge…",
+      "Searching knowledge…",
+      "Checking prescriptions…"
+    ],
+    "earlyFacts": [],
+    "statements": [
+      {
+        "text": "The option supports a 90-day supply for eligible existing prescriptions, and individual medications can be selected.",
+        "sourceId": "DEMO-SERVICE-v1",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "The option supports a 90",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "Enrollment does not place a fill, start automatic refills, or change today’s pickup, and retail and mixed retail-and-delivery choices remain available.",
+        "sourceId": "DEMO-SERVICE-v1",
+        "sourceTag": "Plan rules",
+        "confirmed": true,
+        "highlight": "Enrollment does not plac",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "Your atorvastatin 20 mg tablets prescription is authorized for a 90-day supply.",
+        "sourceId": "DEMO-RX001",
+        "sourceTag": "Pharmacy system",
+        "confirmed": true,
+        "highlight": "Your atorvastatin 20 mg ",
+        "lookedFor": [],
+        "found": []
+      },
+      {
+        "text": "Your metformin 500 mg tablets prescription is authorized for a 90-day supply.",
+        "sourceId": "DEMO-RX002",
+        "sourceTag": "Pharmacy system",
+        "confirmed": true,
+        "highlight": "Your metformin 500 mg ta",
+        "lookedFor": [],
+        "found": []
+      }
+    ],
+    "canRetry": false,
+    "retryCause": null
+  },
+  "quotes": [],
+  "wrap": "",
+  "handoff": "",
+  "enrollment": {
+    "medications": [],
+    "readback": "",
+    "confirmed": false,
+    "submitted": false,
+    "resultId": null,
+    "returnedScope": null,
+    "scopeOk": null,
+    "withdrawn": false,
+    "scopeChangedAt": 0
+  },
+  "coverage": null,
+  "transfer": {
+    "destinationConfirmed": false,
+    "connectionStatus": null,
+    "transferId": null
+  },
+  "disposition": {
+    "recommended": null,
+    "confirmed": null
+  },
+  "lastTimings": [
+    {
+      "eventId": "e-ivr",
+      "kind": "system",
+      "tEvent": 1789870367110,
+      "tPaint": 1789870367126,
+      "paintMs": 16,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-greet-final",
+      "kind": "transcript",
+      "tEvent": 1789870367189,
+      "tPaint": 1789870367203,
+      "paintMs": 14,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-pause-identity",
+      "kind": "pause_gate",
+      "tEvent": 1789870367264,
+      "tPaint": 1789870367271,
+      "paintMs": 7,
+      "measured": true,
+      "excludedPauseMs": 0
+    },
+    {
+      "eventId": "e-auth",
+      "kind": "system",
+      "tEvent": 1789870367337,
+      "tPaint": 1789870367492,
+      "paintMs": 155,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-90",
+      "kind": "transcript",
+      "tEvent": 1789870367561,
+      "tPaint": 1789870372416,
+      "paintMs": 4855,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-pause-edu",
+      "kind": "pause_gate",
+      "tEvent": 1789870372485,
+      "tPaint": 1789870372494,
+      "paintMs": 9,
+      "measured": true,
+      "excludedPauseMs": 26
+    },
+    {
+      "eventId": "e-explain",
+      "kind": "transcript",
+      "tEvent": 1789870372564,
+      "tPaint": 1789870372579,
+      "paintMs": 15,
+      "measured": true,
+      "excludedPauseMs": 54
+    },
+    {
+      "eventId": "e-close",
+      "kind": "transcript",
+      "tEvent": 1789870372641,
+      "tPaint": 1789870372660,
+      "paintMs": 19,
+      "measured": true,
+      "excludedPauseMs": 54
+    },
+    {
+      "eventId": "e-pause-done",
+      "kind": "pause_gate",
+      "tEvent": 1789870372723,
+      "tPaint": 1789870372731,
+      "paintMs": 8,
+      "measured": true,
+      "excludedPauseMs": 54
+    }
+  ],
+  "needPaths": [
+    {
+      "eventId": "e-90",
+      "need": "service_education",
+      "path": "code_rule"
+    }
+  ]
+}

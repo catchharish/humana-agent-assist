@@ -1,0 +1,443 @@
+started 2026-09-20T01:20:43Z
+ORIGIN=http://127.0.0.1:3000
+listeners:
+node      87724 harishkrishnan   16u  IPv6 0x799d4af33704a8ea      0t0  TCP *:3000 (LISTEN)
+
+===== T01 run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 112330ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 112329ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/t01_main.test.ts:28:91
+     26|       readyGate?.historicalGuidance,
+     27|     );
+     28|     expect(s.needs.some((n) => n.kind === "historical_price" && n.stat…
+       |                                                                                           ^
+     29|     expect(s.diagnostics.router.some((r) => r.recheck)).toBe(true);
+     30|   }, 900_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:20:44
+   Duration  112.97s (transform 31ms, setup 0ms, collect 512ms, tests 112.33s, environment 0ms, prepare 35ms)
+
+T01 run 1 FAIL exit=1
+
+===== T01 run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 110116ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 110115ms
+     → expected 'unresolved_gap' to be 'deferred' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+AssertionError: expected 'unresolved_gap' to be 'deferred' // Object.is equality
+
+Expected: "deferred"
+Received: "unresolved_gap"
+
+ ❯ tests/t01_main.test.ts:24:41
+     22|       /refill is primary; historical should be deferred/i.test(p.label…
+     23|     );
+     24|     expect(readyGate?.historicalStatus).toBe("deferred");
+       |                                         ^
+     25|     expect(["preparing", "deferred_valid"]).toContain(
+     26|       readyGate?.historicalGuidance,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:22:37
+   Duration  110.48s (transform 31ms, setup 0ms, collect 244ms, tests 110.12s, environment 0ms, prepare 34ms)
+
+T01 run 2 FAIL exit=1
+
+===== T01 run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/t01_main.test.ts (1 test | 1 failed) 111707ms
+   × T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence 111706ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/t01_main.test.ts > T01 automated main (fresh model calls) > completes t01_m2a with human actions from session evidence
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/t01_main.test.ts:28:91
+     26|       readyGate?.historicalGuidance,
+     27|     );
+     28|     expect(s.needs.some((n) => n.kind === "historical_price" && n.stat…
+       |                                                                                           ^
+     29|     expect(s.diagnostics.router.some((r) => r.recheck)).toBe(true);
+     30|   }, 900_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:24:28
+   Duration  112.00s (transform 31ms, setup 0ms, collect 163ms, tests 111.71s, environment 0ms, prepare 36ms)
+
+T01 run 3 FAIL exit=1
+T01 PASS_COUNT 0/3
+
+===== REPLAYS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/replays.test.ts (6 tests | 1 failed) 64963ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  12067ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5822ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  2892ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  16565ms
+   × §19.3 replays (live app) > T06A omit DEMO-NET0818 6301ms
+     → expected undefined to be true // Object.is equality
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  21314ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T06A omit DEMO-NET0818
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ tests/replays.test.ts:60:46
+     58|     const s = await runScenario({ scenarioId: "t06a", overlay: "T06A" …
+     59|     const hist = s.needs.find((n) => n.kind === "historical_price");
+     60|     expect(hist?.answer?.chargesEstablished).toBe(true);
+       |                                              ^
+     61|     expect(hist?.answer?.causeSupported).toBe(false);
+     62|     expect(hist?.answer?.body).toMatch(/\$8|8/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  20:26:21
+   Duration  65.34s (transform 33ms, setup 0ms, collect 162ms, tests 64.96s, environment 0ms, prepare 38ms)
+
+REPLAYS run 1 FAIL exit=1
+
+===== REPLAYS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/replays.test.ts (6 tests | 1 failed) 63644ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  9206ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5914ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3766ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17053ms
+   × §19.3 replays (live app) > T06A omit DEMO-NET0818 6564ms
+     → expected undefined to be true // Object.is equality
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  21140ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T06A omit DEMO-NET0818
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ tests/replays.test.ts:60:46
+     58|     const s = await runScenario({ scenarioId: "t06a", overlay: "T06A" …
+     59|     const hist = s.needs.find((n) => n.kind === "historical_price");
+     60|     expect(hist?.answer?.chargesEstablished).toBe(true);
+       |                                              ^
+     61|     expect(hist?.answer?.causeSupported).toBe(false);
+     62|     expect(hist?.answer?.body).toMatch(/\$8|8/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  20:27:27
+   Duration  63.81s (transform 31ms, setup 0ms, collect 44ms, tests 63.64s, environment 0ms, prepare 33ms)
+
+REPLAYS run 2 FAIL exit=1
+
+===== REPLAYS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/replays.test.ts (6 tests | 1 failed) 64948ms
+   ✓ §19.3 replays (live app) > T02A clean servicing / silence  11134ms
+   ✓ §19.3 replays (live app) > T03A member-led 90-day  5544ms
+   ✓ §19.3 replays (live app) > T03B firm refusal  3213ms
+   ✓ §19.3 replays (live app) > T04B changed pharmacy / invalidation  17481ms
+   × §19.3 replays (live app) > T06A omit DEMO-NET0818 6527ms
+     → expected undefined to be true // Object.is equality
+   ✓ §19.3 replays (live app) > T08B changed scope and withdrawal  21047ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/replays.test.ts > §19.3 replays (live app) > T06A omit DEMO-NET0818
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected: 
+true
+
++ Received: 
+undefined
+
+ ❯ tests/replays.test.ts:60:46
+     58|     const s = await runScenario({ scenarioId: "t06a", overlay: "T06A" …
+     59|     const hist = s.needs.find((n) => n.kind === "historical_price");
+     60|     expect(hist?.answer?.chargesEstablished).toBe(true);
+       |                                              ^
+     61|     expect(hist?.answer?.causeSupported).toBe(false);
+     62|     expect(hist?.answer?.body).toMatch(/\$8|8/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  20:28:31
+   Duration  65.11s (transform 32ms, setup 0ms, collect 45ms, tests 64.95s, environment 0ms, prepare 34ms)
+
+REPLAYS run 3 FAIL exit=1
+REPLAYS PASS_COUNT 0/3
+
+===== CHAIN run 1 =====
+c01_harry_827 ok 3555.066708
+c02_harry_five_step ok 6465.44525
+c03_harry_preferred_rule ok 1961.3829999999998
+c04_harry_mail_vs_today ok 3344.661875
+c05_m002_lisinopril ok 1587.8300000000017
+c06_m004_other_plan ok 1468.4014590000006
+c07_harry_case_chain ok 3566.9176670000015
+c08_m003_ozempic_case ok 2407.4995830000007
+c09_m005_mail_and_cases ok 2832.5430419999975
+c10_harry_quotes_after_consent ok 2879.3277500000004
+{
+  "correct": 10,
+  "of": 10,
+  "over8": 0,
+  "broke": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789867808153.json"
+}
+CHAIN run 1 PASS
+
+===== CHAIN run 2 =====
+c01_harry_827 ok 3931.480292
+c02_harry_five_step ok 4714.10325
+c03_harry_preferred_rule ok 1761.604209000001
+c04_harry_mail_vs_today ok 2882.319958
+c05_m002_lisinopril ok 1448.9673329999987
+c06_m004_other_plan ok 1464.3306250000005
+c07_harry_case_chain ok 4203.039166999999
+c08_m003_ozempic_case ok 2321.190333999999
+c09_m005_mail_and_cases ok 3037.425542000001
+c10_harry_quotes_after_consent ok 2740.664334000001
+{
+  "correct": 10,
+  "of": 10,
+  "over8": 0,
+  "broke": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789867837555.json"
+}
+CHAIN run 2 PASS
+
+===== CHAIN run 3 =====
+c01_harry_827 ok 3385.1638749999997
+c02_harry_five_step ok 4017.08475
+c03_harry_preferred_rule ok 2802.04025
+c04_harry_mail_vs_today ok 3638.212125
+c05_m002_lisinopril ok 1482.1028750000005
+c06_m004_other_plan ok 1625.482833
+c07_harry_case_chain ok 4394.470165999999
+c08_m003_ozempic_case ok 2273.3022500000006
+c09_m005_mail_and_cases ok 2747.934624999998
+c10_harry_quotes_after_consent ok 2983.4404170000016
+{
+  "correct": 10,
+  "of": 10,
+  "over8": 0,
+  "broke": 0,
+  "recommendGraph": "Do not build a graph in this pass. REST tools plus snapshot cover the ten questions well enough; remaining misses are model/latency or support-check, not missing joins.",
+  "file": "/Users/harishkrishnan/projects/humana-agent-assist/runs/chain_eval_1789867867799.json"
+}
+CHAIN run 3 PASS
+CHAIN PASS_COUNT 3/3
+
+===== NOT_CANNED run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/not_canned.test.ts (3 tests) 27473ms
+   ✓ answers are not canned > same question, different members, different facts  10924ms
+   ✓ answers are not canned > same member, different questions, different answers  11346ms
+   ✓ answers are not canned > playbook-only other_plan_cost_explain is available for M004  5202ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:31:08
+   Duration  27.65s (transform 33ms, setup 0ms, collect 47ms, tests 27.47s, environment 0ms, prepare 33ms)
+
+NOT_CANNED run 1 PASS
+
+===== NOT_CANNED run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/not_canned.test.ts (3 tests) 27222ms
+   ✓ answers are not canned > same question, different members, different facts  11065ms
+   ✓ answers are not canned > same member, different questions, different answers  10485ms
+   ✓ answers are not canned > playbook-only other_plan_cost_explain is available for M004  5670ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:31:36
+   Duration  27.39s (transform 33ms, setup 0ms, collect 44ms, tests 27.22s, environment 0ms, prepare 34ms)
+
+NOT_CANNED run 2 PASS
+
+===== NOT_CANNED run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/not_canned.test.ts (3 tests) 32965ms
+   ✓ answers are not canned > same question, different members, different facts  10963ms
+   ✓ answers are not canned > same member, different questions, different answers  17207ms
+   ✓ answers are not canned > playbook-only other_plan_cost_explain is available for M004  4793ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:32:04
+   Duration  33.13s (transform 31ms, setup 0ms, collect 48ms, tests 32.96s, environment 0ms, prepare 34ms)
+
+NOT_CANNED run 3 PASS
+NOT_CANNED PASS_COUNT 3/3
+
+===== NBA_MEMBERS run 1 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/nba_members.test.ts (1 test | 1 failed) 20670ms
+   × NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's 20670ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:66:152
+     64|     const m004 = await memberQuestion("DEMO-M004", q);
+     65| 
+     66|     expect(harry.recommendation?.status === "pending" || harry.diagnos…
+       |                                                                                                                                                        ^
+     67|     expect(harry.nowCard.body).not.toMatch(/\$15\.00|prospective/i);
+     68| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:32:38
+   Duration  20.83s (transform 32ms, setup 0ms, collect 43ms, tests 20.67s, environment 0ms, prepare 34ms)
+
+NBA_MEMBERS run 1 FAIL exit=1
+
+===== NBA_MEMBERS run 2 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ❯ tests/nba_members.test.ts (1 test | 1 failed) 21030ms
+   × NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's 21030ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/nba_members.test.ts > NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/nba_members.test.ts:66:152
+     64|     const m004 = await memberQuestion("DEMO-M004", q);
+     65| 
+     66|     expect(harry.recommendation?.status === "pending" || harry.diagnos…
+       |                                                                                                                                                        ^
+     67|     expect(harry.nowCard.body).not.toMatch(/\$15\.00|prospective/i);
+     68| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  20:32:59
+   Duration  21.19s (transform 31ms, setup 0ms, collect 43ms, tests 21.03s, environment 0ms, prepare 33ms)
+
+NBA_MEMBERS run 2 FAIL exit=1
+
+===== NBA_MEMBERS run 3 =====
+
+ RUN  v3.2.7 /Users/harishkrishnan/projects/humana-agent-assist
+
+ ✓ tests/nba_members.test.ts (1 test) 21197ms
+   ✓ NBA across members > Harry gets a suggestion; enrolled/DNC/nothing-to-offer do not; other plan is not Harry's  21196ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:33:21
+   Duration  21.38s (transform 34ms, setup 0ms, collect 52ms, tests 21.20s, environment 0ms, prepare 35ms)
+
+NBA_MEMBERS run 3 PASS
+NBA_MEMBERS PASS_COUNT 1/3
+finished 2026-09-20T01:33:43Z
