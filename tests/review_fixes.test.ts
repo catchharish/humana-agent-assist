@@ -9,7 +9,7 @@ import {
   consumeEnrollmentToken,
   mintEnrollmentToken,
 } from "@/lib/enrollmentToken";
-import { createSession, ingestTranscript, showNow, upsertNeed } from "@/lib/session";
+import { createSession, guardNowWording, ingestTranscript, showNow, upsertNeed } from "@/lib/session";
 import { classifyPricingTrigger, hasAmount } from "@/lib/triggers";
 import {
   classifyEnrollmentConsent,
@@ -55,6 +55,7 @@ function interp(over: Partial<Interpretation>): Interpretation {
     quoteDrug: null,
     pricingTrigger: "none",
     focusKind: null,
+    lookupHold: false,
     raw: "",
     ms: 1,
     ttftMs: 1,
@@ -297,6 +298,67 @@ describe("review fixes F1–F15, F18, F26–F28", () => {
       { priority: "answer", needKind: "refill_status" },
     );
     expect(session.nowCard.title).toBe("Pricing statement due now");
+  });
+
+  it("F12b due-now Now card keeps no answer statements or quote facts", () => {
+    const session = createSession({ disclosures, disclosureFetch: "test" });
+    session.greeting = "exact_timely";
+    session.greetingLocked = true;
+    session.identityStatus = "VALID";
+    session.pricing = "due_now";
+    showNow(
+      session,
+      {
+        title: "Pricing statement due now",
+        body: PRICING,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      },
+      { priority: "due_now" },
+    );
+    session.nowCard = {
+      ...session.nowCard,
+      statements: [
+        {
+          text: "$6 retail",
+          sourceId: "q",
+          sourceTag: "Quote",
+          confirmed: true,
+        },
+      ],
+      earlyFacts: [{ text: "$24 delivery", source: "quotes" }],
+    };
+    guardNowWording(session);
+    expect(session.nowCard.title).toBe("Pricing statement due now");
+    expect(session.nowCard.body).toBe(PRICING);
+    expect(session.nowCard.statements).toBeUndefined();
+    expect(session.nowCard.earlyFacts).toEqual([]);
+  });
+
+  it("F12c a finished answer paints on Now when focus is still listening", () => {
+    const session = createSession({ disclosures, disclosureFetch: "test" });
+    session.identityStatus = "VALID";
+    session.greeting = "exact_timely";
+    session.greetingLocked = true;
+    session.currentNeed = "listening";
+    showNow(
+      session,
+      {
+        title: "Answer",
+        body: "Your paid claim was $8.00. The cause is not confirmed.",
+        sourceLabel: "Claims",
+        statements: [
+          {
+            text: "paid $8.00",
+            sourceId: "c",
+            sourceTag: "Claims",
+            confirmed: true,
+          },
+        ],
+      },
+      { priority: "answer", needKind: "unrecognized_request" },
+    );
+    expect(session.nowCard.body).toMatch(/\$8\.00/);
+    expect(session.nowCard.title).toBe("Answer");
   });
 
   it("F13 extra words on a final are not compatible with the partial", () => {

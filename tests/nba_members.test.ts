@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { writeFileSync } from "fs";
 import { originUp } from "./driver";
 import type { SessionState } from "@/lib/types";
 
@@ -46,7 +47,12 @@ async function memberQuestion(memberId: string, text: string) {
     if (r.ok) {
       session = ((await r.json()) as { session?: SessionState }).session ?? session;
       const nba = session.diagnostics?.nba ?? [];
-      if (nba.length > 0 || session.recommendation) break;
+      const terminal = nba.some((r) =>
+        ["proposal", "hard_stop", "cap_drop", "failed"].includes(
+          String(r.event),
+        ),
+      );
+      if (terminal || session.recommendation) break;
     }
     await new Promise((res) => setTimeout(res, 400));
   }
@@ -89,5 +95,33 @@ describe.skipIf(!live)("NBA across members", () => {
       m004.recommendation?.status === "pending" ||
         m004.diagnostics.nba.some((r) => r.event === "proposal"),
     ).toBe(true);
+    const sessions = [harry, m002, m003, m004, m005];
+    writeFileSync(
+      "runs/nba_members_latest.json",
+      JSON.stringify(
+        {
+          at: new Date().toISOString(),
+          rows: sessions.map((session) => ({
+            sessionId: session.sessionId,
+            memberId: session.member?.memberId,
+            action: session.recommendation?.kind ?? null,
+            nba: session.diagnostics.nba,
+            capDrops: session.diagnostics.nba.filter(
+              (record) => record.event === "cap_drop",
+            ).length,
+          })),
+          capDrops: sessions.reduce(
+            (count, session) =>
+              count +
+              session.diagnostics.nba.filter(
+                (record) => record.event === "cap_drop",
+              ).length,
+            0,
+          ),
+        },
+        null,
+        2,
+      ),
+    );
   }, 300_000);
 });

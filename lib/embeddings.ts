@@ -19,7 +19,7 @@ const g = globalThis as unknown as {
   };
 };
 
-const INDEX_KEY = "knowledge-v13";
+const INDEX_KEY = "knowledge-v14";
 
 function cosine(a: number[], b: number[]): number {
   let dot = 0;

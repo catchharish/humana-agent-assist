@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 export ORIGIN=http://127.0.0.1:3000
-LOG="runs/isolated_suites_nba_after_check.txt"
+LOG="${SUITE_LOG:-runs/isolated_suites_nba_after_check.txt}"
 {
   echo "started $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "ORIGIN=$ORIGIN"

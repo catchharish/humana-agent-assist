@@ -1,0 +1,180 @@
+{
+  "at": "2026-09-20T16:31:03.579Z",
+  "question": "Is my current prescription ready to pick up today?",
+  "rows": [
+    {
+      "memberId": "DEMO-M001",
+      "label": "Harry Whitfield",
+      "sessionId": "7514027e-f1f7-4ab9-bde2-c9d750dcc814",
+      "greeting": "exact_timely",
+      "identity": "VALID",
+      "authMember": "DEMO-M001",
+      "authOk": true,
+      "nowTitle": "Answer",
+      "nowBody": "Your atorvastatin refill is ready for pickup at Lakeview Pharmacy.",
+      "wrapLen": 72,
+      "wrapHasCiteLike": true,
+      "wrapPreview": "The atorvastatin refill is ready for pickup at Lakeview Pharmacy.\n\nready",
+      "dispositionRecommended": "COMPLETED_SERVICING",
+      "dispositionConfirmed": null,
+      "dispositionReasons": [
+        {
+          "text": "The atorvastatin refill is ready for pickup at Lakeview Pharmacy.",
+          "sourceId": "need:e-typed",
+          "sourceTag": "Pharmacy system",
+          "confirmed": true,
+          "highlight": "Lakeview Pharmacy",
+          "lookedFor": [
+            "Lakeview Pharmacy"
+          ],
+          "found": [
+            "Lakeview Pharmacy"
+          ]
+        }
+      ],
+      "nba": [
+        {
+          "event": "proposal",
+          "action": "none"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "memberId": "DEMO-M002",
+      "label": "Mina Chen",
+      "sessionId": "33904eeb-053e-4fcb-af1d-321322a3efd8",
+      "greeting": "exact_timely",
+      "identity": "VALID",
+      "authMember": "DEMO-M002",
+      "authOk": true,
+      "nowTitle": "Answer",
+      "nowBody": "Your 90-day lisinopril refill from CenterWell has been shipped.",
+      "wrapLen": 204,
+      "wrapHasCiteLike": true,
+      "wrapPreview": "The member’s 90-day lisinopril refill from CenterWell has been shipped. It remains unresolved whether the prescription is ready for pickup today, as the available evidence only confirms shipment.\n\nshipped",
+      "dispositionRecommended": "UNRESOLVED_FOLLOW_UP",
+      "dispositionConfirmed": null,
+      "dispositionReasons": [
+        {
+          "text": "Member asked whether the current prescription is ready for pickup today; available record only says a 90-day lisinopril refill from CenterWell has been shipped.",
+          "sourceId": "transcript:e-typed",
+          "sourceTag": "Transcript · member",
+          "confirmed": true,
+          "highlight": "Member asked whether the",
+          "lookedFor": [],
+          "found": []
+        }
+      ],
+      "nba": [
+        {
+          "event": "hard_stop",
+          "stop": "already_enrolled"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "memberId": "DEMO-M003",
+      "label": "Owen Brooks",
+      "sessionId": "6d8880f6-0ee4-48a0-a127-29d51dd5088f",
+      "greeting": "exact_timely",
+      "identity": "VALID",
+      "authMember": "DEMO-M003",
+      "authOk": true,
+      "nowTitle": "Partial answer",
+      "nowBody": "No supported answer — this isn’t in Humana’s documents or the member’s records.",
+      "wrapLen": 264,
+      "wrapHasCiteLike": true,
+      "wrapPreview": "The member’s question about whether the current prescription is ready for pickup remains unresolved because no supported answer is available in the records. The call was disconnected.\n\nNo supported answer — this isn’t in Humana’s documents or the member’s records.",
+      "dispositionRecommended": "UNRESOLVED_FOLLOW_UP",
+      "dispositionConfirmed": null,
+      "dispositionReasons": [
+        {
+          "text": "The member asked whether their current prescription is ready for pickup today, and no supported answer is available in the records.",
+          "sourceId": "need:e-typed",
+          "sourceTag": "Plan rules (snapshot cost-share for this plan)",
+          "confirmed": true,
+          "highlight": "The member asked whether",
+          "lookedFor": [],
+          "found": []
+        }
+      ],
+      "nba": [
+        {
+          "event": "hard_stop",
+          "stop": "do_not_contact"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "memberId": "DEMO-M004",
+      "label": "Priya Nair",
+      "sessionId": "ed8cb6f7-e99a-4f17-ae9f-f4e08d64ff3b",
+      "greeting": "exact_timely",
+      "identity": "VALID",
+      "authMember": "DEMO-M004",
+      "authOk": true,
+      "nowTitle": "Partial answer",
+      "nowBody": "No supported answer — this isn’t in Humana’s documents or the member’s records.",
+      "wrapLen": 412,
+      "wrapHasCiteLike": true,
+      "wrapPreview": "The member asked whether their current prescription is ready for pickup today, but no supported answer is available in the records provided. The call disconnected before the prescription pickup question was resolved. The advocate still needs to verify the prescription’s readiness",
+      "dispositionRecommended": "UNRESOLVED_FOLLOW_UP",
+      "dispositionConfirmed": null,
+      "dispositionReasons": [
+        {
+          "text": "Member asked whether the current prescription is ready for pickup today, and the record states there is no supported answer in the documents or member records.",
+          "sourceId": "need:e-typed",
+          "sourceTag": "Plan rules (snapshot cost-share for this plan)",
+          "confirmed": true,
+          "highlight": "Member asked whether the",
+          "lookedFor": [],
+          "found": []
+        }
+      ],
+      "nba": [
+        {
+          "event": "proposal",
+          "action": "none"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "memberId": "DEMO-M005",
+      "label": "Luis Ortega",
+      "sessionId": "3a03be8a-0ff2-41b1-af56-5250c747344f",
+      "greeting": "exact_timely",
+      "identity": "VALID",
+      "authMember": "DEMO-M005",
+      "authOk": true,
+      "nowTitle": "Answer",
+      "nowBody": "I do not see a refill request to check for pickup readiness.",
+      "wrapLen": 200,
+      "wrapHasCiteLike": true,
+      "wrapPreview": "The member asked whether their current prescription is ready for pickup today, but no refill request was found to verify pickup readiness.\n\nI do not see a refill request to check for pickup readiness.",
+      "dispositionRecommended": "UNRESOLVED_FOLLOW_UP",
+      "dispositionConfirmed": null,
+      "dispositionReasons": [
+        {
+          "text": "Member asked whether the current prescription is ready for pickup, but the record states, \"I do not see a refill request to check for pickup readiness.\"",
+          "sourceId": "need:e-typed",
+          "sourceTag": "Plan rules (snapshot cost-share for this plan)",
+          "confirmed": true,
+          "highlight": "Member asked whether the",
+          "lookedFor": [],
+          "found": []
+        }
+      ],
+      "nba": [
+        {
+          "event": "proposal",
+          "action": "none"
+        }
+      ],
+      "ok": true
+    }
+  ]
+}

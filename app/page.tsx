@@ -1,14 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { outcomeWith, outcomeWithout } from "@/lib/copy";
-import { quoteAmountsMayRender } from "@/lib/utteranceRules";
 import type {
   NeedKind,
-  ObligationStatus,
   SessionState,
-  TranscriptLine,
 } from "@/lib/types";
+import { AdvocateScreen } from "./AdvocateScreen";
 
 type StreamEvent = {
   id: string;
@@ -20,9 +17,16 @@ type StreamEvent = {
   text?: string;
   correctsEventId?: string;
   pauseLabel?: string;
+  inputSource?: "stream" | "presenter_typed" | "presenter_picked";
+};
+
+type PresenterQuestion = {
+  topic: string;
+  question: string;
 };
 
 type ScenarioKind =
+  | "open_call"
   | "t01_m2a"
   | "t02a"
   | "t03a"
@@ -32,6 +36,7 @@ type ScenarioKind =
   | "t08b";
 
 const SCENARIO_OVERLAY: Record<ScenarioKind, string | null> = {
+  open_call: null,
   t01_m2a: null,
   t02a: null,
   t03a: null,
@@ -42,14 +47,26 @@ const SCENARIO_OVERLAY: Record<ScenarioKind, string | null> = {
 };
 
 const SCENARIOS: { id: ScenarioKind; label: string }[] = [
-  { id: "t01_m2a", label: "Main call (T01)" },
-  { id: "t02a", label: "Replay T02A" },
-  { id: "t03a", label: "Replay T03A" },
-  { id: "t03b", label: "Replay T03B" },
-  { id: "t04b", label: "Replay T04B" },
-  { id: "t06a", label: "Replay T06A" },
-  { id: "t08b", label: "Replay T08B" },
+  { id: "open_call", label: "Open call" },
+  { id: "t01_m2a", label: "Harry Whitfield — Main call" },
+  { id: "t02a", label: "Harry Whitfield — Clean servicing" },
+  { id: "t03a", label: "Harry Whitfield — 90-day inquiry" },
+  { id: "t03b", label: "Harry Whitfield — Firm refusal" },
+  { id: "t04b", label: "Harry Whitfield — Pharmacy correction" },
+  { id: "t06a", label: "Harry Whitfield — Missing evidence" },
+  { id: "t08b", label: "Harry Whitfield — Enrollment withdrawal" },
 ];
+
+const SCRIPT_MEMBER: Record<ScenarioKind, string | null> = {
+  open_call: null,
+  t01_m2a: "DEMO-M001",
+  t02a: "DEMO-M001",
+  t03a: "DEMO-M001",
+  t03b: "DEMO-M001",
+  t04b: "DEMO-M001",
+  t06a: "DEMO-M001",
+  t08b: "DEMO-M001",
+};
 
 const MEMBERS = [
   { id: "DEMO-M001", label: "Harry Whitfield" },
@@ -59,170 +76,62 @@ const MEMBERS = [
   { id: "DEMO-M005", label: "Luis Ortega" },
 ];
 
-const NEED_PLAIN: Record<string, string> = {
-  opening: "Listening",
-  listening: "Listening",
-  refill_status: "Refill status",
-  "refill status": "Refill status",
-  historical_price: "Past charges",
-  prospective_comparison: "Price comparison",
-  service_education: "Delivery service",
-  service_election: "Enrollment choice",
-  coverage_status: "Coverage case",
-  unrecognized_request: "Unrecognized request",
-  unsupported_work: "Not available here",
-};
+/** UI playback only. Does not change logged offsetMs or 1/2/5/8 clocks. */
+const PLAYBACK_STRETCH = 2.5;
 
-const STEP_PLAIN: Record<string, string> = {
-  "verify greeting → await identity": "Verify greeting, then identity",
-  "greeting verified · await identity": "Greeting done — verify identity",
-  "identity verified · refill workflow": "Identity verified — refill",
-  listening: "Listening",
-};
+const SAY_DWELL_MS = 3500;
 
-const OBLIGATION_PLAIN: Record<
-  ObligationStatus,
-  { label: string; sym: string; kind: string }
-> = {
-  not_applicable: { label: "Not needed yet", sym: "–", kind: "idle" },
-  pending_later: { label: "Not needed yet", sym: "–", kind: "idle" },
-  due_now: { label: "Due now", sym: "!", kind: "due" },
-  exact_timely: { label: "Said", sym: "✓", kind: "said" },
-  paraphrased: { label: "Wording differs", sym: "≠", kind: "late" },
-  late_finding: { label: "Said late", sym: "⚠", kind: "late" },
-  unable_to_verify: { label: "Could not verify", sym: "?", kind: "verify" },
-};
-
-function hideDemoIds(text: string) {
-  return text.replace(/\bDEMO-[A-Z0-9-]+\b/g, "").replace(/\s{2,}/g, " ").trim();
-}
-
-function needStepLabel(session: SessionState) {
-  const need = session.currentNeed?.trim() || "listening";
-  if (need === "listening" || need === "opening") return "Listening";
-  return `${plainNeed(need)} · ${plainStep(session.flowStep)}`;
-}
-
-function Highlighted(props: { text: string; highlight?: string }) {
-  const h = props.highlight?.trim();
-  if (!h) return props.text;
-  const i = props.text.toLowerCase().indexOf(h.toLowerCase());
-  if (i < 0) return props.text;
-  return (
-    <>
-      {props.text.slice(0, i)}
-      <mark>{props.text.slice(i, i + h.length)}</mark>
-      {props.text.slice(i + h.length)}
-    </>
-  );
-}
-
-function formatElapsed(ms: number) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const m = Math.floor(total / 60);
-  return `${m}:${String(total % 60).padStart(2, "0")}`;
-}
-
-function plainNeed(value: string) {
-  return NEED_PLAIN[value] ?? value.replace(/_/g, " ");
-}
-
-function plainStep(value: string) {
-  if (STEP_PLAIN[value]) return STEP_PLAIN[value];
-  return value.replace(/→/g, ",").replace(/·/g, " — ").replace(/_/g, " ");
-}
-
-function shortSource(label: string | undefined) {
-  if (!label) return null;
-  const l = label.toLowerCase();
-  if (l.includes("pharmacy")) return "Pharmacy system";
-  if (l.includes("claims")) return "Claims system";
-  if (l.includes("eligibility")) return "Eligibility system";
-  if (l.includes("provider")) return "Pharmacy directory";
-  if (l.includes("telephony")) return "Phone menu";
-  if (l.includes("coverage")) return "Coverage review";
-  if (l.includes("playbook")) return "Playbook";
-  if (l.includes("benefits") || l.includes("scripting") || l.includes("governed")) {
-    return "Plan rules";
+/**
+ * Pace playback to the Now card, matching the T01 transcript race:
+ * hold while the lookup that owns Now is open (and ~3.5s after its say);
+ * do not hold for a background lookup while a prior answer still owns Now
+ * (Harry interrupts metformin before that answer returns).
+ */
+function streamHold(session: SessionState | null) {
+  if (!session) return false;
+  const body = (session.nowCard.body ?? "").trim();
+  const sayReady = session.nowCardOrigin === "answer" && Boolean(body);
+  const open = [...(session.lookupProgress ?? [])]
+    .reverse()
+    .find((p) => p.answeredAt == null);
+  if (open) {
+    if (Date.now() >= open.startedAt + 8000) return false;
+    const openNeed =
+      session.needs.find((n) => n.sourceUtteranceId === open.sourceUtteranceId)
+        ?.kind ?? session.answerLoopAnchor?.needKind;
+    // Background / interrupted lookup: prior answer still owns Now — let the
+    // next scripted line through (e-interrupt while e-hist Terra is in flight).
+    const lookupOwnsNow =
+      !sayReady ||
+      (openNeed != null && session.nowCardNeedKind === openNeed);
+    if (!lookupOwnsNow) return false;
+    return true;
   }
-  return "Plan rules";
-}
-
-function speakerLabel(
-  speaker: string,
-  memberVisible: boolean,
-  memberName: string | null,
-) {
-  if (speaker === "advocate") return "You";
-  if (speaker === "member") {
-    return memberVisible && memberName ? memberName : "Caller";
-  }
-  return speaker;
-}
-
-function compactTranscript(lines: TranscriptLine[]): TranscriptLine[] {
-  const slots = new Map<string, TranscriptLine>();
-  const order: string[] = [];
-  const alias = new Map<string, string>();
-  const resolve = (id: string) => {
-    let cur = id;
-    while (alias.has(cur)) cur = alias.get(cur)!;
-    return cur;
-  };
-  for (const line of lines) {
-    if (line.correctsEventId) {
-      const target = resolve(line.correctsEventId);
-      if (slots.has(target)) {
-        slots.set(target, { ...line, id: target });
-        alias.set(line.id, target);
-        continue;
-      }
+  if (session.activeInterpretations > 0 && !sayReady) {
+    const lastMember = [...session.transcript]
+      .reverse()
+      .find(
+        (t) =>
+          t.speaker === "member" &&
+          (t.stability === "final" || t.stability === "corrected"),
+      );
+    if (lastMember) {
+      const answered = session.needs.some(
+        (n) =>
+          (n.sourceUtteranceId === lastMember.id ||
+            n.queryText === lastMember.text) &&
+          Boolean(n.answer?.body),
+      );
+      if (!answered) return true;
     }
-    if (line.stability === "partial" || line.stability === "final") {
-      const lastPartial = [...order].reverse().find((id) => {
-        const existing = slots.get(id);
-        return (
-          existing &&
-          existing.speaker === line.speaker &&
-          existing.stability === "partial"
-        );
-      });
-      if (lastPartial) {
-        slots.set(lastPartial, { ...line, id: lastPartial });
-        alias.set(line.id, lastPartial);
-        continue;
-      }
-    }
-    slots.set(line.id, line);
-    order.push(line.id);
   }
-  return order.map((id) => slots.get(id)!);
-}
-
-function ObligationChip(props: {
-  name: string;
-  status: ObligationStatus | undefined;
-  exact: string | undefined;
-  note?: string;
-  demo: boolean;
-}) {
-  const meta = props.status
-    ? OBLIGATION_PLAIN[props.status]
-    : OBLIGATION_PLAIN.not_applicable;
-  return (
-    <details className={`chip ${meta.kind}`}>
-      <summary>
-        <span className="sym" aria-hidden="true">
-          {meta.sym}
-        </span>
-        <span>
-          {props.name}: {meta.label}
-        </span>
-      </summary>
-      {props.exact && <p>{props.exact}</p>}
-      {props.demo && props.note && <p className="source">{props.note}</p>}
-    </details>
-  );
+  const shown = [...(session.lookupProgress ?? [])]
+    .reverse()
+    .find((p) => p.answeredAt != null && !p.closedReason);
+  if (sayReady && shown?.answeredAt != null && Date.now() - shown.answeredAt < SAY_DWELL_MS) {
+    return true;
+  }
+  return false;
 }
 
 export default function Page() {
@@ -235,8 +144,39 @@ export default function Page() {
   const [memberId, setMemberId] = useState("DEMO-M001");
   const [members, setMembers] = useState(MEMBERS);
   const [demoDetails, setDemoDetails] = useState(false);
-  const pausedRef = useRef(false);
+  const [stepMode, setStepMode] = useState(false);
+  const [callerText, setCallerText] = useState("");
+  const [advocateText, setAdvocateText] = useState("");
+  const [questions, setQuestions] = useState<PresenterQuestion[]>([]);
+  const [pickedQuestion, setPickedQuestion] = useState("");
+  const [presenterNotice, setPresenterNotice] = useState("");
+  const [dispositionChoice, setDispositionChoice] = useState("");
+  const [userPaused, setUserPaused] = useState(false);
+  const userPausedRef = useRef(false);
+  const endedRef = useRef(false);
   const sessionIdRef = useRef<string | null>(null);
+  const sessionRef = useRef<SessionState | null>(null);
+  const stepModeRef = useRef(false);
+  const playGenRef = useRef(0);
+  sessionRef.current = session;
+  stepModeRef.current = stepMode;
+
+  const pullSession = useCallback(async (sessionId: string | null) => {
+    if (!sessionId) return;
+    try {
+      const resp = await fetch(`/api/session/state?sessionId=${sessionId}`, {
+        cache: "no-store",
+      });
+      const json = (await resp.json()) as { session?: SessionState };
+      if (json.session) {
+        setSession(json.session);
+        sessionRef.current = json.session;
+        endedRef.current = json.session.callEnd.ended;
+      }
+    } catch {
+      /* keep last painted state */
+    }
+  }, []);
 
   const ingest = useCallback(async (event: StreamEvent) => {
     const sessionId = sessionIdRef.current;
@@ -250,13 +190,28 @@ export default function Page() {
         event: { ...event, clientT },
       }),
     });
-    const json = (await resp.json()) as { session?: SessionState };
+    const json = (await resp.json()) as {
+      session?: SessionState;
+      error?: string;
+    };
+    if (!resp.ok) {
+      setError(json.error ?? `Input failed (${resp.status})`);
+      return false;
+    }
     if (json.session) {
       setSession(json.session);
-      pausedRef.current = json.session.paused;
+      sessionRef.current = json.session;
+      endedRef.current = json.session.callEnd.ended;
     }
     await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        resolve();
+      };
+      requestAnimationFrame(() => requestAnimationFrame(finish));
+      setTimeout(finish, 50);
     });
     const paint = await fetch("/api/session/paint", {
       method: "POST",
@@ -270,35 +225,69 @@ export default function Page() {
       }),
     });
     const painted = (await paint.json()) as { session?: SessionState };
-    if (painted.session) setSession(painted.session);
+    if (painted.session) {
+      setSession(painted.session);
+      sessionRef.current = painted.session;
+    }
+    return true;
   }, []);
 
   const playEvents = useCallback(
-    async (events: StreamEvent[]) => {
+    async (events: StreamEvent[], gen: number) => {
       let last = 0;
       for (const ev of events) {
+        if (endedRef.current || playGenRef.current !== gen) break;
         const gap = Math.max(0, ev.offsetMs - last);
         last = ev.offsetMs;
-        if (gap) await new Promise((r) => setTimeout(r, gap));
-        while (pausedRef.current) {
+        const wait = Math.round(gap * PLAYBACK_STRETCH);
+        let remaining = wait;
+        while (remaining > 0) {
+          if (endedRef.current || playGenRef.current !== gen) return;
+          if (userPausedRef.current) {
           await new Promise((r) => setTimeout(r, 100));
+            continue;
+          }
+          const slice = Math.min(120, remaining);
+          const t0 = Date.now();
+          await new Promise((r) => setTimeout(r, slice));
+          remaining -= Date.now() - t0;
+        }
+        while (userPausedRef.current) {
+          await new Promise((r) => setTimeout(r, 100));
+          if (endedRef.current || playGenRef.current !== gen) return;
+        }
+        if (ev.type === "transcript") {
+          while (
+            streamHold(sessionRef.current) &&
+            !endedRef.current &&
+            playGenRef.current === gen
+          ) {
+            await pullSession(sessionIdRef.current);
+            await new Promise((r) => setTimeout(r, 200));
+          }
+        }
+        if (ev.type === "pause_gate") {
+          if (stepModeRef.current) {
+            userPausedRef.current = true;
+            setUserPaused(true);
+            await ingest(ev);
+            while (userPausedRef.current && !endedRef.current) {
+              await new Promise((r) => setTimeout(r, 100));
+            }
+          }
+          continue;
         }
         await ingest(ev);
       }
     },
-    [ingest],
+    [ingest, pullSession],
   );
 
   async function startCall(kind: ScenarioKind, selectedMemberId: string) {
+    playGenRef.current += 1;
     setBusy(true);
     setError(null);
     try {
-      const disc = await fetch("/api/simulated/scripting/disclosures", {
-        cache: "no-store",
-      });
-      setDisclosureNetwork(
-        `GET ${disc.url} → ${disc.status} (browser Network tab)`,
-      );
       const start = await fetch("/api/session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -306,14 +295,24 @@ export default function Page() {
           scenarioId: kind,
           overlay: SCENARIO_OVERLAY[kind],
           injectedDelayMs: kind.startsWith("t01") ? 2800 : 0,
-          memberId: selectedMemberId,
+          memberId: SCRIPT_MEMBER[kind] ?? selectedMemberId,
         }),
       });
-      const startJson = (await start.json()) as { session: SessionState };
+      const startJson = (await start.json()) as {
+        session: SessionState;
+        disclosureUrl?: string;
+      };
+      setDisclosureNetwork(
+        `GET ${startJson.disclosureUrl ?? "/api/simulated/scripting/disclosures"} (session start)`,
+      );
       sessionIdRef.current = startJson.session.sessionId;
       setSession(startJson.session);
       setEnrollToken(null);
-      pausedRef.current = false;
+      userPausedRef.current = false;
+      setUserPaused(false);
+      endedRef.current = false;
+      playGenRef.current += 1;
+      const gen = playGenRef.current;
       const stream = await fetch(
         `/api/simulated/telephony/scenario-events?id=${kind}`,
         { cache: "no-store" },
@@ -321,7 +320,7 @@ export default function Page() {
       const streamJson = (await stream.json()) as {
         data?: { events?: StreamEvent[] };
       };
-      playEvents(streamJson.data?.events ?? []);
+      playEvents(streamJson.data?.events ?? [], gen);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -338,7 +337,73 @@ export default function Page() {
     });
     const json = (await resp.json()) as { session: SessionState };
     setSession(json.session);
-    pausedRef.current = false;
+    userPausedRef.current = false;
+    setUserPaused(false);
+  }
+
+  async function sendPresenterLine(
+    speaker: "member" | "advocate",
+    text: string,
+    inputSource: "presenter_typed" | "presenter_picked",
+  ) {
+    if (!session || !text.trim() || session.callEnd.ended) return;
+    userPausedRef.current = true;
+    setUserPaused(true);
+    setError(null);
+    const originalLength = text.length;
+    const ok = await ingest({
+      id: `presenter-${crypto.randomUUID()}`,
+      offsetMs: session.elapsedMs,
+      type: "transcript",
+      speaker,
+      stability: "final",
+      text,
+      inputSource,
+    });
+    if (!ok) {
+      userPausedRef.current = false;
+      setUserPaused(false);
+      return;
+    }
+    const max = session.presenterInput.maxLength;
+    setPresenterNotice(
+      originalLength > max
+        ? `Input cut from ${originalLength} to ${max} characters; the cut text is shown in the transcript.`
+        : `${speaker === "member" ? "Caller" : "Advocate"} line sent; scripted stream paused.`,
+    );
+    if (speaker === "member") setCallerText("");
+    else setAdvocateText("");
+  }
+
+  async function endCall() {
+    if (!session || session.callEnd.ended) return;
+    userPausedRef.current = true;
+    setUserPaused(true);
+    setBusy(true);
+    setError(null);
+    try {
+      const resp = await fetch("/api/session/end-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.sessionId }),
+      });
+      const json = (await resp.json()) as {
+        session?: SessionState;
+        error?: string;
+      };
+      if (!resp.ok || !json.session) {
+        setError(json.error ?? `End call failed (${resp.status})`);
+        userPausedRef.current = false;
+        setUserPaused(false);
+        return;
+      }
+      setSession(json.session);
+      endedRef.current = true;
+      userPausedRef.current = true;
+      setUserPaused(true);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function human(path: string, extra: Record<string, unknown> = {}) {
@@ -351,9 +416,78 @@ export default function Page() {
     const json = (await resp.json()) as {
       session?: SessionState;
       token?: string;
+      error?: string;
     };
+    if (!resp.ok) setError(json.error ?? `Action failed (${resp.status})`);
     if (json.token) setEnrollToken(json.token);
-    if (json.session) setSession(json.session);
+    if (json.session) {
+      setSession(json.session);
+      sessionRef.current = json.session;
+    }
+  }
+
+  async function togglePause() {
+    if (!session || session.callEnd.ended) return;
+    if (userPausedRef.current) {
+      await resume();
+      return;
+    }
+    userPausedRef.current = true;
+    setUserPaused(true);
+    await ingest({
+      id: `presenter-pause-${crypto.randomUUID()}`,
+      offsetMs: session.elapsedMs,
+      type: "pause_gate",
+      pauseLabel: "Presenter pause",
+    });
+  }
+
+  async function submitEnrollment() {
+    if (!session) return;
+    const mint = await fetch("/api/session/human/mint-enrollment-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: session.sessionId,
+        scope: { medications: session.enrollment.medications },
+      }),
+    });
+    const minted = (await mint.json()) as {
+      session?: SessionState;
+      token?: string;
+      error?: string;
+    };
+    if (!mint.ok) {
+      setError(minted.error ?? "Could not confirm enrollment");
+      if (minted.session) setSession(minted.session);
+      return;
+    }
+    const token = minted.token ?? enrollToken;
+    if (minted.session) setSession(minted.session);
+    if (minted.token) setEnrollToken(minted.token);
+    if (!token) return;
+    const submit = await fetch("/api/session/human/submit-enrollment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: session.sessionId, token }),
+    });
+    const submitted = (await submit.json()) as {
+      session?: SessionState;
+      error?: string;
+    };
+    if (!submit.ok) setError(submitted.error ?? "Submit failed");
+    if (submitted.session) {
+      setSession(submitted.session);
+      sessionRef.current = submitted.session;
+    }
+  }
+
+  function finishReview() {
+    setSession(null);
+    sessionIdRef.current = null;
+    userPausedRef.current = false;
+    setUserPaused(false);
+    endedRef.current = false;
   }
 
   async function selectFocus(kind: NeedKind) {
@@ -376,14 +510,21 @@ export default function Page() {
         const json = JSON.parse(ev.data) as { session?: SessionState };
         if (json.session) {
           setSession(json.session);
-          pausedRef.current = json.session.paused;
+          sessionRef.current = json.session;
+          endedRef.current = json.session.callEnd.ended;
         }
       } catch {
         /* ignore malformed frames */
       }
     };
-    return () => es.close();
-  }, [session?.sessionId]);
+    const poll = setInterval(() => {
+      void pullSession(sid);
+    }, 400);
+    return () => {
+      es.close();
+      clearInterval(poll);
+    };
+  }, [session?.sessionId, pullSession]);
 
   useEffect(() => {
     void fetch("/api/simulated/eligibility/members")
@@ -403,867 +544,68 @@ export default function Page() {
       });
   }, []);
 
-  const greetingReq = session?.disclosures.find(
-    (d) => d.requirementId === "DEMO-GREETING-v1",
-  );
-  const pricingReq = session?.disclosures.find(
-    (d) => d.requirementId === "DEMO-PRICING-v1",
-  );
-  const closingReq = session?.disclosures.find(
-    (d) => d.requirementId === "DEMO-CLOSING-v2",
-  );
-  const memberVisible = session?.auth?.decision.toLowerCase() === "valid";
-  const memberName = session?.member
-    ? `${session.member.name.given} ${session.member.name.family}`
-    : null;
-  const lastRouter =
-    session?.diagnostics.router[session.diagnostics.router.length - 1];
-  const rejectedWrongPlan = session?.diagnostics.router
-    .flatMap((r) => r.rejected)
-    .filter((x) => x.reason === "rejected: wrong plan");
+  useEffect(() => {
+    void fetch("/api/simulated/scripting/presenter-questions")
+      .then((response) => response.json())
+      .then(
+        (json: { data?: { questions?: PresenterQuestion[] } }) => {
+          setQuestions(json.data?.questions ?? []);
+        },
+      )
+      .catch(() => setQuestions([]));
+  }, []);
 
-  const advocateNow = Boolean(session) && !memberVisible && !demoDetails;
-  const nowTitle = advocateNow
-    ? "Verify the caller's identity"
-    : (session?.nowCard.title ?? "Opening");
-  const rawBody =
-    session?.nowCard.body ?? "Start the call to load the workspace.";
-  const nowBody = advocateNow
-    ? null
-    : demoDetails
-      ? rawBody
-      : hideDemoIds(rawBody);
-  const phoneHint =
-    advocateNow && session?.ivrReason
-      ? `Phone menu hinted a ${session.ivrReason}.`
-      : null;
-  const nowSource = session?.nowCard.sourceLabel;
-  const displayLines = compactTranscript(session?.transcript ?? []);
+  useEffect(() => {
+    if (session?.disposition.recommended) {
+      setDispositionChoice(session.disposition.recommended);
+    }
+  }, [session?.disposition.recommended]);
+
+  const scriptMemberId = SCRIPT_MEMBER[scenario];
+  const scriptMemberLabel = scriptMemberId
+    ? (members.find((m) => m.id === scriptMemberId)?.label ?? scriptMemberId)
+    : null;
 
   return (
-    <main className={session?.paused ? "workspace paused" : "workspace"}>
-      <div className="demo-bar">
-        <label>
-          Scenario
-          <select
-            value={scenario}
-            disabled={Boolean(session) || busy}
-            onChange={(e) => setScenario(e.target.value as ScenarioKind)}
-          >
-            {SCENARIOS.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Member (presenter)
-          <select
-            value={memberId}
-            disabled={Boolean(session) || busy}
-            onChange={(e) => setMemberId(e.target.value)}
-          >
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {!session && (
-          <button disabled={busy} onClick={() => startCall(scenario, memberId)}>
-            Start
-          </button>
-        )}
-        {session?.paused && (
-          <button className="secondary" onClick={resume}>
-            Resume
-          </button>
-        )}
-        <span className="sim-badge">
-          {demoDetails ? (
-            <>
-              <span className="sym" aria-hidden="true">
-                ⌬
-              </span>
-              Simulated data
-            </>
-          ) : null}
-        </span>
-        <label>
-          <input
-            type="checkbox"
-            checked={demoDetails}
-            onChange={(e) => setDemoDetails(e.target.checked)}
-          />
-          Show demo details
-        </label>
-        {session && (
-          <span className="sim-badge" title={session.modelHealth?.luna?.error ?? ""}>
-            Luna{" "}
-            {session.modelHealth?.luna
-              ? session.modelHealth.luna.ok
-                ? "ok"
-                : `fail ${session.modelHealth.luna.status}${
-                    session.modelHealth.luna.error
-                      ? `: ${session.modelHealth.luna.error.slice(0, 80)}`
-                      : ""
-                  }`
-              : "—"}
-          </span>
-        )}
-        {session && (
-          <span className="sim-badge" title={session.modelHealth?.terra?.error ?? ""}>
-            Terra{" "}
-            {session.modelHealth?.terra
-              ? session.modelHealth.terra.ok
-                ? "ok"
-                : `fail ${session.modelHealth.terra.status}${
-                    session.modelHealth.terra.error
-                      ? `: ${session.modelHealth.terra.error.slice(0, 80)}`
-                      : ""
-                  }`
-              : "—"}
-          </span>
-        )}
-        {session?.paused && demoDetails && (
-          <span className="pause-notice">
-            <span className="mark">Paused</span>
-            {session.lastPauseLabel ??
-              "Presenter-gated pause — excluded from machine response time."}
-          </span>
-        )}
-      </div>
-
-      <header className="strip">
-        <dl>
-          <div>
-            <dt>Caller</dt>
-            <dd>
-              {memberVisible
-                ? `${memberName}${session?.member?.lineOfBusiness ? ` · ${session.member.lineOfBusiness}` : ""}`
-                : "Not verified"}
-            </dd>
-          </div>
-          {memberVisible && session?.member && demoDetails && (
-            <div>
-              <dt>Plan</dt>
-              <dd>{session.member.planId}</dd>
-            </div>
-          )}
-          <div>
-            <dt>Call type</dt>
-            <dd>{session?.callType ?? "—"}</dd>
-          </div>
-          <div>
-            <dt>Need / step</dt>
-            <dd>{session ? needStepLabel(session) : "Not started"}</dd>
-          </div>
-          <div>
-            <dt>Elapsed</dt>
-            <dd>{session ? formatElapsed(session.elapsedMs) : "0:00"}</dd>
-          </div>
-          {demoDetails && session?.auth && (
-            <div>
-              <dt>Authorization</dt>
-              <dd>
-                {session.auth.authorizationId} · {session.auth.role} ·{" "}
-                {session.identityStatus}
-              </dd>
-            </div>
-          )}
-        </dl>
-      </header>
-
-      <div className="chips">
-        <ObligationChip
-          name="Recorded-line greeting"
-          status={session?.greeting}
-          exact={greetingReq?.verbatimText}
-          note={demoDetails ? greetingReq?.requirementId : undefined}
-          demo={demoDetails}
-        />
-        <ObligationChip
-          name="Pricing disclaimer"
-          status={session?.pricing}
-          exact={pricingReq?.verbatimText}
-          note={
-            demoDetails
-              ? "Historical charges do not trigger this statement."
-              : undefined
-          }
-          demo={demoDetails}
-        />
-        <ObligationChip
-          name="Closing statement"
-          status={session?.closing}
-          exact={closingReq?.verbatimText}
-          note={
-            demoDetails
-              ? session?.closingNote ??
-                "Clicking Offer does not create this obligation."
-              : undefined
-          }
-          demo={demoDetails}
-        />
-      </div>
-
-      <section className="now">
-        <h2>Now</h2>
-        {session?.nudge && (
-          <div className="nudge">
-            <strong>{session.nudge.template}</strong>
-            {session.nudge.requiredText && <p>{session.nudge.requiredText}</p>}
-            {session.nudge.heard && (
-              <p className="diff">
-                Heard: {session.nudge.heard}
-                <br />
-                Missing: {(session.nudge.missingFromHeard ?? []).join(", ") || "—"}
-                <br />
-                Extra: {(session.nudge.extraInHeard ?? []).join(", ") || "—"}
-              </p>
-            )}
-          </div>
-        )}
-        {session?.pricingNote && <p className="exact">{session.pricingNote}</p>}
-        <h3 className="now-title">{nowTitle}</h3>
-        {phoneHint && <p className="now-secondary">{phoneHint}</p>}
-        {demoDetails && (session?.nowCard.liveSteps?.length ?? 0) > 0 && (
-          <ol className="live-steps">
-            {session!.nowCard.liveSteps!.map((step, i) => (
-              <li key={`${step}-${i}`}>{step}</li>
-            ))}
-          </ol>
-        )}
-        {(session?.nowCard.earlyFacts?.length ?? 0) > 0 && (
-          <div className="early-facts">
-            <h4 className="subhead">Facts</h4>
-            <ul>
-              {session!.nowCard.earlyFacts!.map((f, i) => (
-                <li key={`${f.text}-${i}`}>
-                  {demoDetails ? f.text : hideDemoIds(f.text)}
-                  <button
-                    className="source-tag"
-                    type="button"
-                    onClick={() =>
-                      human("/api/session/human/view-evidence", {
-                        sourceId: f.source,
-                      })
-                    }
-                  >
-                    {shortSource(f.source) ?? f.source}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {(session?.nowCard.statements?.length ?? 0) > 0 ? (
-          <div className="statements">
-            {session!.nowCard.statements!.map((st, i) => (
-              <p key={`${st.text}-${i}`}>
-                {demoDetails ? st.text : hideDemoIds(st.text)}{" "}
-                <button
-                  className="source-tag"
-                  type="button"
-                  onClick={() =>
-                    human("/api/session/human/view-evidence", {
-                      sourceId: st.sourceId,
-                    })
-                  }
-                >
-                  {st.confirmed ? st.sourceTag : "Not confirmed"}
-                </button>
-              </p>
-            ))}
-          </div>
-        ) : (
-          nowBody && <p>{nowBody}</p>
-        )}
-        {session?.nowCard.canRetry && (
-          <div className="actions">
-            <button
-              type="button"
-              onClick={() => human("/api/session/human/retry-answer")}
-            >
-              Retry
-            </button>
-            {demoDetails && session.nowCard.retryCause ? (
-              <p className="source">{session.nowCard.retryCause}</p>
-            ) : null}
-          </div>
-        )}
-        {nowSource &&
-          (demoDetails ? (
-            <p className="source">{nowSource}</p>
-          ) : (
-            !advocateNow &&
-            session?.pricing !== "due_now" &&
-            session?.closing !== "due_now" &&
-            shortSource(nowSource) && (
-              <span className="source-tag">{shortSource(nowSource)}</span>
-            )
-          ))}
-        {session && (
-          <div className="actions">
-            <button
-              className="linkish"
-              type="button"
-              onClick={() => human("/api/session/human/view-evidence")}
-            >
-              View evidence
-            </button>
-            <button
-              className="linkish"
-              type="button"
-              onClick={() =>
-                human("/api/session/human/flag-issue", {
-                  note: "Advocate flagged the current Now card",
-                })
-              }
-            >
-              Flag issue
-            </button>
-          </div>
-        )}
-        {session?.openEvidence && (
-          <div>
-            <h3 className="subhead">Opened record</h3>
-            <p>{session.openEvidence.title}</p>
-            <p>
-              <Highlighted
-                text={session.openEvidence.body}
-                highlight={session.openEvidence.highlight}
-              />
-            </p>
-            {demoDetails && (
-              <p className="source">{session.openEvidence.sourceLabel}</p>
-            )}
-          </div>
-        )}
-        {session?.recommendation?.status === "pending" && (
-          <div className="actions">
-            {(session.recommendation.advocateControl ?? "offer_dismiss") ===
-              "offer_dismiss" &&
-              session.recommendation.kind !== "warm_transfer" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() =>
-                    human("/api/session/human/offer", { decision: "offer" })
-                  }
-                >
-                  Offer
-                </button>
-                <button
-                  className="secondary"
-                  type="button"
-                  onClick={() =>
-                    human("/api/session/human/offer", { decision: "dismiss" })
-                  }
-                >
-                  Dismiss
-                </button>
-              </>
-            )}
-            {(session.recommendation.advocateControl === "confirm_transfer" ||
-              session.recommendation.kind === "warm_transfer") && (
-              <button
-                type="button"
-                onClick={() => human("/api/session/human/confirm-transfer")}
-              >
-                Confirm Coverage Review destination
-              </button>
-            )}
-            <p>
-              {demoDetails
-                ? session.recommendation.body
-                : hideDemoIds(session.recommendation.body)}
-            </p>
-            {session.recommendation.reasons?.length ? (
-              <ul>
-                {session.recommendation.reasons.map((r, i) => (
-                  <li key={r}>
-                    {demoDetails ? r : hideDemoIds(r)}
-                    {session.recommendation?.facts?.[i] ? (
-                      <button
-                        className="source-tag"
-                        type="button"
-                        onClick={() =>
-                          human("/api/session/human/view-evidence", {
-                            sourceId: session.recommendation?.playbookIds?.[0],
-                          })
-                        }
-                      >
-                        Record
-                      </button>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            {session.recommendation.playbookPassage && (
-              <button
-                className="source-tag"
-                type="button"
-                onClick={() =>
-                  human("/api/session/human/view-evidence", {
-                    sourceId: session.recommendation?.playbookIds?.[0],
-                  })
-                }
-              >
-                Playbook
-              </button>
-            )}
-          </div>
-        )}
-        {session &&
-          session.quotes.length > 0 &&
-          quoteAmountsMayRender(session.consent.comparison) &&
-          session.pricingExactDelivered &&
-          session.pricing !== "due_now" &&
-          session.pricing !== "late_finding" &&
-          session.pricing !== "paraphrased" && (
-            <table className="quote-table">
-              <thead>
-                <tr>
-                  <th>Drug</th>
-                  <th>Pharmacy</th>
-                  <th>90-day estimate</th>
-                  <th>Validity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {session.quotes.map((q) => (
-                  <tr key={q.quoteId}>
-                    <td>{q.drugName}</td>
-                    <td>{q.pharmacyName}</td>
-                    <td>${q.estimatedMemberCost.value}</td>
-                    <td>{q.validityStatus}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        {session?.enrollment.readback && (
-          <div>
-            <p className="source">
-              Draft scope: {session.enrollment.medications.join(", ") || "none"}.
-              Comparison interest is not enrollment authorization.
-            </p>
-            <p>{session.enrollment.readback}</p>
-            <div className="actions">
-              <button
-                type="button"
-                disabled={session.consent.enrollment !== "absolute_yes"}
-                onClick={() =>
-                  human("/api/session/human/mint-enrollment-token", {
-                    scope: { medications: session.enrollment.medications },
-                  })
-                }
-              >
-                Confirm (mint token)
-              </button>
-              <button
-                type="button"
-                disabled={
-                  !enrollToken ||
-                  !session.enrollment.confirmed ||
-                  session.enrollment.withdrawn
-                }
-                onClick={() =>
-                  human("/api/session/human/submit-enrollment", {
-                    token: enrollToken,
-                  })
-                }
-              >
-                Submit enrollment
-              </button>
-              <button
-                className="secondary"
-                type="button"
-                onClick={() => {
-                  const quoted = [
-                    ...new Set(session.quotes.map((q) => q.drugName)),
-                  ];
-                  const extra = quoted.filter(
-                    (d) =>
-                      !session.enrollment.medications.some(
-                        (m) => m.toLowerCase() === d.toLowerCase(),
-                      ),
-                  );
-                  human("/api/session/human/edit-enrollment-scope", {
-                    medications: [
-                      ...session.enrollment.medications,
-                      ...(extra.length ? extra : ["atorvastatin"]),
-                    ],
-                  });
-                }}
-              >
-                Add atorvastatin to draft
-              </button>
-              <button
-                className="secondary"
-                type="button"
-                disabled={session.enrollment.withdrawn}
-                onClick={() => human("/api/session/human/withdraw-enrollment")}
-              >
-                Withdraw enrollment
-              </button>
-            </div>
-            {session.enrollment.resultId && (
-              <p>
-                {demoDetails ? `Returned ${session.enrollment.resultId} scope ` : "Returned scope "}
-                {(session.enrollment.returnedScope ?? []).join(", ")}.{" "}
-                {session.enrollment.scopeOk
-                  ? `Matches confirmed scope (${(session.enrollment.returnedScope ?? []).join(", ")}).`
-                  : "Scope mismatch — not a success."}
-              </p>
-            )}
-          </div>
-        )}
-        {session?.coverage && (
-          <p className="source">
-            {demoDetails ? `${session.coverage.caseId}: ` : ""}
-            {session.coverage.requestedMedication} · {session.coverage.status} ·
-            determination {session.coverage.determination ?? "null"}
-          </p>
-        )}
-        {session?.handoffDraft && (
-          <div>
-            <h3 className="subhead">Handoff draft</h3>
-            {session.handoffLines?.length ? (
-              session.handoffLines.map((ln, i) => (
-                <p key={i}>
-                  {demoDetails ? ln.text : hideDemoIds(ln.text)}{" "}
-                  <button
-                    className="source-tag"
-                    type="button"
-                    onClick={() =>
-                      human("/api/session/human/view-evidence", {
-                        sourceId: ln.sourceId,
-                      })
-                    }
-                  >
-                    {ln.sourceTag}
-                  </button>
-                </p>
-              ))
-            ) : (
-              <p>
-                {demoDetails
-                  ? session.handoffDraft
-                  : hideDemoIds(session.handoffDraft)}
-              </p>
-            )}
-            {!session.transfer.destinationConfirmed && (
-              <button
-                type="button"
-                onClick={() => human("/api/session/human/confirm-transfer")}
-              >
-                Confirm Coverage Review destination
-              </button>
-            )}
-          </div>
-        )}
-        {session?.transfer.destinationConfirmed &&
-          session.closing === "exact_timely" &&
-          !session.transfer.connectionStatus && (
-            <div className="actions">
-              <button
-                type="button"
-                onClick={() => human("/api/session/human/execute-transfer")}
-              >
-                Execute transfer
-              </button>
-            </div>
-          )}
-        {session?.transfer.connectionStatus && (
-          <p>
-            {demoDetails && session.transfer.transferId
-              ? `${session.transfer.transferId}: `
-              : ""}
-            {session.transfer.connectionStatus}. Coverage case{" "}
-            {demoDetails ? session.coverage?.caseId : ""} remains{" "}
-            {session.coverage?.status ?? "unreturned"}.
-          </p>
-        )}
-        {session?.wrapDraft && (
-          <div>
-            <h3 className="subhead">Wrap (editable)</h3>
-            {session.wrapLines?.length ? (
-              <div>
-                {session.wrapLines.map((ln, i) => (
-                  <p key={i}>
-                    {demoDetails ? ln.text : hideDemoIds(ln.text)}{" "}
-                    <button
-                      className="source-tag"
-                      type="button"
-                      onClick={() =>
-                        human("/api/session/human/view-evidence", {
-                          sourceId: ln.sourceId,
-                        })
-                      }
-                    >
-                      {ln.sourceTag}
-                    </button>
-                  </p>
-                ))}
-              </div>
-            ) : null}
-            <textarea
-              className="wrap"
-              defaultValue={session.wrapDraft}
-              key={session.wrapDraft.slice(0, 40)}
-              onBlur={(e) =>
-                human("/api/session/human/save-wrap", { wrap: e.target.value })
-              }
-            />
-          </div>
-        )}
-        {session?.disposition.recommended && (
-          <div className="actions">
-            <button
-              type="button"
-              disabled={Boolean(session.disposition.confirmed)}
-              onClick={() =>
-                human("/api/session/human/confirm-disposition", {
-                  code: session.disposition.recommended,
-                })
-              }
-            >
-              Confirm {session.disposition.recommended}
-            </button>
-            {session.disposition.confirmed && (
-              <span className="exact">
-                Confirmed {session.disposition.confirmed}
-              </span>
-            )}
-          </div>
-        )}
-        {session?.outcomeReady && demoDetails && (
-          <div className="outcome">
-            <h3 className="subhead">End-of-demo outcome (said once)</h3>
-            {session.pricing === "late_finding" ? (
-              <>
-                <p>
-                  {outcomeWithout({
-                    historicalNeed:
-                      session.needs.find((n) => n.kind === "historical_price")
-                        ?.answer?.title ?? "historical-charge",
-                  })}
-                </p>
-                <p>
-                  {outcomeWith({
-                    memberGiven: session.member?.name.given ?? "the member",
-                  })}{" "}
-                  This is not a measured Humana baseline. Do not describe the
-                  pricing moment as prevention.
-                </p>
-              </>
-            ) : (
-              <p>
-                This run did not record a recovered pricing-timing miss. Outcome
-                copy is not claiming a caught miss.
-              </p>
-            )}
-            {demoDetails && (
-              <p className="source">
-                Greeting {session.greeting}; pricing {session.pricing}
-                {session.pricingNote ? ` (${session.pricingNote})` : ""}; closing{" "}
-                {session.closing}
-                {session.closingNote ? ` (${session.closingNote})` : ""}.
-                Enrollment {session.enrollment.resultId ?? "none"} scope{" "}
-                {(session.enrollment.returnedScope ?? []).join(", ") || "n/a"}.
-                Coverage {session.coverage?.caseId} {session.coverage?.status};
-                connection {session.transfer.connectionStatus ?? "none"};
-                disposition {session.disposition.confirmed ?? "unconfirmed"}.
-              </p>
-            )}
-          </div>
-        )}
-        {error && <p>{error}</p>}
-      </section>
-
-      <aside className="drawer">
-        <h2>Context</h2>
-        {!memberVisible && (
-          <p>Member details appear after the caller is verified.</p>
-        )}
-        {memberVisible && session?.member && (
-          <p>
-            {session.member.name.given} {session.member.name.family}
-            {session.member.lineOfBusiness
-              ? ` · ${session.member.lineOfBusiness}`
-              : ""}
-            {demoDetails ? (
-              <>
-                <br />
-                Plan {session.member.planId}
-              </>
-            ) : null}
-          </p>
-        )}
-        {demoDetails && (
-          <p className="source">
-            {memberVisible
-              ? "System record · eligibility · simulated"
-              : "System record · telephony · simulated"}
-          </p>
-        )}
-        <h3 className="subhead">Open needs</h3>
-        {(session?.needs ?? []).length === 0 &&
-          !session?.consent.clarification && <p>None yet.</p>}
-        {session?.consent.clarification && (
-          <div className="need">
-            <div className="need-head">
-              <strong>Clarify comparison interest</strong>
-              <span className="mark">open</span>
-            </div>
-            <p className="source">{session.consent.clarification}</p>
-          </div>
-        )}
-        {(session?.needs ?? []).map((need) => (
-          <div key={need.kind} className="need">
-            <div className="need-head">
-              <strong>{plainNeed(need.kind)}</strong>
-              <span className="mark">{need.status.replace(/_/g, " ")}</span>
-              {need.guidance === "deferred_valid" && (
-                <span className="mark">Answer ready</span>
-              )}
-              {need.guidance === "ready" && (
-                <span className="mark">ready</span>
-              )}
-            </div>
-            <p className="source">{plainStep(need.flowStep)}</p>
-            {need.answer && (
-              <p>
-                {demoDetails
-                  ? need.answer.body
-                  : hideDemoIds(need.answer.body)}
-              </p>
-            )}
-            <button
-              className="secondary"
-              type="button"
-              onClick={() => selectFocus(need.kind)}
-            >
-              Make this the focus
-            </button>
-          </div>
-        ))}
-        {session && session.quotes.length > 0 && (
-          <div className="need">
-            <div className="need-head">
-              <strong>Prospective comparison</strong>
-              <span className="mark">
-                {session.pricing === "due_now" ||
-                session.pricing === "late_finding" ||
-                session.pricing === "paraphrased"
-                  ? "ready, demoted"
-                  : "ready"}
-              </span>
-            </div>
-            {quoteAmountsMayRender(session.consent.comparison) ? (
-              <table className="quote-table">
-                <thead>
-                  <tr>
-                    <th>Drug</th>
-                    <th>Pharmacy</th>
-                    <th>90-day estimate</th>
-                    <th>Validity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {session.quotes.map((q) => (
-                    <tr key={q.quoteId}>
-                      <td>{q.drugName}</td>
-                      <td>{q.pharmacyName}</td>
-                      <td>${q.estimatedMemberCost.value}</td>
-                      <td>{q.validityStatus}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p className="source">
-                Quotes are on file. Amounts stay hidden until comparison
-                interest is an absolute yes.
-              </p>
-            )}
-          </div>
-        )}
-        {demoDetails && (
-          <details className="diagnostics" open>
-            <summary>Diagnostics (not advocate default)</summary>
-            <pre>
-              {disclosureNetwork}
-              {"\n"}
-              overlay: {session?.overlay ?? "none"}
-              {"\n"}
-              {session?.diagnostics.disclosureFetch}
-              {"\n"}
-              {session?.diagnostics.warmup}
-              {"\n"}
-              {session?.diagnostics.embeddings}
-              {"\n"}
-              rejected wrong-plan: {JSON.stringify(rejectedWrongPlan)}
-              {"\n"}
-              last routes: {JSON.stringify(lastRouter, null, 2)}
-              {"\n"}
-              triggers: {JSON.stringify(session?.diagnostics.triggers, null, 2)}
-              {"\n"}
-              rechecks: {JSON.stringify(session?.diagnostics.rechecks)}
-              {"\n"}
-              interpretation:{" "}
-              {JSON.stringify(session?.lastInterpretation, null, 2)}
-              {"\n"}
-              timings: {JSON.stringify(session?.lastTimings, null, 2)}
-            </pre>
-          </details>
-        )}
-      </aside>
-
-      <section className="transcript">
-        <h2>Transcript</h2>
-        {displayLines.map((line) => (
-          <p key={line.id} className="line">
-            {line.stability === "uncertain" && (
-              <span className="mark mark-uncertain">? Uncertain</span>
-            )}
-            {line.stability === "corrected" && (
-              <span className="mark">✎ Corrected</span>
-            )}
-            <span className="mark">
-              {speakerLabel(line.speaker, memberVisible, memberName)}
-            </span>
-            {line.text}
-          </p>
-        ))}
-        {demoDetails && (
-          <details className="diagnostics">
-            <summary>Full transcript events</summary>
-            {(session?.transcript ?? []).map((line) => (
-              <p key={`full-${line.id}`} className="line">
-                <span
-                  className={
-                    line.stability === "uncertain"
-                      ? "mark mark-uncertain"
-                      : "mark"
-                  }
-                >
-                  {line.stability === "uncertain" ? "UNCERTAIN" : line.stability}
-                </span>
-                <span className="mark">{line.speaker}</span>
-                <span className="mark">{line.id}</span>
-                {line.text}
-                {line.correctsEventId ? ` (corrects ${line.correctsEventId})` : ""}
-              </p>
-            ))}
-          </details>
-        )}
-      </section>
-    </main>
+    <AdvocateScreen
+      session={session}
+      busy={busy}
+      error={error}
+      demoDetails={demoDetails}
+      setDemoDetails={setDemoDetails}
+      scenario={scenario}
+      setScenario={(next) => {
+              setScenario(next);
+              const lock = SCRIPT_MEMBER[next];
+              if (lock) setMemberId(lock);
+            }}
+      memberId={memberId}
+      setMemberId={setMemberId}
+      members={members}
+      questions={questions}
+      callerText={callerText}
+      setCallerText={setCallerText}
+      advocateText={advocateText}
+      setAdvocateText={setAdvocateText}
+      pickedQuestion={pickedQuestion}
+      setPickedQuestion={setPickedQuestion}
+      presenterNotice={presenterNotice}
+      dispositionChoice={dispositionChoice}
+      setDispositionChoice={setDispositionChoice}
+      stepMode={stepMode}
+      setStepMode={setStepMode}
+      scriptMemberId={scriptMemberId}
+      scriptMemberLabel={scriptMemberLabel}
+      startCall={startCall}
+      userPaused={userPaused}
+      togglePause={() => void togglePause()}
+      sendPresenterLine={sendPresenterLine}
+      endCall={() => void endCall()}
+      human={human}
+      selectFocus={selectFocus}
+      disclosureNetwork={disclosureNetwork}
+      finishReview={finishReview}
+      submitEnrollment={submitEnrollment}
+    />
   );
 }

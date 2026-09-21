@@ -209,6 +209,24 @@ export async function runScenario(opts: {
       if (resumed.body.session) Object.assign(session, resumed.body.session);
     }
   }
+  if ((session.heldAdvocateLines ?? []).length) {
+    await waitUntil(
+      session,
+      (s) => !(s.heldAdvocateLines ?? []).length,
+      9_000,
+      "held advocate lines flushed",
+    );
+  }
+  if (opts.scenarioId === "t02a") {
+    await waitUntil(
+      session,
+      (s) => Boolean(s.disposition.recommended),
+      15_000,
+      "t02a disposition",
+    );
+    await act(session, tokenRef);
+    await refresh(session);
+  }
   if (opts.scenarioId === "t01_m2a") {
     await waitUntil(
       session,
@@ -238,13 +256,31 @@ export async function runScenario(opts: {
     if (opts.overlay === "T06A" || opts.scenarioId === "t06a") {
       await waitUntil(
         session,
-        (s) => Boolean(s.needs.find((n) => n.kind === "historical_price")?.answer),
+        (s) => pastChargesOnScreen(s),
         20_000,
-        "T06A historical answer",
+        "T06A charges on screen",
       );
     } else {
-      await new Promise((r) => setTimeout(r, 3500));
-      await refresh(session);
+      await waitUntil(
+        session,
+        (s) => {
+          const lake = s.quotes.filter(
+            (q) =>
+              /lakeview/i.test(q.pharmacyName) && /metformin/i.test(q.drugName),
+          );
+          const oak = s.quotes.filter(
+            (q) =>
+              /oak street/i.test(q.pharmacyName) && /metformin/i.test(q.drugName),
+          );
+          return (
+            lake.length > 0 &&
+            lake.every((q) => q.validityStatus === "invalidated") &&
+            oak.some((q) => q.validityStatus === "valid")
+          );
+        },
+        8_000,
+        "corrected-pharmacy quote invalidation",
+      );
     }
   }
   dumpEvidence(session);
@@ -365,7 +401,10 @@ async function waitApplied(
   if (ev.type !== "transcript" || ev.stability === "partial") return;
   await waitUntil(
     session,
-    (s) => s.lastAppliedEventId === ev.id,
+    (s) =>
+      s.lastAppliedEventId === ev.id ||
+      (s.appliedEventIds ?? []).includes(ev.id) ||
+      (s.heldAdvocateLines ?? []).some((h) => h.id === ev.id),
     20_000,
     `applied ${ev.id}`,
   );
@@ -391,6 +430,30 @@ async function waitUntil(
   }
 }
 
+function pastChargesOnScreen(session: SessionState) {
+  const parts = [
+    session.nowCard.body,
+    session.nowCard.sourceLabel ?? "",
+    ...(session.nowCard.statements ?? []).flatMap((st) => [
+      st.text,
+      st.sourceTag ?? "",
+    ]),
+    ...session.needs.flatMap((need) => [
+      need.answer?.body ?? "",
+      need.answer?.sourceLabel ?? "",
+      ...(need.answer?.statements ?? []).flatMap((st) => [
+        st.text,
+        st.sourceTag ?? "",
+      ]),
+    ]),
+  ].join("\n");
+  return (
+    /\$?8(\.00)?/.test(parts) &&
+    /\$?27(\.00)?/.test(parts) &&
+    /not confirmed/i.test(parts)
+  );
+}
+
 async function waitNeedAnswer(
   session: SessionState,
   kind: string,
@@ -398,7 +461,7 @@ async function waitNeedAnswer(
 ) {
   await waitUntil(
     session,
-    (s) => Boolean(s.needs.find((n) => n.kind === kind)?.answer),
+    (s) => Boolean(s.needs.find((n) => n.kind === kind)?.answer?.body),
     ms,
     `${kind} answer`,
   );
@@ -437,6 +500,17 @@ function dumpEvidence(session: SessionState) {
         disposition: session.disposition,
         lastTimings: session.lastTimings,
         needPaths: session.diagnostics.needPaths,
+        lookupProgress: session.lookupProgress ?? [],
+        lookupReport: (session.lookupProgress ?? []).map((p) => ({
+          question: p.question,
+          firstStepMs:
+            p.firstStepAt != null ? p.firstStepAt - p.startedAt : null,
+          firstFactMs:
+            p.firstFactAt != null ? p.firstFactAt - p.startedAt : null,
+          fullAnswerMs:
+            p.answeredAt != null ? p.answeredAt - p.startedAt : null,
+          advocateWaitMs: p.advocateWaitMs,
+        })),
       },
       null,
       2,

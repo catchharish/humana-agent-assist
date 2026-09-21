@@ -2,6 +2,10 @@
 
 import type { CitedStatement, RetrievedSource } from "@/lib/citations";
 
+/** Advocate-facing wording when nothing in the answer survived the check. */
+export const NO_SUPPORTED_ANSWER =
+  "No supported answer — this isn’t in Humana’s documents or the member’s records.";
+
 const ISO_DATE = /\d{4}-\d{2}-\d{2}/g;
 const IDISH = /\bDEMO-[A-Z0-9-]+\b/g;
 const STATUS =
@@ -33,6 +37,7 @@ const NAME_STOP = new Set([
   "my",
   "next",
   "of",
+  "on",
   "or",
   "paid",
   "preferred",
@@ -89,8 +94,18 @@ function expandAtom(atom: string): string[] {
   return [...out];
 }
 
+function monthOnlyAtom(atom: string): string | null {
+  const raw = atom.toLowerCase().replace(/^(on|in|by)\s+/, "").trim();
+  return raw in MONTHS ? raw : null;
+}
+
 function atomInHay(atom: string, sourceText: string): boolean {
   const h = sourceText.toLowerCase();
+  const month = monthOnlyAtom(atom);
+  if (month) {
+    const mm = MONTHS[month];
+    if (mm && (h.includes(`-${mm}-`) || h.includes(month))) return true;
+  }
   return expandAtom(atom).some((form) => {
     if (form.startsWith("-") && form.length === 6) {
       return h.includes(form.slice(1)) || h.includes(form);
@@ -119,9 +134,24 @@ export function factAtoms(text: string): string[] {
   for (const m of text.match(IDISH) ?? []) found.add(m);
   for (const m of text.match(STATUS) ?? []) found.add(m);
   for (const n of text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) ?? []) {
-    const words = n.toLowerCase().split(/\s+/);
-    if (words.every((w) => NAME_STOP.has(w))) continue;
-    found.add(n.replace(/\s+Pharmacy$/i, " Pharmacy"));
+    // Trim stop words off both ends before deciding this is a name. A capital
+    // at the start of a sentence carries no name information, so "On August"
+    // is a date, not an entity, and must not be demanded of the source.
+    const words = n.split(/\s+/);
+    let start = 0;
+    let end = words.length;
+    while (start < end && NAME_STOP.has(words[start].toLowerCase())) start += 1;
+    while (end > start && NAME_STOP.has(words[end - 1].toLowerCase())) end -= 1;
+    const core = words.slice(start, end);
+    if (core.length < 2) continue;
+    if (
+      core.every(
+        (w) => w.toLowerCase() in MONTHS || NAME_STOP.has(w.toLowerCase()),
+      )
+    ) {
+      continue;
+    }
+    found.add(core.join(" ").replace(/\s+Pharmacy$/i, " Pharmacy"));
   }
   return [...found];
 }
@@ -158,10 +188,29 @@ function needsClassification(text: string): boolean {
   );
 }
 
+function isEpistemicLimitation(text: string): boolean {
+  if (text.trim() === NO_SUPPORTED_ANSWER) return true;
+  if (/the cause is not confirmed/i.test(text)) return true;
+  return /\b(?:i|we|the (?:available )?(?:records|sources|information))\s+(?:do not|does not|don['’]t|doesn['’]t|cannot|can['’]t|could not|couldn['’]t)\s+(?:have|show|confirm|support|provide|determine|find)\b/i.test(
+    text,
+  );
+}
+
 function verifyOne(
   st: { text: string; sourceId: string },
   retrieved: RetrievedSource[],
 ): CitedStatement {
+  // A model's statement that it lacks support is a limitation, not a fact
+  // established by an arbitrary retrieved record. Keep it honest and uncited.
+  if (isEpistemicLimitation(st.text)) {
+    return {
+      text: st.text,
+      sourceId: "",
+      sourceTag: "Not confirmed",
+      confirmed: false,
+      note: "no_supported_answer",
+    };
+  }
   const source = findSource(st.sourceId, retrieved);
   if (!source) {
     const looked = factAtoms(st.text);
@@ -332,9 +381,11 @@ export function supportCheck(args: {
 
   let body = confirmed.map((s) => s.text).join(" ");
   if (causeFailed) {
-    body = `${body}${body ? " " : ""}The cause is not confirmed.`.trim();
+    if (!/the cause is not confirmed\.?\s*$/i.test(body)) {
+      body = `${body}${body ? " " : ""}The cause is not confirmed.`.trim();
+    }
   } else if (failed.length && !body) {
-    body = "Not confirmed from retrieved records.";
+    body = NO_SUPPORTED_ANSWER;
   }
 
   const approval = /\b(approv|authorized coverage|coverage granted)\b/i.test(

@@ -25,6 +25,89 @@ export type CitedStatement = {
   found?: string[];
 };
 
+/** One knowledge source shown under a synthesized answer. */
+export type UsedKnowledgeSource = {
+  id: string;
+  tag: string;
+  text: string;
+};
+
+function clip(text: string, n = 90) {
+  const t = text.replace(/\s+/g, " ").trim();
+  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
+}
+
+/** Short advocate-facing subject for a retrieved record or passage. */
+export function sourceSubject(source: RetrievedSource): string {
+  if (source.kind === "document" || source.kind === "playbook") {
+    return clip(source.text) || source.sourceTag;
+  }
+  try {
+    const row = JSON.parse(source.text) as Record<string, unknown>;
+    const bits = [
+      row.drugName,
+      row.pharmacy ?? row.pharmacyName,
+      row.fillStatus ?? row.adjudicationStatus ?? row.status,
+      row.dateOfService ?? row.asOfDate,
+      row.requestedMedication,
+      row.networkTier,
+    ]
+      .filter((v) => v != null && String(v).trim())
+      .map((v) => String(v));
+    if (bits.length) return bits.join(" · ");
+  } catch {
+    /* not json */
+  }
+  return source.sourceTag;
+}
+
+/**
+ * Sources actually used for this answer: cited statements first, then
+ * records that produced facts, then knowledge passages from this lookup.
+ * No named question, member, or beat.
+ */
+export function usedKnowledgeSources(
+  retrieved: RetrievedSource[],
+  statements?: CitedStatement[],
+  earlyFacts?: { text: string; source: string }[],
+): UsedKnowledgeSource[] {
+  const byId = new Map(retrieved.map((s) => [s.id, s]));
+  const out: UsedKnowledgeSource[] = [];
+  const seen = new Set<string>();
+
+  const add = (id: string, tag: string, text: string) => {
+    const key = id || tag;
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    out.push({ id, tag, text: clip(text) || tag });
+  };
+
+  for (const st of statements ?? []) {
+    if (st.confirmed === false) continue;
+    const src = st.sourceId ? byId.get(st.sourceId) : undefined;
+    add(
+      st.sourceId || src?.id || st.sourceTag,
+      st.sourceTag || src?.sourceTag || "Source",
+      src ? sourceSubject(src) : st.sourceTag,
+    );
+  }
+
+  for (const f of earlyFacts ?? []) {
+    const src =
+      retrieved.find((s) => s.id && !seen.has(s.id) && s.sourceTag === f.source) ??
+      retrieved.find((s) => s.sourceTag === f.source);
+    add(src?.id ?? f.source, f.source, src ? sourceSubject(src) : f.text);
+  }
+
+  if (out.length === 0) {
+    for (const s of retrieved) {
+      add(s.id, s.sourceTag, sourceSubject(s));
+    }
+  }
+
+  return out.slice(0, 6);
+}
+
 export function tagForSystem(sourceSystem: string): string {
   const s = sourceSystem.toLowerCase();
   if (s.includes("claim")) return "Claims";
@@ -39,6 +122,23 @@ export function tagForSystem(sourceSystem: string): string {
     return "Plan rules";
   }
   return "Plan rules";
+}
+
+/** Recast model prose as notes for the advocate (he/his), not speech to the member. */
+export function advocateFacing(text: string, given?: string): string {
+  if (!text) return text;
+  const he = (given ?? "").trim() || "He";
+  return text
+    .replace(/\bYou paid\b/g, `${he} paid`)
+    .replace(/\byou paid\b/g, `${he.toLowerCase() === "he" ? "he" : he} paid`)
+    .replace(/\bYou used\b/g, `${he} used`)
+    .replace(/\byou used\b/g, `${he.toLowerCase() === "he" ? "he" : he} used`)
+    .replace(/\byour metformin\b/gi, "his metformin")
+    .replace(/\byour atorvastatin\b/gi, "his atorvastatin")
+    .replace(/\byour pharmacy\b/gi, "his pharmacy")
+    .replace(/\byour plan\b/gi, "his plan")
+    .replace(/\byour prescription\b/gi, "his prescription")
+    .replace(/\byour refill\b/gi, "his refill");
 }
 
 function innerData(json: unknown): Record<string, unknown> {
@@ -260,7 +360,12 @@ export function recordFactsFromSources(
       try {
         const row = JSON.parse(s.text) as Record<string, unknown>;
         const bits: string[] = [];
-        const drug = row.drugName ? String(row.drugName) : "";
+        const drug = row.drugName
+          ? String(row.drugName)
+          : row.requestedMedication
+            ? String(row.requestedMedication)
+            : "";
+        const reference = row.caseId ? String(row.caseId) : "";
         const when = row.dateOfService ? String(row.dateOfService) : "";
         const where = row.pharmacy ? String(row.pharmacy) : String(row.pharmacyName ?? "");
         const paid = row.memberPaidAmount ? String(row.memberPaidAmount) : "";
@@ -277,7 +382,7 @@ export function recordFactsFromSources(
           );
         } else if (status && (drug || where)) {
           bits.push(
-            `${drug || "Record"} ${status}${where ? ` at ${where}` : ""}`,
+            `${reference ? `${reference}: ` : ""}${drug || "Record"} ${status}${where ? ` at ${where}` : ""}`,
           );
         }
         for (const text of bits) {
@@ -313,35 +418,208 @@ export function parseAnswerStatements(
   return { rest: answer, text: answer, sourceId: "" };
 }
 
+function firstSentences(text: string, n = 3) {
+  if (!text.trim()) return "";
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return sentences.slice(0, n).join(" ");
+}
+
+/** End index of a complete `{...}` starting at `start`, or -1 if truncated. */
+function completeJsonObjectEnd(raw: string, start: number): number {
+  if (raw[start] !== "{") return -1;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < raw.length; i++) {
+    const c = raw[i];
+    if (inStr) {
+      if (esc) {
+        esc = false;
+        continue;
+      }
+      if (c === "\\") {
+        esc = true;
+        continue;
+      }
+      if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') {
+      inStr = true;
+      continue;
+    }
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return i;
+    }
+  }
+  return -1;
+}
+
+function jsonStringField(raw: string, key: string): string {
+  const m = new RegExp(`"${key}"\\s*:\\s*"`).exec(raw);
+  if (!m || m.index == null) return "";
+  let out = "";
+  let esc = false;
+  for (let i = m.index + m[0].length; i < raw.length; i++) {
+    const c = raw[i];
+    if (esc) {
+      out += c === "n" ? "\n" : c === "t" ? "\t" : c;
+      esc = false;
+      continue;
+    }
+    if (c === "\\") {
+      esc = true;
+      continue;
+    }
+    if (c === '"') return out;
+    out += c;
+  }
+  return "";
+}
+
+/**
+ * When the outer envelope does not parse (truncated tail, extra braces),
+ * keep every complete `{text, sourceId}` already sitting in `"statements"`.
+ */
+function statementsFromBrokenEnvelope(
+  raw: string,
+): { text: string; sourceId: string }[] {
+  const marker = raw.search(/"statements"\s*:\s*\[/);
+  if (marker < 0) return [];
+  const start = raw.indexOf("[", marker);
+  if (start < 0) return [];
+  const out: { text: string; sourceId: string }[] = [];
+  let i = start + 1;
+  while (i < raw.length && out.length < 6) {
+    while (i < raw.length && /[\s,]/.test(raw[i])) i++;
+    if (i >= raw.length || raw[i] === "]") break;
+    if (raw[i] !== "{") break;
+    const end = completeJsonObjectEnd(raw, i);
+    if (end < 0) break;
+    try {
+      const obj = JSON.parse(raw.slice(i, end + 1)) as {
+        text?: string;
+        sourceId?: string;
+      };
+      const text = String(obj.text ?? "").trim();
+      if (text) {
+        out.push({
+          text,
+          sourceId: String(obj.sourceId ?? "").trim(),
+        });
+      }
+    } catch {
+      /* skip one bad object */
+    }
+    i = end + 1;
+  }
+  return out;
+}
+
+function envelopeFromRecovered(
+  raw: string,
+  recovered: { text: string; sourceId: string }[],
+) {
+  const needRaw = jsonStringField(raw, "need").toLowerCase();
+  const need =
+    needRaw === "nothing" || needRaw === "nothing_needed"
+      ? ("nothing" as const)
+      : needRaw === "answer"
+        ? ("answer" as const)
+        : undefined;
+  const say = jsonStringField(raw, "say").trim();
+  const proseRaw =
+    need === "nothing" ? "" : say || recovered.map((s) => s.text).join(" ");
+  return {
+    prose: firstSentences(proseRaw, 3),
+    statements: need === "nothing" ? [] : recovered,
+    envelope: true as const,
+    need,
+    reason: jsonStringField(raw, "reason").trim() || undefined,
+    headline: jsonStringField(raw, "headline").trim() || undefined,
+    rightNow: jsonStringField(raw, "rightNow").trim() || undefined,
+  };
+}
+
 export function statementsFromModel(answer: string): {
   prose: string;
   statements: { text: string; sourceId: string }[];
+  /** True when the model returned the statements envelope it was asked for. */
+  envelope: boolean;
+  need?: "answer" | "nothing";
+  reason?: string;
+  headline?: string;
+  rightNow?: string;
 } {
-  const match = answer.match(/\{[\s\S]*"statements"[\s\S]*\}/);
+  const match = answer.match(/\{[\s\S]*\}/);
   if (match) {
     try {
       const parsed = JSON.parse(match[0]) as {
         statements?: Array<{ text?: string; sourceId?: string }>;
+        need?: string;
+        reason?: string;
+        headline?: string;
+        say?: string;
+        rightNow?: string;
       };
+      const needRaw = String(parsed.need ?? "").toLowerCase();
+      const need =
+        needRaw === "nothing" || needRaw === "nothing_needed"
+          ? ("nothing" as const)
+          : needRaw === "answer"
+            ? ("answer" as const)
+            : undefined;
       const statements = (parsed.statements ?? [])
         .map((s) => ({
           text: String(s.text ?? "").trim(),
           sourceId: String(s.sourceId ?? "").trim(),
         }))
-        .filter((s) => s.text);
-      const prose = statements.map((s) => s.text).join(" ");
-      return { prose, statements };
+        .filter((s) => s.text)
+        .slice(0, 6);
+      const say = String(parsed.say ?? "").trim();
+      const proseRaw =
+        need === "nothing"
+          ? ""
+          : say || statements.map((s) => s.text).join(" ");
+      const prose = firstSentences(proseRaw, 3);
+      const hasEnvelope =
+        Array.isArray(parsed.statements) ||
+        Boolean(need) ||
+        Boolean(say) ||
+        Boolean(parsed.headline);
+      if (hasEnvelope) {
+        return {
+          prose,
+          statements: need === "nothing" ? [] : statements,
+          envelope: true,
+          need,
+          reason: String(parsed.reason ?? "").trim() || undefined,
+          headline: String(parsed.headline ?? "").trim() || undefined,
+          rightNow: String(parsed.rightNow ?? "").trim() || undefined,
+        };
+      }
     } catch {
-      /* fall through */
+      const recovered = statementsFromBrokenEnvelope(answer);
+      if (recovered.length) return envelopeFromRecovered(answer, recovered);
     }
+  } else {
+    const recovered = statementsFromBrokenEnvelope(answer);
+    if (recovered.length) return envelopeFromRecovered(answer, recovered);
   }
   const sentences = answer
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, 3);
   return {
-    prose: answer.trim(),
+    prose: sentences.join(" "),
     statements: sentences.map((text) => ({ text, sourceId: "" })),
+    envelope: false,
   };
 }
 

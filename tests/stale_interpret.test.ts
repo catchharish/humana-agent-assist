@@ -36,6 +36,7 @@ function interp(over: Partial<Interpretation>): Interpretation {
     quoteDrug: null,
     pricingTrigger: "none",
     focusKind: null,
+    lookupHold: false,
     raw: "",
     ms: 1,
     ttftMs: 1,

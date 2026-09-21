@@ -109,4 +109,46 @@ describe("answers stay with the utterance that produced them", () => {
       true,
     );
   });
+
+  it("keeps two same-kind questions on their originating utterances", () => {
+    const s = createSession({ disclosures, disclosureFetch: "test" });
+    upsertNeed(s, "unrecognized_request", {
+      queryText: "first arbitrary question",
+      sourceUtteranceId: "e-first",
+    });
+    upsertNeed(s, "unrecognized_request", {
+      queryText: "second arbitrary question",
+      sourceUtteranceId: "e-second",
+    });
+    recordNeedAnswer(
+      s,
+      "unrecognized_request",
+      {
+        title: "Answer",
+        body: "second answer",
+        sourceLabel: "Knowledge",
+      },
+      undefined,
+      "e-second",
+    );
+    recordNeedAnswer(
+      s,
+      "unrecognized_request",
+      {
+        title: "Answer",
+        body: "late first answer",
+        sourceLabel: "Knowledge",
+      },
+      undefined,
+      "e-first",
+    );
+    expect(
+      s.needs.find((need) => need.sourceUtteranceId === "e-first")?.answer
+        ?.body,
+    ).toBe("late first answer");
+    expect(
+      s.needs.find((need) => need.sourceUtteranceId === "e-second")?.answer
+        ?.body,
+    ).toBe("second answer");
+  });
 });

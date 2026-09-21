@@ -6,7 +6,8 @@
     {
       "requirementId": "DEMO-GREETING-v1",
       "version": "v1",
-      "verbatimText": "Thank you for calling Humana. This call is being recorded.",
+      "plainName": "Greeting",
+      "verbatimText": "Thank you for calling Humana. This call is being recorded for quality assurance & training purposes.",
       "applicability": "At the opening of each supported connected demonstration call, before identity questions or substantive servicing.",
       "deadlineRule": "Before identity questions or substantive servicing.",
       "repetitionRule": "Once for this advocate interaction.",
@@ -18,6 +19,7 @@
     {
       "requirementId": "DEMO-PRICING-v1",
       "version": "v1",
+      "plainName": "Pricing disclaimer",
       "verbatimText": "Any price estimate we discuss is based on the information available today and may change when your prescription is filled.",
       "applicability": "Before this advocate first speaks a prospective prescription-price estimate.",
       "deadlineRule": "Before this advocate first speaks a prospective prescription-price estimate.",
@@ -57,6 +59,7 @@
     {
       "requirementId": "DEMO-CLOSING-v2",
       "version": "v2",
+      "plainName": "Closing statement",
       "verbatimText": "Your decision today has no impact on your plan membership.",
       "applicability": "Once the advocate actually introduces or discusses the optional pharmacy-service choice.",
       "deadlineRule": "Closing portion after the discussion and before this advocate exits or completes handoff.",

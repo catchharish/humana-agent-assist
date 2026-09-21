@@ -1,5 +1,10 @@
-import { isExactReading, isWordingAttempt, stitchedReading } from "@/lib/exactness";
+import { NUDGE_PARAPHRASE } from "@/lib/copy";
+import { isExactReading, isWordingAttempt, stitchedReading, wordDiff } from "@/lib/exactness";
 import { appendJsonl } from "@/lib/log";
+import {
+  requiredPricingOnNow,
+  requiredWordingOnNow,
+} from "@/lib/nowOccupancy";
 import type {
   ActionResult,
   AuthResult,
@@ -13,12 +18,18 @@ import type {
   TranscriptLine,
   TriggerTrace,
 } from "@/lib/types";
+import {
+  lookupHasAnswer,
+  openLookup,
+} from "@/lib/lookupProgress";
+import { logObligationTransitions } from "@/lib/obligationLog";
 import type { UtteranceRules } from "@/lib/utteranceRules";
 import { randomUUID } from "crypto";
 
 const g = globalThis as unknown as { __haaSessions?: Map<string, SessionState> };
 g.__haaSessions ??= new Map<string, SessionState>();
 const sessions = g.__haaSessions;
+const MAX_IN_MEMORY_SESSIONS = 64;
 
 function now() {
   return Date.now();
@@ -50,12 +61,35 @@ function parkCardOnNeed(session: SessionState, kind: NeedKind) {
   if (session.nowCardNeedKind && session.nowCardNeedKind !== kind) return;
   const card = session.nowCard;
   if (!card.body && !card.title) return;
+  if (nowCardIsLookupPlaceholder(card)) {
+    upsertNeed(session, kind, {
+      status: "deferred",
+      guidance: getNeed(session, kind)?.answer?.body
+        ? "deferred_valid"
+        : "preparing",
+      flowStep:
+        getNeed(session, kind)?.flowStep ||
+        "waiting while another question is on Now",
+    });
+    appendJsonl(session.sessionId, {
+      kind: "answer_parked",
+      needKind: kind,
+      nowTitle: card.title,
+      waiting: true,
+      placeholder: true,
+    });
+    return;
+  }
   recordNeedAnswer(session, kind, {
     title: card.title,
     body: card.body,
     sourceLabel: card.sourceLabel,
     statements: card.statements,
-  }, { status: "deferred", guidance: card.body ? "deferred_valid" : "preparing" });
+    usedSources: card.usedSources,
+  }, {
+    status: card.body ? "resolved" : "deferred",
+    guidance: card.body ? "deferred_valid" : "preparing",
+  });
   appendJsonl(session.sessionId, {
     kind: "answer_parked",
     needKind: kind,
@@ -69,8 +103,9 @@ export function recordNeedAnswer(
   kind: NeedKind,
   answer: NeedAnswer,
   extra?: Partial<NeedRecord>,
+  sourceUtteranceId?: string,
 ) {
-  const existing = getNeed(session, kind);
+  const existing = getNeed(session, kind, sourceUtteranceId);
   const prev = existing?.answer;
   const history = [...(existing?.answerHistory ?? [])];
   if (prev && (prev.body !== answer.body || prev.title !== answer.title)) {
@@ -79,6 +114,7 @@ export function recordNeedAnswer(
   const stamped = { ...answer, at: answer.at ?? new Date().toISOString() };
   upsertNeed(session, kind, {
     ...extra,
+    sourceUtteranceId: sourceUtteranceId ?? existing?.sourceUtteranceId,
     answer: stamped,
     answerHistory: history.slice(-8),
   });
@@ -88,7 +124,12 @@ export function recordActionResult(session: SessionState, rec: ActionResult) {
   session.actionResults = [...session.actionResults, rec].slice(-12);
   session.nowCardOrigin = "action";
   session.nowCardNeedKind = null;
-  appendJsonl(session.sessionId, { kind: "action_result", ...rec });
+  const { kind: actionKind, ...detail } = rec;
+  appendJsonl(session.sessionId, {
+    kind: "action_result",
+    actionKind,
+    ...detail,
+  });
 }
 
 export function beginAnswerLoop(
@@ -101,40 +142,43 @@ export function beginAnswerLoop(
     session.answerLoopAnchor?.needKind ??
     session.nowCardNeedKind ??
     undefined;
-  if (
-    prevKind &&
-    needKind &&
-    prevKind !== needKind &&
-    session.nowCardOrigin === "answer"
-  ) {
-    parkCardOnNeed(session, prevKind);
-    session.nowCard = {
-      title: "Working on it",
-      body: question,
-      sourceLabel: "Copilot",
-      waitingForFocus: false,
-      liveSteps: [],
-      earlyFacts: [],
-    };
-    session.nowCardNeedKind = needKind;
-    session.nowCardOrigin = "answer";
+  const keepNow =
+    Boolean(openLookup(session)) &&
+    !lookupHasAnswer(session) &&
+    session.nowCardOrigin === "answer" &&
+    Boolean(session.answerLoopAnchor?.question) &&
+    session.answerLoopAnchor!.question !== question;
+  if (needKind && !requiredWordingOnNow(session)) {
+    if (
+      prevKind &&
+      prevKind !== needKind &&
+      session.nowCardOrigin === "answer"
+    ) {
+      // File the visible answer on its need. Leave Now as-is — Terra replaces
+      // the card only when it judges need:answer; need:nothing keeps it.
+      parkCardOnNeed(session, prevKind);
+    }
+    if (!keepNow) {
+      // Do not set nowCardNeedKind yet — that would let paintStep decorate the
+      // prior answer while Terra is still judging this line.
+      session.rightNowLine = question;
+    }
   }
-  const generation = session.answerLoopGeneration + 1;
-  session.answerLoopGeneration = generation;
-  session.answerLoopAnchor = {
-    generation,
-    question,
-    needKind,
-    sourceUtteranceId,
-    enrollmentConsent: session.consent.enrollment,
-    enrollmentScopeKey: session.enrollment.medications.join("|"),
-  };
-  session.pendingNba = null;
-  session.nowCard = {
-    ...session.nowCard,
-    liveSteps: [],
-    earlyFacts: [],
-  };
+  const generation = keepNow
+    ? session.answerLoopGeneration || 1
+    : session.answerLoopGeneration + 1;
+  if (!keepNow) session.answerLoopGeneration = generation;
+  session.answerLoopAnchor = keepNow
+    ? session.answerLoopAnchor
+    : {
+        generation,
+        question,
+        needKind,
+        sourceUtteranceId,
+        enrollmentConsent: session.consent.enrollment,
+        enrollmentScopeKey: session.enrollment.medications.join("|"),
+      };
+  if (!keepNow) session.pendingNba = null;
   return generation;
 }
 
@@ -142,6 +186,7 @@ export function shouldApplyAnswerLoop(
   session: SessionState,
   generation: number,
 ): boolean {
+  if (session.callEnd.ended) return false;
   const a = session.answerLoopAnchor;
   if (!a || a.generation !== generation) return false;
   if (session.answerLoopGeneration !== generation) return false;
@@ -150,6 +195,31 @@ export function shouldApplyAnswerLoop(
     return false;
   }
   return true;
+}
+
+/** Paint this answer on Now if the loop is current, or Now is still looking up this question. */
+export function shouldPaintAnswerOntoNow(
+  session: SessionState,
+  opts: { generation: number; needKind?: NeedKind; question?: string },
+) {
+  if (blockingNowPriority(session) >= NOW_PRIORITY.due_now) return false;
+  const current =
+    shouldApplyAnswerLoop(session, opts.generation) || opts.generation === 0;
+  if (current) return true;
+  if (!nowCardIsLookupPlaceholder(session.nowCard)) return false;
+  if (session.nowCardOrigin === "answer") {
+    if (
+      opts.needKind &&
+      session.nowCardNeedKind &&
+      opts.needKind !== session.nowCardNeedKind
+    ) {
+      return false;
+    }
+    return true;
+  }
+  if (opts.needKind && session.nowCardNeedKind === opts.needKind) return true;
+  if (opts.question && session.nowCard.body === opts.question) return true;
+  return false;
 }
 
 export function publicState(session: SessionState): SessionState {
@@ -214,11 +284,15 @@ export function createSession(init: {
     actionResults: [],
     nowCardOrigin: "system",
     nowCard: {
-      title: "Opening",
-      body: "Recorded-line greeting is due. Exact wording is on the obligation rail. No member record until the caller is verified.",
-      sourceLabel: "Plan rules",
+      title: "Recorded-line greeting due now",
+      body:
+        init.disclosures.find((d) => d.requirementId === "DEMO-GREETING-v1")
+          ?.verbatimText ??
+        "Recorded-line greeting is due. Exact wording is on the obligation rail. No member record until the caller is verified.",
+      sourceLabel: "Governed guidance · scripting · simulated",
     },
     recommendation: null,
+    waitingRecommendations: [],
     quotes: [],
     quoteFocus: null,
     quoteGeneration: 0,
@@ -260,25 +334,51 @@ export function createSession(init: {
       destinationConfirmed: false,
       connectionStatus: null,
       transferId: null,
+      agreedThisCall: false,
     },
     disposition: {
       recommended: null,
       confirmed: null,
+      reasons: [],
+      documentId: null,
+      options: [],
+    },
+    callEnd: {
+      triggered: false,
+      ended: false,
+      finalizing: false,
+      trigger: null,
+      endedAt: null,
+      hangupId: null,
+      wrapMs: null,
+    },
+    presenterInput: {
+      maxLength: 500,
+      lastSource: null,
+      truncatedFrom: null,
     },
     closingNote: null,
     closingHistory: [],
     outcomeReady: false,
+    rightNowLine: "Call connected — greet the caller",
+    callReasonHow: null,
+    reviewStep: 0,
+    shownCards: [],
     warmup: null,
     lastTimings: [],
     lunaSeq: 0,
     lastInterpretation: null,
     lastAppliedEventId: null,
+    appliedEventIds: [],
     lastAnswerQuestion: null,
     nowCardNeedKind: null,
     modelHealth: { luna: null, terra: null },
     answerLoopGeneration: 0,
+    activeInterpretations: 0,
     answerLoopAnchor: null,
     pendingNba: null,
+    lookupProgress: [],
+    heldAdvocateLines: [],
     diagnostics: {
       disclosureFetch: init.disclosureFetch,
       warmup: "luna warmup started fire-and-forget at connect (not awaited)",
@@ -294,6 +394,11 @@ export function createSession(init: {
     },
   };
   sessions.set(sessionId, state);
+  while (sessions.size > MAX_IN_MEMORY_SESSIONS) {
+    const oldest = sessions.keys().next().value as string | undefined;
+    if (!oldest || oldest === sessionId) break;
+    sessions.delete(oldest);
+  }
   appendJsonl(sessionId, {
     kind: "session_start",
     sessionId,
@@ -302,6 +407,7 @@ export function createSession(init: {
     warmup: "pending_fire_and_forget",
     disclosureFetch: init.disclosureFetch,
   });
+  logObligationTransitions(state);
   return state;
 }
 
@@ -392,12 +498,8 @@ function applyGreeting(session: SessionState, line: TranscriptLine) {
     session.greeting = late ? "late_finding" : "exact_timely";
     session.greetingLocked = true;
     session.flowStep = "greeting verified · await identity";
-    if (session.ivrReason && !late) {
-      session.nowCard = {
-        title: "Phone menu",
-        body: `Provisional hint: ${session.ivrReason}. Not identity evidence. Greeting matched on the rail.`,
-        sourceLabel: "Phone menu",
-      };
+    if (session.nudge?.requiredText === req.verbatimText) {
+      session.nudge = null;
     }
     appendJsonl(session.sessionId, {
       kind: "greeting_verified",
@@ -409,6 +511,23 @@ function applyGreeting(session: SessionState, line: TranscriptLine) {
   }
   if (!session.greetingLocked && isWordingAttempt(combined, req.verbatimText)) {
     session.greeting = "paraphrased";
+    const diff = wordDiff(combined, req.verbatimText);
+    session.nudge = {
+      template: NUDGE_PARAPHRASE,
+      heard: combined,
+      requiredText: req.verbatimText,
+      missingFromHeard: diff.missingFromHeard,
+      extraInHeard: diff.extraInHeard,
+    };
+    showNow(
+      session,
+      {
+        title: "Recorded-line greeting due now",
+        body: req.verbatimText,
+        sourceLabel: "Governed guidance · scripting · simulated",
+      },
+      { priority: "due_now" },
+    );
   }
 }
 
@@ -426,21 +545,35 @@ export function ingestTranscript(
     speaker: line.speaker,
     stability: line.stability,
     text: line.text,
+    inputSource: line.inputSource ?? "stream",
+    truncatedFrom: line.truncatedFrom ?? null,
     tEvent: receivedAt,
   });
   applyGreeting(session, next);
+  logObligationTransitions(session, { eventId: line.id });
 }
 
 export function setIvrHint(session: SessionState, ivrReason: string) {
   session.ivrReason = ivrReason;
+  if (!session.callReasonHow) session.callReasonHow = "phone_menu";
   if (/refill/i.test(ivrReason)) session.callType = "Refill";
   else if (/pric/i.test(ivrReason)) session.callType = "Pricing";
-  session.nowCard = {
-    title: "Phone menu",
-    body: `Provisional hint: ${ivrReason}. Not identity evidence. Greeting still due.`,
-    sourceLabel: "Phone menu",
-  };
+  if (!requiredWordingOnNow(session)) {
+    session.nowCard = {
+      title: "Phone menu",
+      body: `Provisional hint: ${ivrReason}. Not identity evidence. Greeting still due.`,
+      sourceLabel: "Phone menu",
+    };
+  }
   appendJsonl(session.sessionId, { kind: "ivr_hint", ivrReason });
+}
+
+export function markEventApplied(session: SessionState, eventId: string) {
+  session.lastAppliedEventId = eventId;
+  if (!session.appliedEventIds) session.appliedEventIds = [];
+  if (!session.appliedEventIds.includes(eventId)) {
+    session.appliedEventIds = [...session.appliedEventIds, eventId].slice(-80);
+  }
 }
 
 export function beginPause(session: SessionState, label: string) {
@@ -448,7 +581,9 @@ export function beginPause(session: SessionState, label: string) {
   session.paused = true;
   session.pauseStartedAt = now();
   session.lastPauseLabel = label;
-  const hist = session.needs.find((n) => n.kind === "historical_price");
+  const hist = [...session.needs]
+    .reverse()
+    .find((n) => n.kind === "historical_price");
   session.diagnostics.pauseSnapshots.push({
     label,
     nowTitle: session.nowCard.title,
@@ -463,6 +598,8 @@ export function beginPause(session: SessionState, label: string) {
     excludedFromMachineTime: true,
     nowTitle: session.nowCard.title,
     nowBody: session.nowCard.body,
+    historicalGuidance: hist?.guidance ?? null,
+    historicalStatus: hist?.status ?? null,
   });
 }
 
@@ -490,6 +627,12 @@ export function applyAuth(
   auth: AuthResult,
   member: MemberBrief | null,
 ) {
+  const greetingReq = greetingRequirement(session);
+  const greetingCardOpen = Boolean(
+    greetingReq &&
+      (/recorded-line greeting/i.test(session.nowCard.title) ||
+        session.nowCard.body === greetingReq.verbatimText),
+  );
   session.auth = auth;
   session.member = member;
   session.identityStatus =
@@ -500,20 +643,31 @@ export function applyAuth(
   if (session.greeting === "due_now" && !session.greetingLocked) {
     session.greeting = "late_finding";
   }
+  // Paraphrased greeting is no longer due after identity — same as unread due_now.
+  if (session.greeting === "paraphrased" && !session.greetingLocked) {
+    session.greeting = "late_finding";
+  }
+  if (
+    session.identityStatus === "VALID" &&
+    greetingReq &&
+    session.nudge?.requiredText === greetingReq.verbatimText
+  ) {
+    session.nudge = null;
+  }
+  if (session.identityStatus === "VALID" && greetingCardOpen) {
+    session.nowCard = { title: "", body: "", sourceLabel: "" };
+    session.nowCardOrigin = "system";
+    session.nowCardNeedKind = null;
+    session.nowPriority = 0;
+  }
   session.flowStep = "listening";
   session.currentNeed = "listening";
-  if (member && auth.decision.toLowerCase() === "valid") {
-    session.nowCard = {
-      title: "Caller verified",
-      body: `${member.name.given} ${member.name.family} · ${member.lineOfBusiness}. Member details are available.`,
-      sourceLabel: "Eligibility",
-    };
-  }
   appendJsonl(session.sessionId, {
     kind: "authorization",
     source: "stream_system_event",
     auth,
   });
+  logObligationTransitions(session);
 }
 
 export function upsertNeed(
@@ -521,7 +675,26 @@ export function upsertNeed(
   kind: NeedKind,
   patch: Partial<NeedRecord>,
 ) {
-  const idx = session.needs.findIndex((n) => n.kind === kind);
+  let idx = -1;
+  if (patch.sourceUtteranceId) {
+    idx = session.needs.findIndex(
+      (need) =>
+        need.kind === kind &&
+        need.sourceUtteranceId === patch.sourceUtteranceId,
+    );
+    if (idx < 0) {
+      idx = session.needs.findIndex(
+        (need) => need.kind === kind && !need.sourceUtteranceId,
+      );
+    }
+  } else {
+    for (let i = session.needs.length - 1; i >= 0; i -= 1) {
+      if (session.needs[i].kind === kind) {
+        idx = i;
+        break;
+      }
+    }
+  }
   if (idx < 0) {
     session.needs = [
       ...session.needs,
@@ -538,8 +711,33 @@ export function upsertNeed(
   }
 }
 
-export function getNeed(session: SessionState, kind: NeedKind) {
-  return session.needs.find((n) => n.kind === kind);
+export function nowCardIsLookupPlaceholder(card: {
+  title?: string;
+  body?: string;
+} | undefined) {
+  if (/^working on it$/i.test(card?.title ?? "")) return true;
+  if (/^still checking$/i.test(card?.title ?? "")) return true;
+  const body = (card?.body ?? "").trim();
+  return !body && Boolean(card?.title);
+}
+
+export function getNeed(
+  session: SessionState,
+  kind: NeedKind,
+  sourceUtteranceId?: string,
+) {
+  if (sourceUtteranceId) {
+    const exact = session.needs.find(
+      (need) =>
+        need.kind === kind &&
+        need.sourceUtteranceId === sourceUtteranceId,
+    );
+    if (exact) return exact;
+  }
+  for (let i = session.needs.length - 1; i >= 0; i -= 1) {
+    if (session.needs[i].kind === kind) return session.needs[i];
+  }
+  return undefined;
 }
 
 export function setFocus(session: SessionState, kind: NeedKind, flowStep: string) {
@@ -570,35 +768,42 @@ export const NOW_PRIORITY = {
 
 export type NowPriorityKind = keyof typeof NOW_PRIORITY;
 
+export function needFocusIsIdle(currentNeed: string | null | undefined) {
+  const n = (currentNeed ?? "").replace(/_/g, " ").trim();
+  return !n || n === "opening" || n === "listening";
+}
+
 function focusMatches(currentNeed: string, kind: NeedKind) {
+  if (needFocusIsIdle(currentNeed)) return true;
   return currentNeed.replace(/_/g, " ") === kind.replace(/_/g, " ");
 }
 
-/** Required DEMO-PRICING-v1 wording occupies Now (due now, late, or paraphrased until exact). */
-export function requiredPricingOnNow(session: SessionState): boolean {
-  return (
-    !session.pricingExactDelivered &&
-    (session.pricing === "due_now" ||
-      session.pricing === "late_finding" ||
-      session.pricing === "paraphrased")
-  );
+export { requiredPricingOnNow, requiredWordingOnNow };
+
+/** Strip answers, facts, and live steps while a required statement owns Now. */
+export function guardNowWording(session: SessionState) {
+  if (!requiredWordingOnNow(session)) return;
+  session.nowCard = {
+    ...session.nowCard,
+    liveSteps: [],
+    earlyFacts: [],
+    statements: undefined,
+    usedSources: undefined,
+  };
 }
 
-function isPricingWordingCard(
+function isRequiredWordingCard(
   card: SessionState["nowCard"],
   opts?: { priority?: NowPriorityKind },
 ) {
-  return (
-    opts?.priority === "due_now" || card.title === "Pricing statement due now"
-  );
+  if (opts?.priority === "due_now" || opts?.priority === "nudge") return true;
+  return /due now|could not be verified/i.test(card.title);
 }
 
 /** Blocking rank from live conditions. Due-now required wording always outranks clarify, answers, and recommendations (§14 / D11). */
 export function blockingNowPriority(session: SessionState): number {
-  const closingOpen =
-    session.closing === "paraphrased" || session.closing === "unable_to_verify";
-  if (requiredPricingOnNow(session)) return NOW_PRIORITY.due_now;
-  if (session.nudge || closingOpen) return NOW_PRIORITY.nudge;
+  if (requiredWordingOnNow(session)) return NOW_PRIORITY.due_now;
+  if (session.nudge) return NOW_PRIORITY.nudge;
   return 0;
 }
 
@@ -610,8 +815,8 @@ export function showNow(
   const priority = NOW_PRIORITY[opts?.priority ?? "answer"];
   const kind = opts?.needKind;
   if (
-    requiredPricingOnNow(session) &&
-    !isPricingWordingCard(card, opts) &&
+    requiredWordingOnNow(session) &&
+    !isRequiredWordingCard(card, opts) &&
     priority < NOW_PRIORITY.due_now
   ) {
     if (kind) {
@@ -620,12 +825,19 @@ export function showNow(
         body: card.body,
         sourceLabel: card.sourceLabel,
         statements: card.statements,
+        usedSources: card.usedSources,
       });
     }
     return;
   }
-  if (requiredPricingOnNow(session) && isPricingWordingCard(card, opts)) {
-    session.nowCard = card;
+  if (requiredWordingOnNow(session) && isRequiredWordingCard(card, opts)) {
+    session.nowCard = {
+      ...card,
+      liveSteps: [],
+      earlyFacts: [],
+      statements: undefined,
+      usedSources: undefined,
+    };
     session.nowCardOrigin = "system";
     session.nowCardNeedKind = null;
     session.nowPriority = NOW_PRIORITY.due_now;
@@ -633,12 +845,22 @@ export function showNow(
   }
   const block = blockingNowPriority(session);
   session.nowPriority = block;
-  if (kind && !focusMatches(session.currentNeed, kind) && priority <= NOW_PRIORITY.answer) {
+  const placeholderForKind =
+    Boolean(kind) &&
+    session.nowCardNeedKind === kind &&
+    nowCardIsLookupPlaceholder(session.nowCard);
+  if (
+    kind &&
+    !focusMatches(session.currentNeed, kind) &&
+    priority <= NOW_PRIORITY.answer &&
+    !placeholderForKind
+  ) {
     recordNeedAnswer(session, kind, {
       title: card.title,
       body: card.body,
       sourceLabel: card.sourceLabel,
       statements: card.statements,
+      usedSources: card.usedSources,
     });
     return;
   }
@@ -649,13 +871,17 @@ export function showNow(
         body: card.body,
         sourceLabel: card.sourceLabel,
         statements: card.statements,
+        usedSources: card.usedSources,
       });
     }
     return;
   }
   session.nowCard = card;
-  session.nowCardNeedKind = kind ?? null;
-  session.nowCardOrigin = kind ? "answer" : "system";
+  session.nowCardNeedKind = kind ?? session.nowCardNeedKind ?? null;
+  session.nowCardOrigin =
+    kind || opts?.priority === "answer" || Boolean((card.body ?? "").trim())
+      ? "answer"
+      : "system";
   session.nowPriority = Math.max(priority, block);
 }
 

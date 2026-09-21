@@ -17,6 +17,8 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
     expect(s.nowCard.body).not.toMatch(/\$8|\$27/);
     expect(s.disposition.recommended).toBe("COMPLETED_SERVICING");
     expect(s.disposition.confirmed).toBe("COMPLETED_SERVICING");
+    expect(s.disposition.documentId).toBe("DEMO-DISPOSITIONS-v1");
+    expect(s.disposition.reasons.some((reason) => reason.confirmed)).toBe(true);
   }, 180_000);
 
   it("T03A member-led 90-day", async () => {
@@ -56,8 +58,11 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
 
   it("T06A omit DEMO-NET0818", async () => {
     const s = await runScenario({ scenarioId: "t06a", overlay: "T06A" });
-    const hist = s.needs.find((n) => n.kind === "historical_price");
-    const seen = `${s.nowCard.body}\n${hist?.answer?.body ?? ""}`;
+    const seen = [
+      s.nowCard.body,
+      ...(s.nowCard.statements ?? []).map((st) => st.text),
+      ...s.needs.map((n) => n.answer?.body ?? ""),
+    ].join("\n");
     expect(seen).toMatch(/\$8|8/);
     expect(seen).toMatch(/\$27|27/);
     expect(s.nowCard.body).toMatch(/not confirmed/i);
@@ -66,6 +71,13 @@ describe.skipIf(!live)("§19.3 replays (live app)", () => {
     expect(JSON.stringify(s.nowCard.earlyFacts ?? [])).not.toMatch(
       /preferred retail/i,
     );
+    const tags = [
+      ...(s.nowCard.statements ?? []).map((st) => st.sourceTag ?? ""),
+      ...s.needs.flatMap((n) =>
+        (n.answer?.statements ?? []).map((st) => st.sourceTag ?? ""),
+      ),
+    ].join(" ");
+    expect(tags).toMatch(/Claims/i);
     const rec = `${s.recommendation?.body ?? ""} ${JSON.stringify(s.recommendation?.facts ?? [])} ${JSON.stringify(s.recommendation?.reasons ?? [])}`;
     expect(rec).not.toMatch(/preferred(_retail|\s+retail)|standard(_retail|\s+retail)/i);
   }, 180_000);

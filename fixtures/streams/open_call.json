@@ -1,0 +1,20 @@
+{
+  "scenarioId": "open_call",
+  "callDate": "2026-09-17",
+  "events": [
+    {
+      "id": "e-greet-final",
+      "offsetMs": 400,
+      "type": "transcript",
+      "speaker": "advocate",
+      "stability": "final",
+      "text": "Thank you for calling Humana. This call is being recorded for quality assurance & training purposes."
+    },
+    {
+      "id": "e-auth",
+      "offsetMs": 1200,
+      "type": "system",
+      "name": "authorization"
+    }
+  ]
+}

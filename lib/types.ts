@@ -11,12 +11,14 @@ export type ObligationStatus =
   | "exact_timely"
   | "paraphrased"
   | "late_finding"
-  | "unable_to_verify";
+  | "unable_to_verify"
+  | "missed_not_recoverable";
 
 export type DisclosureRequirement = {
   requirementId: string;
   version: string;
   verbatimText: string;
+  plainName?: string;
   applicability: string;
   deadlineRule: string;
   repetitionRule: string;
@@ -45,6 +47,8 @@ export type TranscriptLine = {
   stability: TranscriptStability;
   text: string;
   correctsEventId?: string;
+  inputSource?: "stream" | "presenter_typed" | "presenter_picked";
+  truncatedFrom?: number;
   receivedAt: number;
 };
 
@@ -75,6 +79,7 @@ export type NeedAnswer = {
   causeSupported?: boolean;
   chargesEstablished?: boolean;
   statements?: import("@/lib/citations").CitedStatement[];
+  usedSources?: import("@/lib/citations").UsedKnowledgeSource[];
   at?: string;
   generation?: number;
 };
@@ -121,6 +126,23 @@ export type TriggerTrace = {
 };
 
 export type UtteranceRules = import("@/lib/utteranceRules").UtteranceRules;
+
+export type Recommendation = {
+  kind: string;
+  title: string;
+  body: string;
+  reasons?: string[];
+  facts?: string[];
+  playbookIds?: string[];
+  considered?: { action: string; whyNot: string }[];
+  preferredVsMail?: string;
+  advocateControl?: "offer_dismiss" | "confirm_transfer";
+  marksPricingUpcoming?: boolean;
+  sourceLabel: string;
+  playbookPassage?: string;
+  pillName?: string;
+  status: "pending" | "offered" | "dismissed" | "used";
+};
 
 export type SessionState = {
   sessionId: string;
@@ -193,24 +215,13 @@ export type SessionState = {
     liveSteps?: string[];
     earlyFacts?: { text: string; source: string }[];
     statements?: import("@/lib/citations").CitedStatement[];
+    usedSources?: import("@/lib/citations").UsedKnowledgeSource[];
     canRetry?: boolean;
     retryCause?: string | null;
+    headline?: string;
   };
-  recommendation: {
-    kind: string;
-    title: string;
-    body: string;
-    reasons?: string[];
-    facts?: string[];
-    playbookIds?: string[];
-    considered?: { action: string; whyNot: string }[];
-    preferredVsMail?: string;
-    advocateControl?: "offer_dismiss" | "confirm_transfer";
-    marksPricingUpcoming?: boolean;
-    sourceLabel: string;
-    playbookPassage?: string;
-    status: "pending" | "offered" | "dismissed" | "used";
-  } | null;
+  recommendation: Recommendation | null;
+  waitingRecommendations: Recommendation[];
   quotes: Array<{
     quoteId: string;
     drugName: string;
@@ -279,10 +290,32 @@ export type SessionState = {
     destinationConfirmed: boolean;
     connectionStatus: string | null;
     transferId: string | null;
+    agreedThisCall?: boolean;
   };
   disposition: {
     recommended: string | null;
     confirmed: string | null;
+    reasons: import("@/lib/citations").CitedStatement[];
+    documentId: string | null;
+    options: Array<{
+      code: string;
+      meaning: string;
+      safetyRequirement: string;
+    }>;
+  };
+  callEnd: {
+    triggered: boolean;
+    ended: boolean;
+    finalizing: boolean;
+    trigger: string | null;
+    endedAt: string | null;
+    hangupId: string | null;
+    wrapMs: number | null;
+  };
+  presenterInput: {
+    maxLength: number;
+    lastSource: "presenter_typed" | "presenter_picked" | null;
+    truncatedFrom: number | null;
   };
   closingNote: string | null;
   closingHistory: Array<{
@@ -291,6 +324,17 @@ export type SessionState = {
     assessment: string;
   }>;
   outcomeReady: boolean;
+  rightNowLine: string;
+  callReasonHow: "phone_menu" | "his_words" | null;
+  reviewStep: 0 | 1 | 2;
+  shownCards: Array<{
+    id: string;
+    kind: string;
+    description: string;
+    thumb: "up" | "down" | null;
+    reason?: string;
+    note?: string;
+  }>;
   warmup: {
     ok: boolean;
     ms: number;
@@ -303,6 +347,7 @@ export type SessionState = {
   lunaSeq: number;
   lastInterpretation: Record<string, unknown> | null;
   lastAppliedEventId: string | null;
+  appliedEventIds: string[];
   lastAnswerQuestion: string | null;
   modelHealth: {
     luna: {
@@ -321,6 +366,7 @@ export type SessionState = {
     } | null;
   };
   answerLoopGeneration: number;
+  activeInterpretations: number;
   answerLoopAnchor: {
     generation: number;
     question: string;
@@ -330,6 +376,8 @@ export type SessionState = {
     enrollmentScopeKey: string;
   } | null;
   pendingNba: string | null;
+  lookupProgress: import("@/lib/lookupProgress").LookupProgress[];
+  heldAdvocateLines: import("@/lib/lookupProgress").HeldAdvocateLine[];
   diagnostics: {
     disclosureFetch: string;
     warmup: string;

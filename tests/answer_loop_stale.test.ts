@@ -4,8 +4,12 @@ import {
   beginAnswerLoop,
   createSession,
   shouldApplyAnswerLoop,
+  shouldPaintAnswerOntoNow,
+  upsertNeed,
 } from "@/lib/session";
+import { parkedNeedKindForUtterance } from "@/lib/parkedNeed";
 import { questionCouldChange } from "@/lib/answerLoop";
+import { resumeParkedNeed } from "@/lib/copilot";
 import type { DisclosureRequirement } from "@/lib/types";
 
 describe("support check", () => {
@@ -85,10 +89,106 @@ describe("answer loop stale apply", () => {
     beginAnswerLoop(s, "is my refill ready", "refill_status");
     expect(shouldApplyAnswerLoop(s, g1)).toBe(false);
     const hist = s.needs.find((n) => n.kind === "historical_price");
-    expect(hist?.status).toBe("deferred");
+    expect(hist?.status).toBe("resolved");
     expect(hist?.guidance).toBe("deferred_valid");
     expect(hist?.answer?.body).toBe("park me");
-    expect(s.nowCard.body).toBe("is my refill ready");
+    // Prior answer stays on Now until Terra paints the next card.
+    expect(s.nowCard.body).toBe("park me");
+    expect(s.nowCardNeedKind).toBe("historical_price");
+    expect(s.answerLoopAnchor?.needKind).toBe("refill_status");
+  });
+
+  it("paints a late answer while Now is still looking up that question", () => {
+    const s = createSession({
+      disclosures: [] as DisclosureRequirement[],
+      disclosureFetch: "test",
+    });
+    upsertNeed(s, "historical_price", {
+      status: "active",
+      queryText: "why $8 and $27",
+      sourceUtteranceId: "e-hist",
+    });
+    const g1 = beginAnswerLoop(s, "why $8 and $27", "historical_price", "e-hist");
+    beginAnswerLoop(s, "is my refill ready", "refill_status", "e-rx");
+    s.nowCard = {
+      title: "Working on it",
+      body: "why $8 and $27",
+      sourceLabel: "Copilot",
+    };
+    s.nowCardNeedKind = "historical_price";
+    s.nowCardOrigin = "answer";
+    expect(
+      shouldPaintAnswerOntoNow(s, {
+        generation: g1,
+        needKind: "historical_price",
+        question: "why $8 and $27",
+      }),
+    ).toBe(true);
+  });
+
+  it("does not paint a late answer over a different question's lookup", () => {
+    const s = createSession({
+      disclosures: [] as DisclosureRequirement[],
+      disclosureFetch: "test",
+    });
+    const g1 = beginAnswerLoop(s, "why $8 and $27", "historical_price");
+    beginAnswerLoop(s, "is my refill ready", "refill_status");
+    // Prior greeting/answer stays on Now until Terra paints; simulate a live
+    // refill lookup already claimed on Now.
+    s.nowCard = {
+      title: "is my refill ready",
+      body: "",
+      sourceLabel: "Copilot",
+      liveSteps: ["Searching knowledge…"],
+    };
+    s.nowCardOrigin = "answer";
+    s.nowCardNeedKind = "refill_status";
+    expect(
+      shouldPaintAnswerOntoNow(s, {
+        generation: g1,
+        needKind: "historical_price",
+        question: "why $8 and $27",
+      }),
+    ).toBe(false);
+  });
+
+  it("does not park a Working on it placeholder as the answer", () => {
+    const s = createSession({
+      disclosures: [] as DisclosureRequirement[],
+      disclosureFetch: "test",
+    });
+    upsertNeed(s, "historical_price", {
+      status: "active",
+      queryText: "why $8 and $27",
+      sourceUtteranceId: "e-hist",
+    });
+    beginAnswerLoop(s, "why $8 and $27", "historical_price", "e-hist");
+    beginAnswerLoop(s, "is my refill ready", "refill_status", "e-rx");
+    const hist = s.needs.find((n) => n.kind === "historical_price");
+    expect(hist?.answer?.title).not.toBe("Working on it");
+    expect(hist?.answer?.body).not.toBe("why $8 and $27");
+  });
+
+  it("puts a parked answer back on Now instead of Working on it", async () => {
+    const s = createSession({
+      disclosures: [] as DisclosureRequirement[],
+      disclosureFetch: "test",
+    });
+    upsertNeed(s, "historical_price", {
+      status: "deferred",
+      guidance: "deferred_valid",
+      queryText: "Why was my metformin eight dollars last month and twenty-seven dollars yesterday?",
+      sourceUtteranceId: "e-hist",
+    });
+    s.needs[0].answer = {
+      title: "The two fills used different pharmacies",
+      body: "He paid $8.00 at Oak Street and $27.00 at Lakeview.",
+      sourceLabel: "Claims",
+    };
+    beginAnswerLoop(s, "is my refill ready", "refill_status");
+    await resumeParkedNeed(s, "http://127.0.0.1:9", "historical_price");
+    expect(s.nowCard.body).toMatch(/\$8\.00/);
+    expect(s.nowCard.title).not.toBe("Working on it");
   });
 
   it("drops a late answer after enrollment consent changes", () => {
@@ -158,5 +258,108 @@ describe("preload filter", () => {
         false,
       ),
     ).toHaveLength(4);
+  });
+});
+
+describe("parked need return cue", () => {
+  it("maps So, the metformin? to a deferred historical need", () => {
+    const kind = parkedNeedKindForUtterance(
+      [
+        {
+          kind: "historical_price",
+          status: "deferred",
+          guidance: "deferred_valid",
+          flowStep: "parked",
+          queryText: "Why was my metformin eight dollars last month?",
+        },
+      ],
+      "So, the metformin?",
+      ["metformin"],
+    );
+    expect(kind).toBe("historical_price");
+  });
+
+  it("maps the return cue even when the parked answer is resolved, not deferred", () => {
+    const kind = parkedNeedKindForUtterance(
+      [
+        {
+          kind: "historical_price",
+          status: "resolved",
+          guidance: "ready",
+          flowStep: "answered",
+          queryText: "Why was my metformin eight dollars last month?",
+          answer: {
+            title: "Two pharmacies",
+            body: "He paid $8.00 and $27.00.",
+            sourceLabel: "Claims",
+          },
+        },
+      ],
+      "So, the metformin?",
+      ["metformin"],
+    );
+    expect(kind).toBe("historical_price");
+  });
+
+  it("maps the return cue while historical is still preparing", () => {
+    const kind = parkedNeedKindForUtterance(
+      [
+        {
+          kind: "historical_price",
+          status: "active",
+          guidance: "preparing",
+          flowStep: "lookup",
+          queryText: "Why was my metformin eight dollars last month?",
+        },
+      ],
+      "So, the metformin?",
+      ["metformin"],
+    );
+    expect(kind).toBe("historical_price");
+  });
+
+  it("maps the first long metformin question to historical", () => {
+    const kind = parkedNeedKindForUtterance(
+      [
+        {
+          kind: "historical_price",
+          status: "resolved",
+          guidance: "deferred_valid",
+          flowStep: "answered",
+          queryText:
+            "Why was my metformin eight dollars last month and twenty-seven dollars yesterday?",
+          answer: {
+            title: "Two pharmacies",
+            body: "He paid $8.00 and $27.00.",
+            sourceLabel: "Claims",
+          },
+        },
+      ],
+      "Why was my metformin eight dollars last month and twenty-seven dollars yesterday?",
+      ["metformin"],
+    );
+    expect(kind).toBe("historical_price");
+  });
+
+  it("maps a refill-readiness interrupt to the refill need", () => {
+    const kind = parkedNeedKindForUtterance(
+      [
+        {
+          kind: "refill_status",
+          status: "resolved",
+          guidance: "deferred_valid",
+          flowStep: "answered",
+          queryText: "I put in my atorvastatin refill request. Can you help me check it?",
+          answer: {
+            title: "Ready",
+            body: "The atorvastatin is ready at Lakeview.",
+            sourceLabel: "Pharmacy system",
+          },
+        },
+      ],
+      "Actually first—can you check my refill is ready today?",
+      ["atorvastatin"],
+    );
+    expect(kind).toBe("refill_status");
   });
 });

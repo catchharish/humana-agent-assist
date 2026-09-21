@@ -15,6 +15,7 @@ type Session = {
       action?: string;
       stop?: string;
       reasons?: string[];
+      elapsedMs?: number;
     }>;
   };
   modelHealth?: { terra?: { ok?: boolean; status?: number; error?: string } };
@@ -69,12 +70,15 @@ async function one(): Promise<Record<string, unknown>> {
   const nba = session.diagnostics?.nba ?? [];
   const proposal = nba.find((n) => n.event === "proposal");
   const stop = nba.find((n) => n.event === "hard_stop");
+  const capDrop = nba.find((n) => n.event === "cap_drop");
   return {
     sessionId: sid,
     waitedMs: Date.now() - t0,
     action: session.recommendation?.kind ?? proposal?.action ?? null,
     recStatus: session.recommendation?.status ?? null,
     stop: stop?.stop ?? null,
+    capDrop: Boolean(capDrop),
+    capElapsedMs: capDrop?.elapsedMs ?? null,
     terra: session.modelHealth?.terra ?? null,
     nowTitle: session.nowCard?.title ?? null,
   };
@@ -95,13 +99,19 @@ async function main() {
     actions,
     sameAction: same.length ? same[0] : null,
     sameCount: same.filter((a) => a === same[0]).length,
+    capDrops: rows.filter((row) => row.capDrop === true).length,
   };
   console.log("SUMMARY", JSON.stringify(summary, null, 2));
   writeFileSync(
     "runs/harry_nba_10.json",
     JSON.stringify({ at: new Date().toISOString(), rows, summary }, null, 2),
   );
-  if (summary.withAction !== 10 || summary.sameCount !== 10) process.exit(1);
+  if (
+    summary.withAction + summary.capDrops !== 10 ||
+    summary.sameCount !== summary.withAction
+  ) {
+    process.exit(1);
+  }
 }
 
 main().catch((err) => {

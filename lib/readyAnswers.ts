@@ -77,7 +77,9 @@ export async function ensureReadyAnswers(origin: string): Promise<{
       }>;
     };
   };
-  const cands = json.data?.candidates ?? [];
+  const cands = (json.data?.candidates ?? []).filter(
+    (candidate) => candidate.kind !== "disposition",
+  );
   const hash = createHash("sha256")
     .update(cands.map((c) => c.id + c.text).join("\n"))
     .digest("hex");

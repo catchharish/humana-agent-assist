@@ -153,6 +153,7 @@ describe("C01 disclosure / deadlines", () => {
       disclosures: disclosures(),
       disclosureFetch: "test",
     });
+    session.identityStatus = "VALID";
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
     seedQuotes(session);
@@ -163,6 +164,8 @@ describe("C01 disclosure / deadlines", () => {
       text: "The Oak Street 90-day estimate is eighteen dollars",
     });
     expect(session.pricing).toBe("late_finding");
+    expect(session.nudge?.template).toBeTruthy();
+    expect(session.nudge?.heard).toBeUndefined();
   });
 
   it("uncertain evidence does not verify greeting", () => {
@@ -260,6 +263,7 @@ describe("C01 disclosure / deadlines", () => {
       disclosures: disclosures(),
       disclosureFetch: "test",
     });
+    session.identityStatus = "VALID";
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
     seedQuotes(session);
@@ -367,6 +371,7 @@ describe("C01 disclosure / deadlines", () => {
       disclosures: disclosures(),
       disclosureFetch: "test",
     });
+    session.identityStatus = "VALID";
     upsertNeed(session, "prospective_comparison", { status: "active" });
     session.currentNeed = "prospective comparison";
     seedQuotes(session);
@@ -385,5 +390,9 @@ describe("C01 disclosure / deadlines", () => {
     });
     expect(session.nudge?.heard).toMatch(/prices might change/i);
     expect(session.nudge?.missingFromHeard?.length).toBeGreaterThan(0);
+    expect(session.nudge?.extraInHeard).toEqual(
+      expect.arrayContaining(["these", "prices", "might"]),
+    );
+    expect(session.nudge?.missingFromHeard).not.toContain("change");
   });
 });

@@ -20,11 +20,12 @@ export type Interpretation = {
   firmRefusal: boolean;
   smallTalkOnly: boolean;
   withdrawEnrollment: boolean;
-  quotePharmacy: "lakeview" | "oak-street" | "centerwell" | null;
+  quotePharmacy: string | null;
   quotePharmacyCorrection: boolean;
   quoteDrug: string | null;
   pricingTrigger: "historical_charges" | "prospective_estimate" | "none";
   focusKind: NeedKind | null;
+  lookupHold: boolean;
   raw: string;
   ms: number;
   ttftMs: number | null;
@@ -54,12 +55,6 @@ const CONSENT = {
   y: "absolute_yes",
 } as const;
 
-const PHARM = {
-  l: "lakeview",
-  o: "oak-street",
-  c: "centerwell",
-} as const;
-
 const PRICE = {
   n: "none",
   h: "historical_charges",
@@ -74,8 +69,6 @@ const FOCUS: Record<string, NeedKind> = {
   sel: "service_election",
   cs: "coverage_status",
 };
-
-const DRUGS = ["metformin", "atorvastatin", "jardiance"] as const;
 
 type Compact = {
   ct?: keyof typeof CALL | null;
@@ -96,20 +89,21 @@ type Compact = {
   fr?: 0 | 1;
   st?: 0 | 1;
   we?: 0 | 1;
-  qp?: keyof typeof PHARM | null;
+  qp?: string | null;
   qc?: 0 | 1;
-  qd?: (typeof DRUGS)[number] | null;
+  qd?: string | null;
   pt?: keyof typeof PRICE;
   fk?: keyof typeof FOCUS | null;
+  lh?: 0 | 1;
 };
 
 function on(v: unknown) {
   return v === 1 || v === true || v === "1";
 }
 
-const INTERPRET_STATIC = `Classify one utterance. JSON object only, no prose. Keys: ct rf ha rt cr n90 rh si cc ec el em cv ma ao fr st we qp qc qd pt fk
-Allowed: ct R|P|E|D|G|- ; rf n|ex|rd ; bits 0 or 1 ; cc ec n|h|y ; em [] ; qp -|l|o|c ; qd - or named drug from Entities ; pt n|h|p ; fk -|rs|hp|pc|se|sel|cs
-Rules: hist price stays R. D only if they ask not to be called. E only if advocate introduces 90-day/delivery or member asks how it works. rf=ex already-submitted refill; rd ready today. st=1 small talk only. ha=1 question about past paid amounts (then fk=hp). rt=1 return to deferred price. n90=1 how 90-day option works. rh=1 unsure delivery while keeping retail. fr=1 keep retail/no delivery. si=1 advocate introduces service. cc=h hedge; cc=y clear yes to scoped compare. qp/qd for named-pharmacy estimate. qc=1 pharmacy correction. el=1 split election; em delivery drugs. ec=y yes after scoped readback. we=1 withdraw. cv=1 pending coverage/approval status (then fk=cs). ao=1 advocate offers Coverage Review. ma=1 member agrees to transfer. pt=p future estimate; pt=h past charges.
+const INTERPRET_STATIC = `Classify one utterance. JSON object only, no prose. Keys: ct rf ha rt cr n90 rh si cc ec el em cv ma ao fr st we qp qc qd pt fk lh
+Allowed: ct R|P|E|D|G|- ; rf n|ex|rd ; bits 0 or 1 ; cc ec n|h|y ; em [] ; qp - or pharmacy name as spoken ; qd - or named drug from Entities ; pt n|h|p ; fk -|rs|hp|pc|se|sel|cs ; lh 0 or 1
+Rules: hist price stays R. D only if they ask not to be called. E only if advocate introduces 90-day/delivery or member asks how it works. rf=ex already-submitted refill; rd ready today. st=1 small talk only. ha=1 question about past paid amounts (then fk=hp). rt=1 return to deferred price. n90=1 how 90-day option works. rh=1 unsure delivery while keeping retail. fr=1 keep retail/no delivery. si=1 advocate introduces service. cc=h hedge; cc=y clear yes to scoped compare. qp/qd for named-pharmacy estimate. qc=1 pharmacy correction. el=1 split election; em delivery drugs. ec=y yes after scoped readback. we=1 withdraw. cv=1 pending coverage/approval status (then fk=cs). ao=1 advocate offers Coverage Review. ma=1 member agrees to transfer. pt=p future estimate; pt=h past charges. lh=1 only when the speaker is the advocate buying time on the caller's last question — judge the turn, never from a phrase list. Member lines always lh=0.
 Shots (invented layout only; input then object):
 paid-last-April-at-other-counter → {"ct":"R","rf":"n","ha":1,"rt":0,"cr":0,"n90":0,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":0,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"hp"}
 has-that-new-card-been-reviewed → {"ct":"G","rf":"n","ha":0,"rt":0,"cr":0,"n90":0,"rh":0,"si":0,"cc":"n","ec":"n","el":0,"em":[],"cv":1,"ma":0,"ao":0,"fr":0,"st":0,"we":0,"qp":"-","qc":0,"qd":"-","pt":"n","fk":"cs"}
@@ -137,9 +131,14 @@ const BITS = new Set(["0", "1"]);
 const CC = new Set(["n", "h", "y"]);
 const RF = new Set(["n", "ex", "rd"]);
 const CT = new Set(["R", "P", "E", "D", "G", "-"]);
-const QP = new Set(["-", "l", "o", "c"]);
 const PT = new Set(["n", "h", "p"]);
 const FK = new Set(["-", "rs", "hp", "pc", "se", "sel", "cs"]);
+
+function pharmacyToken(raw: unknown): string | null {
+  const s = String(raw ?? "").trim();
+  if (!s || s === "-" || s === "null" || s === "n") return null;
+  return s;
+}
 
 function parseCsvInterp(text: string): Compact | null {
   const json = parseJsonObject<Record<string, unknown>>(text);
@@ -152,7 +151,6 @@ function parseCsvInterp(text: string): Compact | null {
     const pt = String(json.pt ?? "n");
     const fk = String(json.fk ?? "-");
     if (!CT.has(ct) || !RF.has(rf) || !CC.has(cc) || !CC.has(ec)) return null;
-    if (!QP.has(qp) && qp !== "null") return null;
     if (!PT.has(pt) || !FK.has(fk)) return null;
     return json as Compact;
   }
@@ -171,7 +169,7 @@ function parseCsvInterp(text: string): Compact | null {
     if (!BITS.has(at(i))) return null;
   }
   if (!CC.has(at(8)) || !CC.has(at(9))) return null;
-  if (!QP.has(at(18)) || !PT.has(at(21)) || !FK.has(at(22))) return null;
+  if (!PT.has(at(21)) || !FK.has(at(22))) return null;
   return {
     ct: at(0) as Compact["ct"],
     rf: at(1) as Compact["rf"],
@@ -211,7 +209,15 @@ export async function interpretUtterance(
       ]),
     ].filter(Boolean),
     pharmacies: [
-      ...new Set(session.quotes.map((q) => q.pharmacyName).filter(Boolean)),
+      ...new Set(
+        [
+          ...session.quotes.map((q) => q.pharmacyName),
+          String(
+            (session.prefetch?.refill as { pharmacyName?: string } | null)
+              ?.pharmacyName ?? "",
+          ),
+        ].filter(Boolean),
+      ),
     ],
     draft: session.enrollment.medications,
   };
@@ -224,7 +230,7 @@ utt:${JSON.stringify(utterance.text)}`;
     input: `${INTERPRET_STATIC}\n---\n${dynamic}`,
     maxOutputTokens: 160,
     serviceTier: "priority",
-    promptCacheKey: "haa-interpret-v3",
+    promptCacheKey: "haa-interpret-v5",
     onDelta: (acc) => Boolean(parseCsvInterp(acc)),
   });
   const csv = parseCsvInterp(luna.text);
@@ -253,6 +259,7 @@ utt:${JSON.stringify(utterance.text)}`;
       quoteDrug: null,
       pricingTrigger: "none",
       focusKind: null,
+      lookupHold: false,
       raw: luna.text,
       ms: luna.ms,
       ttftMs: luna.ttftMs ?? null,
@@ -276,9 +283,9 @@ utt:${JSON.stringify(utterance.text)}`;
       ? String(csv.em).split("+")
       : [];
   const elected = Array.isArray(electedSrc)
-    ? electedSrc.filter((x): x is string =>
-        DRUGS.includes(x as (typeof DRUGS)[number]),
-      )
+    ? electedSrc
+        .map((x) => String(x).trim())
+        .filter((x) => x && x !== "-")
     : [];
   const callValues = Object.values(CALL);
   let ct: Interpretation["callTypeChange"] =
@@ -294,14 +301,7 @@ utt:${JSON.stringify(utterance.text)}`;
   ) {
     ct = null;
   }
-  const qp =
-    qpRaw === "l" || qpRaw === "lakeview"
-      ? ("lakeview" as const)
-      : qpRaw === "o" || qpRaw === "oak-street"
-        ? ("oak-street" as const)
-        : qpRaw === "c" || qpRaw === "centerwell"
-          ? ("centerwell" as const)
-          : null;
+  const qp = pharmacyToken(qpRaw);
   const cc =
     ccRaw === "h" || ccRaw === "hedge"
       ? ("hedge" as const)
@@ -360,13 +360,10 @@ utt:${JSON.stringify(utterance.text)}`;
       ),
     quotePharmacy: qp,
     quotePharmacyCorrection: on(csv.qc),
-    quoteDrug:
-      typeof qdRaw === "string" &&
-      DRUGS.includes(qdRaw as (typeof DRUGS)[number])
-        ? qdRaw
-        : null,
+    quoteDrug: pharmacyToken(qdRaw),
     pricingTrigger: pt,
     focusKind: fk,
+    lookupHold: utterance.speaker === "advocate" && on(csv.lh),
     raw: luna.text,
     ms: luna.ms,
     ttftMs: luna.ttftMs ?? null,

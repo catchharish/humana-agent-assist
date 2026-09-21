@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { supportCheck } from "@/lib/supportCheck";
+import { NO_SUPPORTED_ANSWER, supportCheck } from "@/lib/supportCheck";
 import type { RetrievedSource } from "@/lib/citations";
 
 const claims: RetrievedSource = {
@@ -122,6 +122,31 @@ describe("per-statement support check", () => {
     });
     expect(r.statements[0]?.confirmed).toBe(false);
     expect(r.note).toMatch(/value_not_in_source/);
+  });
+
+  it("does not cite an unrelated record for an unsupported-answer limitation", () => {
+    const r = supportCheck({
+      question: "What happened outside the available records?",
+      answer: "",
+      statements: [
+        {
+          text: "I don’t have information about what happened.",
+          sourceId: "DEMO-C0818",
+        },
+      ],
+      retrieved: [claims],
+      toolsUsed: ["getClaims"],
+      snapshotHasPlanRule: false,
+      sources: ["DEMO-C0818"],
+    });
+    expect(r.partial).toBe(true);
+    expect(r.body).toBe(NO_SUPPORTED_ANSWER);
+    expect(r.body).not.toMatch(/retrieved records|source|citation/i);
+    expect(r.statements[0]).toMatchObject({
+      confirmed: false,
+      sourceId: "",
+      note: "no_supported_answer",
+    });
   });
 
   it("marks a network-tier cause as not confirmed without a dated classification", () => {
@@ -262,5 +287,47 @@ describe("per-statement support check", () => {
     });
     expect(r.statements[0]?.confirmed).toBe(true);
     expect(r.statements[0]?.note ?? "").not.toMatch(/Your September/);
+  });
+
+  it("keeps prose fill dates like On August 18, 2026 when the record has the ISO date", () => {
+    const r = supportCheck({
+      question: "Why was my metformin eight dollars last month and twenty-seven dollars yesterday?",
+      answer: "",
+      statements: [
+        {
+          text: "On August 18, 2026, you paid $8.00 for a 30-day supply of metformin 500 mg at Oak Street Pharmacy.",
+          sourceId: "DEMO-C0818",
+        },
+        {
+          text: "On September 16, 2026, you paid $27.00 for a 30-day supply of metformin 500 mg at Lakeview Pharmacy.",
+          sourceId: "DEMO-C0916",
+        },
+        {
+          text: "The cause is not confirmed.",
+          sourceId: "DEMO-C0818",
+        },
+      ],
+      retrieved: [claims, claim27],
+      toolsUsed: ["getClaims"],
+      snapshotHasPlanRule: false,
+      sources: ["DEMO-C0818", "DEMO-C0916"],
+    });
+    expect(r.body).toMatch(/8\.00/);
+    expect(r.body).toMatch(/27\.00/);
+    expect(r.statements.filter((s) => s.text === "The cause is not confirmed.")[0]?.confirmed).toBe(
+      false,
+    );
+  });
+});
+
+describe("advocateFacing", () => {
+  it("recasts member-facing paid lines for the advocate", async () => {
+    const { advocateFacing } = await import("@/lib/citations");
+    expect(
+      advocateFacing(
+        "On August 18, 2026, you paid $8.00 for metformin at Oak Street Pharmacy.",
+        "Harry",
+      ),
+    ).toBe("On August 18, 2026, Harry paid $8.00 for metformin at Oak Street Pharmacy.");
   });
 });

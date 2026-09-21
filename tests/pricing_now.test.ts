@@ -45,6 +45,7 @@ function interp(over: Partial<Interpretation>): Interpretation {
     quoteDrug: null,
     pricingTrigger: "none",
     focusKind: null,
+    lookupHold: false,
     raw: "",
     ms: 1,
     ttftMs: 1,
@@ -118,6 +119,8 @@ describe("pricing due-now vs clarify (D11 / §14)", () => {
     });
     expect(session.nowCard.title).toBe("Clarify comparison interest");
     expect(session.consent.clarification).toBeTruthy();
+    expect(session.nowCardNeedKind).toBeNull();
+    expect(session.nowCard.usedSources ?? []).toEqual([]);
     expect(session.pricing).toBe("pending_later");
 
     ingestTranscript(session, {

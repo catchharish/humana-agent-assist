@@ -1,0 +1,22 @@
+[
+  {
+    "topic": "Refills",
+    "question": "What is the current status of my refill?"
+  },
+  {
+    "topic": "Past costs",
+    "question": "Can you explain a recent pharmacy charge?"
+  },
+  {
+    "topic": "Pharmacy service",
+    "question": "How does the 90-day option work?"
+  },
+  {
+    "topic": "Coverage",
+    "question": "What does my current coverage-review status say?"
+  },
+  {
+    "topic": "Other",
+    "question": "What can you confirm from the records available for this call?"
+  }
+]

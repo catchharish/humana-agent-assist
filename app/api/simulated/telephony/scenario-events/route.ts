@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     "t04b",
     "t06a",
     "t08b",
+    "open_call",
   ]);
   if (!allowed.has(id)) {
     return NextResponse.json(

@@ -41,10 +41,23 @@ These are outcomes of the approved M4 order. They do not reopen the contract. Do
 - **`lib/queryRouter.ts` removed.** Live answers are Terra + session-bound tools. Diagnostic log kind is `lookup_trace`.
 - **Pre-load in the live loop:** search-only on the member’s words (`preloadSearchOnly`). Full Luna-named extra-tool pre-load stayed off (slower on Harry $8/$27).
 - **Plan filter:** SEARCH rejects a document only when its `planId` is set and differs from the **session** plan. `DEMO-POLICY-OTHER-v1` is wrong for Harry and right for M004.
-- **NBA:** action ids and advocate controls come from playbook text (`Action id:`, `Advocate control:`). Code draws one card and Offer/Dismiss or Confirm transfer. Six hard stops stay in code. M005 “none” is model-reasoned.
+- **NBA:** action ids and advocate controls come from playbook text (`Action id:`, `Advocate control:`). Code draws one card and Offer/Dismiss or Confirm transfer. Six hard stops stay in code *(seventh stop added 20 Sep — see As-built below)*. M005 “none” is model-reasoned.
 - **Members:** `DEMO-M001`–`DEMO-M005`. Presenter member selector loads `GET /api/simulated/eligibility/members`.
 - **Coverage list:** `GET /coverage-review/cases?memberId=` returns **200** `{ cases: [...] }` (empty array if none), then `GET .../cases/{caseId}` for the record.
 - T01 and six replays still pass after the cutover.
+
+## As-built (20 Sep 2026 — Phase 4 close)
+
+Packaging and honesty only. Does not reopen the 17–18 Sep overrides. Does not rewrite the 19 Sep graph decision.
+
+- **NBA hard stops in code are seven:** `unverified`, `due_now`, `already_enrolled`, `said_no`, `do_not_contact`, `dismissed_this_call`, `unconfirmed_fact`. Luis / M005 “none” is still model-reasoned from playbook text, not a member-id rule. Every suggestion attempt logs one of `proposal` / `none` / `hard_stop` / `cap_drop` / `failed`.
+- **Open call:** presenter scenario `open_call` is greeting + simulated VALID auth for the picked member, then unscripted. T01 and the six replays lock the member picker to Harry (`DEMO-M001`).
+- **Now occupancy:** while greeting, pricing, or closing wording is due, Now is that exact registry text only (`requiredWordingOnNow`). Answers wait as Open-needs ready. Paraphrase word-diff is advocate help (visible with demo details off).
+- **Disposition:** Terra recommends one code from `DEMO-DISPOSITIONS-v1`. Code only blocks: any code before an end trigger; transferred without confirmed connection; enrolled without confirmed enrollment. No fallback picker.
+- **Testing cadence** is in `AGENTS.md` (wording = screen; one-area = that suite once; shared state = T01 + affected suite; 3× only when asked).
+- **Proof, kept failures:** Phase 3 combined pack (`runs/PHASE3_REPORT.md`): T01 3/3; replays 1/3 (T06A wait); chain 3/3 with one 8s miss (c02 9647 ms); not-canned 3/3; NBA 2/3. Follow-up after Open call / T06A wait / NBA log: replays 6/6 once, NBA pass once, T01 pass once. Chain and not-canned were not re-run on that follow-up. Phase 4 did not re-run suites.
+- **Graph:** still do not build. The 19 Sep chain eval was 10/10 under 8s. The later 8s miss is load, not a missing hop. Do not treat it as a reopen.
+- **Wrap-up artifacts:** `README.md`, `SUBMISSION.md`, this addendum, `runs/PHASE4_CLOSE.md` (secrets scan).
 
 ## Stack
 
@@ -195,7 +208,7 @@ Quiet greeting: code exactness on adequate advocate transcript vs `DEMO-GREETING
 
 - Advocate lines stay in the **timed stream**. Presenter-gated **pauses** at advocate reaction points. Mark pause intervals; **never** count them as machine response time.
 - Stretch / QA view **off**.
-- `SUBMISSION.md` **deferred until after M3**. Ambiguity 9 stands until then.
+- `SUBMISSION.md` **deferred until after M3**. Ambiguity 9 stands until then. **As-built 20 Sep:** file exists after M3 and was aligned at Phase 4 close. Presenter **Open call** is greeting + auth, then unscripted; scripted T01/replays lock to Harry.
 - C06: **manual UI checklist**; no Playwright setup now.
 
 ## Fixtures (handler-only)
@@ -220,13 +233,13 @@ Five regions §14: call strip (no member fields before `DEMO-AUTH001`), obligati
 - **Then** remaining simulated REST, router, SEARCH, trigger classifier — needed before/during M2, not a separate product.
 - **M2** — Full §10/§20 main call with Harish as advocate. **No M3 until M2 runs end to end.**
 - **M3** — Two fresh mains, six replays, C01–C03 and C05–C06 (C06 manual). Keep every run record.
-- **M4** — Reasoning loop. Order: standing files → **speed gate on current fixtures** (stop if five-step chain > 8s) → extra members/docs → Terra tool loop cutover → NBA hard stops → ≥10 chain eval → DECISIONS_LOG graph recommendation (no graph built). T01 and six replays must pass after every step. **Done 19 Sep 2026** (see As-built above).
+- **M4** — Reasoning loop. Order: standing files → **speed gate on current fixtures** (stop if five-step chain > 8s) → extra members/docs → Terra tool loop cutover → NBA hard stops → ≥10 chain eval → DECISIONS_LOG graph recommendation (no graph built). T01 and six replays must pass after every step. **Done 19 Sep 2026** (see As-built 19 Sep). **Phase 4 wrap 20 Sep 2026** (see As-built 20 Sep) — packaging/honesty only, no new product.
 
 Time-cap cut order §10. Never cut beats 4–5, 9, 10, 12, 13–15.
 
 ## Deliverables
 
-Running app; `/fixtures`; tests for M3; `runs/`; `DECISIONS_LOG.md`; README (real vs simulated, how to run, limitations, architecture diagram, import exclusion). `SUBMISSION.md` after M3 only.
+Running app; `/fixtures`; tests for M3; `runs/`; `DECISIONS_LOG.md`; README (real vs simulated, how to run, limitations, architecture diagram, import exclusion). `SUBMISSION.md` after M3; aligned at Phase 4 close (`runs/PHASE4_CLOSE.md`).
 
 ## Flagged ambiguities (unchanged handling)
 

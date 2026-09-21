@@ -1,0 +1,204 @@
+{
+  "at": "2026-09-20T18:16:04.924Z",
+  "rows": [
+    {
+      "sessionId": "1ad73032-6704-4f49-a3fd-ba330de25587",
+      "memberId": "DEMO-M001",
+      "action": "preferred_pharmacy_tip",
+      "nba": [
+        {
+          "at": "2026-09-20T18:15:34.227Z",
+          "event": "proposal",
+          "action": "preferred_pharmacy_tip",
+          "source": "model",
+          "title": "Money-saving tip",
+          "reasons": [
+            "The member confirmed that the September 16, 2026 metformin fill at Lakeview Pharmacy was standard retail.",
+            "The member confirmed a lower-paid 30-day metformin fill at Oak Street Pharmacy on August 18, 2026."
+          ],
+          "facts": [
+            "On September 16, 2026, the member paid $27.00 for a 30-day supply of metformin 500 mg at Lakeview Pharmacy.",
+            "Lakeview Pharmacy was standard retail on September 16, 2026.",
+            "On August 18, 2026, the member paid $8.00 for a 30-day supply of metformin 500 mg at Oak Street Pharmacy."
+          ],
+          "playbookIds": [
+            "DEMO-PLAYBOOK-PREFERRED-PHARMACY-v1"
+          ],
+          "considered": [
+            {
+              "action": "optional_comparison",
+              "whyNot": "The confirmed facts support a direct preferred-retail versus standard-retail tip; no confirmed mail-service comparison facts are needed for this next step."
+            },
+            {
+              "action": "ninety_day_retail",
+              "whyNot": "The support check did not confirm that a 90-day retail option is eligible at the pharmacy the member uses."
+            },
+            {
+              "action": "objection_retail",
+              "whyNot": "The member did not raise an objection to a comparison or concern about moving medicines."
+            },
+            {
+              "action": "warm_transfer",
+              "whyNot": "No confirmed open coverage-review case or member agreement to transfer is present."
+            },
+            {
+              "action": "coverage_expectations",
+              "whyNot": "No confirmed pending coverage-review case or coverage-review question is present."
+            },
+            {
+              "action": "none",
+              "whyNot": "The member asked what to consider after a higher retail fill, and confirmed facts show a preferred-retail alternative for the same supply."
+            }
+          ],
+          "preferredVsMail": "A preferred-retail tip was chosen because confirmed fills show a preferred-retail versus standard-retail difference for the same 30-day metformin supply; a mail-order comparison is not needed to address the member's question."
+        }
+      ],
+      "capDrops": 0
+    },
+    {
+      "sessionId": "d506e188-e5bd-4d75-b74d-780870cc103b",
+      "memberId": "DEMO-M002",
+      "action": null,
+      "nba": [
+        {
+          "at": "2026-09-20T18:15:39.225Z",
+          "event": "hard_stop",
+          "stop": "already_enrolled",
+          "detail": "already enrolled in mail service",
+          "proposal": null,
+          "reasons": [],
+          "facts": []
+        }
+      ],
+      "capDrops": 0
+    },
+    {
+      "sessionId": "2c2ceffe-cd40-47dc-b48d-50f1fe3ac1c5",
+      "memberId": "DEMO-M003",
+      "action": null,
+      "nba": [
+        {
+          "at": "2026-09-20T18:15:44.834Z",
+          "event": "hard_stop",
+          "stop": "do_not_contact",
+          "detail": "member asked not to be contacted",
+          "proposal": null,
+          "reasons": [],
+          "facts": []
+        }
+      ],
+      "capDrops": 0
+    },
+    {
+      "sessionId": "e0c2030c-1e40-4382-85eb-74e32ce242fb",
+      "memberId": "DEMO-M004",
+      "action": "other_plan_cost_explain",
+      "nba": [
+        {
+          "at": "2026-09-20T18:16:04.565Z",
+          "event": "proposal",
+          "action": "other_plan_cost_explain",
+          "source": "model",
+          "title": "Money-saving tip",
+          "reasons": [
+            "The member asked what to consider next after their retail fill cost more than expected.",
+            "This call confirmed that the September 2, 2026 metformin fill was a 30-day retail supply at Lakeview Pharmacy.",
+            "This call confirmed that this plan applies the other_plan_retail cost share to a 30-day metformin 500 mg retail fill."
+          ],
+          "facts": [
+            "On September 2, 2026, you paid $12.00 for a 30-day supply of metformin 500 mg at Lakeview Pharmacy.",
+            "For this plan and period, a 30-day retail fill of metformin 500 mg is $12.00 under the other_plan_retail cost share."
+          ],
+          "playbookIds": [
+            "DEMO-PLAYBOOK-OTHER-PLAN-v1"
+          ],
+          "considered": [
+            {
+              "action": "optional_comparison",
+              "whyNot": "This member is on the other plan, for which the playbook directs an explanation of this plan's own retail cost-share category instead of a MAPD preferred-versus-standard comparison."
+            },
+            {
+              "action": "preferred_pharmacy_tip",
+              "whyNot": "No confirmed-this-call fact establishes that Lakeview Pharmacy is non-preferred or that a cheaper preferred pharmacy exists."
+            },
+            {
+              "action": "ninety_day_retail",
+              "whyNot": "No confirmed-this-call fact establishes 90-day eligibility for the existing prescription."
+            },
+            {
+              "action": "coverage_expectations",
+              "whyNot": "No confirmed-this-call fact shows a pending coverage-review case or a question about one."
+            },
+            {
+              "action": "warm_transfer",
+              "whyNot": "No confirmed-this-call fact shows an open coverage-review case or member agreement to transfer."
+            },
+            {
+              "action": "objection_retail",
+              "whyNot": "The member has not raised an objection to a comparison offer."
+            },
+            {
+              "action": "none",
+              "whyNot": "The member asked for next considerations after an unexpected retail cost, and the other-plan playbook supports explaining this plan's retail cost-share category."
+            }
+          ],
+          "preferredVsMail": ""
+        }
+      ],
+      "capDrops": 0
+    },
+    {
+      "sessionId": "083a6b6e-3c4c-4b7f-aa63-1d1aa485bd11",
+      "memberId": "DEMO-M005",
+      "action": null,
+      "nba": [
+        {
+          "at": "2026-09-20T18:15:54.752Z",
+          "event": "proposal",
+          "action": "none",
+          "source": "model",
+          "reasons": [
+            "The confirmed claim shows atorvastatin 20 mg was filled as a 90-day supply at CenterWell.",
+            "The confirmed current prescription is atorvastatin 20 mg tablets for a 90-day supply."
+          ],
+          "facts": [
+            "The recorded paid claim was for atorvastatin 20 mg, a 90-day supply filled at CenterWell on August 15, 2026, with $6.00 paid by the member.",
+            "The current prescription on file is atorvastatin 20 mg tablets for a 90-day supply."
+          ],
+          "playbookIds": [
+            "DEMO-PLAYBOOK-NONE-v1"
+          ],
+          "considered": [
+            {
+              "action": "optional_comparison",
+              "whyNot": "The confirmed claim and current prescription show the member already receives atorvastatin as a 90-day supply through CenterWell, so a retail-versus-delivery comparison is not indicated for this medicine."
+            },
+            {
+              "action": "preferred_pharmacy_tip",
+              "whyNot": "No confirmed-this-call fact establishes that the member paid more at a non-preferred pharmacy or identifies a cheaper preferred pharmacy option."
+            },
+            {
+              "action": "ninety_day_retail",
+              "whyNot": "The confirmed claim and prescription already show a 90-day supply, so there is no confirmed 90-day retail gap to address."
+            },
+            {
+              "action": "objection_retail",
+              "whyNot": "There is no active comparison offer to respond to and no stated objection to moving medicines."
+            },
+            {
+              "action": "warm_transfer",
+              "whyNot": "No confirmed-this-call fact shows an open coverage-review case or agreement to a warm transfer."
+            },
+            {
+              "action": "coverage_expectations",
+              "whyNot": "No confirmed-this-call fact shows a pending coverage-review case or that the member asked about one."
+            }
+          ],
+          "preferredVsMail": ""
+        }
+      ],
+      "capDrops": 0
+    }
+  ],
+  "capDrops": 0
+}

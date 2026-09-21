@@ -31,7 +31,7 @@
       "speaker": "advocate",
       "stability": "corrected",
       "correctsEventId": "e-greet-final",
-      "text": "Thank you for calling Humana. This call is being recorded."
+      "text": "Thank you for calling Humana. This call is being recorded for quality assurance & training purposes."
     },
     {
       "id": "e-noise-uncertain",

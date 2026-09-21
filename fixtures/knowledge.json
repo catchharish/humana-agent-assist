@@ -63,13 +63,13 @@
     "text": "Recorded-line greeting, pricing exact wording, and closing wording come from the disclosure registry. The assist must not rewrite those sentences. Nudges are fixed templates. Enrollment is a human POST only."
   },
   {
-    "id": "DEMO-PLAYBOOK-OFFERS-v1",
+    "id": "DEMO-PLAYBOOK-OFFERS-v2",
     "kind": "playbook",
     "planId": null,
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
     "mainTopics": ["when a retail vs delivery comparison may be offered"],
-    "text": "Action id: optional_comparison. Advocate control: offer_dismiss. Marks pricing upcoming: yes. Offer a retail-versus-delivery comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. Do not offer when the only matter on the call is refill or other servicing and the member never raised price, cost, estimate, or comparison. Do not state or depend on a cause the support check did not confirm. A comparison may still be offered without claiming that cause. A suggestion's reasons may use only facts the support check confirmed this call. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes."
+    "text": "Action id: optional_comparison. Advocate control: offer_dismiss. Pill name: Money-saving tip. Kind: next best action. Marks pricing upcoming: yes. Offer a pharmacy price comparison only after identity is verified, required due-now wording is not blocking, the member is not already enrolled in the mail service, the member has not refused this call, and do-not-contact is not set. When this call's records show the member paid more at a standard (non-preferred) retail pharmacy than at preferred retail for the same medicine and supply, the member is not using the mail service, and the member has not said no: this comparison offer is the one suggestion. That offer includes the member's preferred pharmacy as one of the options compared, together with the pharmacy they used and mail delivery when those are in the records. Do not also propose preferred_pharmacy_tip in that situation — the preferred pharmacy is already an option on this card. Do not offer when the only matter on the call is refill or other servicing and the member never raised price, cost, estimate, or comparison. Do not offer the retail-versus-mail comparison for a medicine the member already receives as a 90-day mail-order supply. If all of the member's current medicines are already filled that way, there is nothing to offer. Do not state or depend on a cause the support check did not confirm. A comparison may still be offered without claiming that cause. A suggestion's reasons may use only facts the support check confirmed this call. The advocate decides whether to speak the offer. Prospective amounts are shown only after a clear comparison yes. Do not mention dollar amounts on this suggestion card."
   },
   {
     "id": "DEMO-PLAYBOOK-OBJECTION-v1",
@@ -78,7 +78,7 @@
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
     "mainTopics": ["retail hesitation"],
-    "text": "Action id: objection_retail. Advocate control: offer_dismiss. We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
+    "text": "Action id: objection_retail. Advocate control: offer_dismiss. Pill name: Reply to a concern. Kind: objection rebuttal. We can include your retail options in the comparison. You do not have to move both medicines, and today's pickup stays as it is."
   },
   {
     "id": "DEMO-PLAYBOOK-TRANSFER-v1",
@@ -87,7 +87,7 @@
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
     "mainTopics": ["warm transfer to coverage review"],
-    "text": "Action id: warm_transfer. Advocate control: confirm_transfer. If an open coverage-review case exists and the member agrees to a warm transfer, the advocate initiates the transfer. The assist does not determine coverage. Read case status only. After a connected transfer, wrap with the case id and queue."
+    "text": "Action id: warm_transfer. Advocate control: confirm_transfer. Pill name: Warm transfer. Kind: next best action. If an open coverage-review case exists and the member agrees to a warm transfer, the advocate initiates the transfer. The assist does not determine coverage. Read case status only. After a connected transfer, wrap with the case id and queue."
   },
   {
     "id": "DEMO-PLAYBOOK-COVERAGE-v1",
@@ -114,7 +114,7 @@
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
     "mainTopics": ["nothing to offer"],
-    "text": "Propose none when there is no open coverage-review case and the member already fills at the plan preferred mail pharmacy on a 90-day supply with no enrollment gap to close. That is not a code hard stop; record reasons from these facts. Do not invent a retail-versus-mail offer or a transfer. Action id: none."
+    "text": "Propose none when there is no open coverage-review case and the member already fills at the plan preferred mail pharmacy on a 90-day supply with no enrollment gap to close. That is not a code hard stop; record reasons from these facts. Do not invent a retail-versus-mail offer or a transfer. Action id: none. Pill name: none."
   },
   {
     "id": "DEMO-FAQ-PHARMACY-v1",
@@ -136,6 +136,42 @@
     "audience": "pharmacy_ops",
     "effectiveDate": "2026-01-01",
     "mainTopics": ["explain this plan's own retail category"],
-    "text": "Action id: other_plan_cost_explain. Advocate control: offer_dismiss. When the session member is on this other plan, propose explaining this plan's own retail cost-share category. Do not offer a MAPD preferred-versus-standard comparison and do not use another plan's amounts. Prefer this action over optional_comparison for this plan."
+    "text": "Action id: other_plan_cost_explain. Advocate control: offer_dismiss. Pill name: Money-saving tip. Kind: next best action. When the session member is on this other plan, propose explaining this plan's own retail cost-share category. Do not offer a MAPD preferred-versus-standard comparison and do not use another plan's amounts. Prefer this action over optional_comparison for this plan."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-PREFERRED-PHARMACY-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["preferred pharmacy is cheaper for this member"],
+    "text": "Action id: preferred_pharmacy_tip. Advocate control: offer_dismiss. Pill name: Money-saving tip. Kind: next best action. Member benefit only: tell the member their preferred pharmacy is cheaper for the same supply when this call's confirmed facts show they paid more at a non-preferred pharmacy. Do not propose this action when optional_comparison applies — a member who paid more at a standard pharmacy, is not using the mail service, and has not said no. In that situation the one suggestion is the pharmacy price comparison offer, which already includes the preferred pharmacy as an option. This tip is only when that comparison offer does not apply and the confirmed facts only support naming the cheaper preferred pharmacy. Do not offer this as a plan change, enrollment, or a coverage decision. Do not offer when identity is unverified, required wording is due now, the member already said no this call, do-not-contact is set, the offer was dismissed this call, or the cheaper-pharmacy fact is unconfirmed. Do not name a pharmacy the support check did not confirm."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-NINETY-DAY-RETAIL-v2",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["90-day supply at the current pharmacy"],
+    "text": "Action id: ninety_day_retail. Advocate control: offer_dismiss. Pill name: Money-saving tip. Kind: next best action. Suggest moving an eligible existing prescription to a 90-day supply at the pharmacy they already use. This is not mail enrollment and does not change today's pickup. Do not offer when identity is unverified, required wording is due now, the member is already on a 90-day supply at that pharmacy, the member already said no this call, do-not-contact is set, the offer was dismissed this call, or the 90-day eligibility fact is unconfirmed. Do not offer this instead of answering a past-charge question. Do not offer the retail-versus-mail comparison for a medicine the member already receives as a 90-day mail-order supply. If all of the member's current medicines are already filled that way, there is nothing to offer."
+  },
+  {
+    "id": "DEMO-PLAYBOOK-COVERAGE-EXPECT-v1",
+    "kind": "playbook",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["set expectations on a pending coverage review"],
+    "text": "Action id: coverage_expectations. Advocate control: offer_dismiss. Pill name: Reply to a concern. Kind: next best action. When a coverage-review case is pending and the member asks about it, set the expectation that there is no decision yet and only Coverage Review can decide. This is not a coverage determination. Do not offer when identity is unverified, required wording is due now, there is no pending case, the member already said no this call, do-not-contact is set, the offer was dismissed this call, or the pending-status fact is unconfirmed. Do not predict an approval or denial."
+  },
+  {
+    "id": "DEMO-DISPOSITIONS-v1",
+    "kind": "disposition",
+    "planId": null,
+    "audience": "pharmacy_ops",
+    "effectiveDate": "2026-01-01",
+    "mainTopics": ["pharmacy call disposition codes and end-of-call outcomes"],
+    "text": "Synthetic disposition guide — made-up codes for this prototype.\n\nCode: COMPLETED_SERVICING\nMeaning: The requested servicing was completed and no material member request remains unresolved.\nApplies when: Requested status or information was delivered and there is no confirmed enrollment, confirmed transfer, declined optional branch as the primary outcome, contact-preference request, or follow-up need.\nSafety requirement: none.\n\nCode: TRANSFERRED_COVERAGE_REVIEW\nMeaning: The member was connected to Coverage Review; connection does not mean the case was resolved.\nApplies when: Telephony confirms a receiving Coverage Review specialist connection.\nSafety requirement: confirmed_connection.\n\nCode: ENROLLED_SERVICE\nMeaning: A human-submitted pharmacy-service enrollment returned a confirmed result for the member-authorized scope.\nApplies when: Enrollment completed without a later connected transfer becoming the primary routing outcome.\nSafety requirement: confirmed_enrollment.\n\nCode: OFFER_DECLINED\nMeaning: The member declined an optional pharmacy-service or comparison offer and no more material completed or unresolved outcome supersedes that choice.\nApplies when: The current-call transcript records a firm decline and no enrollment followed.\nSafety requirement: none.\n\nCode: UNRESOLVED_FOLLOW_UP\nMeaning: At least one requested answer or action remains unresolved or needs follow-up after the call.\nApplies when: A need has no supported answer, an answer was still in progress at call end, a source limitation remains, or the advocate still has work to do.\nSafety requirement: none.\n\nCode: CONTACT_PREFERENCE_REQUEST\nMeaning: The member asked to change contact preferences or not be contacted; the request is recorded but this prototype does not claim the preference was changed.\nApplies when: The transcript contains the member request and the wrap preserves it as unresolved/manual work.\nSafety requirement: none.\n\nCode: TRANSFER_PENDING\nMeaning: A requested transfer has a telephony result of pending and no receiving specialist connection is confirmed.\nApplies when: Telephony explicitly returns a pending connection status.\nSafety requirement: none.\n\nCode: TRANSFER_NOT_COMPLETED\nMeaning: A requested transfer failed or otherwise ended without a receiving specialist connection.\nApplies when: Telephony explicitly returns a failed/not-connected status.\nSafety requirement: none.\n\nCode: REVIEW_PENDING\nMeaning: A lead-review request exists and remains unresolved.\nApplies when: A system action confirms a review request with pending status.\nSafety requirement: none.\n\nCode: CALL_ENDED_NO_SERVICING\nMeaning: The call ended before any requested servicing result or supported answer was completed.\nApplies when: There is no completed need or action result and no more specific unresolved, contact-preference, decline, enrollment, or transfer outcome applies.\nSafety requirement: none.\n\nChoose one primary code from this document. Reasons must cite actual current-call evidence. Never infer a completed transfer from an offer, destination confirmation, handoff draft, ring event, pending result, or failed result. Never infer enrollment from discussion, a draft, comparison consent, or readback alone."
   }
 ]

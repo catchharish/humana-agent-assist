@@ -13,6 +13,7 @@ import {
 import {
   classifyEnrollmentConsent,
   isDirectNamedQuoteAsk,
+  resolveQuotePharmacyId,
   type UtteranceRules,
 } from "@/lib/utteranceRules";
 import type { DisclosureRequirement } from "@/lib/types";
@@ -52,6 +53,7 @@ function interp(over: Partial<Interpretation>): Interpretation {
     quoteDrug: null,
     pricingTrigger: "none",
     focusKind: null,
+    lookupHold: false,
     raw: "",
     ms: 1,
     ttftMs: 1,
@@ -329,6 +331,48 @@ describe("N1–N10 regressions", () => {
         "absolute_yes",
       );
     }
+  });
+
+  it("N6b a pharmacy correction keeps the named replacement, not Luna's denied id", () => {
+    const known = [
+      { id: "lakeview", name: "Lakeview Pharmacy" },
+      { id: "oak-street", name: "Oak Street Pharmacy" },
+    ];
+    expect(
+      resolveQuotePharmacyId(
+        "Not Lakeview — Oak Street Pharmacy.",
+        "lakeview",
+        known,
+      ),
+    ).toBe("oak-street");
+    expect(
+      resolveQuotePharmacyId(
+        "What is the 90-day metformin estimate at Lakeview?",
+        "lakeview",
+        known,
+      ),
+    ).toBe("lakeview");
+    const other = [
+      { id: "riverside", name: "Riverside Pharmacy" },
+      { id: "hilltop", name: "Hilltop Pharmacy" },
+    ];
+    expect(
+      resolveQuotePharmacyId(
+        "Oak Street instead of Lakeview",
+        "lakeview",
+        known,
+      ),
+    ).toBe("oak-street");
+    expect(
+      resolveQuotePharmacyId(
+        "Not Riverside — Hilltop Pharmacy",
+        "riverside",
+        other,
+      ),
+    ).toBe("hilltop");
+    expect(
+      resolveQuotePharmacyId("Hilltop instead of Riverside", "riverside", other),
+    ).toBe("hilltop");
   });
 
   it("N6 direct quote needs a request cue, no negation, and session entities", () => {
